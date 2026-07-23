@@ -107,28 +107,87 @@ const Scanner = () => {
       return;
     }
 
-    const constraints = [];
-    if (isMobile()) {
-      const fm = useFront ? 'user' : 'environment';
-      constraints.push({ video: { facingMode: fm, width: { ideal: 1280 }, height: { ideal: 720 } } });
-      constraints.push({ video: { facingMode: fm } });
+    // Step 1: Enumerate video devices to find exact camera
+    let devices = [];
+    try {
+      const allDevices = await navigator.mediaDevices.enumerateDevices();
+      devices = allDevices.filter(d => d.kind === 'videoinput');
+      console.log('Available cameras:', devices.map(d => `${d.label || 'unnamed'} (${d.deviceId.slice(0,8)})`));
+    } catch (e) {
+      console.warn('enumerateDevices failed:', e);
     }
-    constraints.push({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
-    constraints.push({ video: true });
 
+    // Step 2: Build constraint list - simpler constraints first to avoid driver issues
+    const constraintList = [];
+
+    // Simple video true first (most compatible across desktop webcams)
+    if (!isMobile()) {
+      constraintList.push({ video: true });
+      constraintList.push({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
+      constraintList.push({ video: { width: 640, height: 480 } });
+    } else {
+      const fm = useFront ? 'user' : 'environment';
+      constraintList.push({ video: { facingMode: fm } });
+      constraintList.push({ video: true });
+    }
+
+    // Add deviceId constraints if multiple devices detected
+    if (devices.length > 1) {
+      for (const dev of devices) {
+        constraintList.push({ video: { deviceId: { exact: dev.deviceId } } });
+      }
+    }
+
+    // Deduplicate
+    const seen = new Set();
+    const uniqueConstraints = constraintList.filter(c => {
+      const key = JSON.stringify(c);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Step 3: Try each constraint set with retries
     let stream = null, lastErr = null;
-    for (const c of constraints) {
+    for (const c of uniqueConstraints) {
       try {
-        stream = await getMedia(c, 5000);
+        console.log('Trying camera constraint:', JSON.stringify(c));
+        stream = await getMedia(c, 8000);
+        console.log('✅ Camera opened successfully');
         break;
-      } catch (e) { lastErr = e; }
+      } catch (e) {
+        lastErr = e;
+        console.warn(`Camera attempt failed (${e.name}): ${e.message}`);
+        // If driver aborted or was overconstrained, pause 800ms before next attempt to allow hardware release
+        if (e.name === 'AbortError' || e.name === 'OverconstrainedError') {
+          await new Promise(r => setTimeout(r, 800));
+        }
+      }
+    }
+
+    // Ultimate emergency fallback: raw getUserMedia({ video: true }) after 1s delay
+    if (!stream && (lastErr?.name === 'AbortError' || lastErr?.name === 'OverconstrainedError')) {
+      console.log('Attempting emergency raw video fallback after 1.2s delay...');
+      await new Promise(r => setTimeout(r, 1200));
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        console.log('✅ Emergency raw camera opened');
+      } catch (e) {
+        lastErr = e;
+      }
     }
 
     if (!stream) {
       setCamLoading(false);
-      if (lastErr?.name === 'NotAllowedError') setCamErr('Camera permission denied. Allow camera in browser settings.');
-      else if (lastErr?.name === 'NotFoundError') setCamErr('No camera found. Use Upload QR instead.');
-      else setCamErr('Camera unavailable. Use Upload QR to scan.');
+      if (lastErr?.name === 'NotAllowedError' || lastErr?.name === 'PermissionDeniedError') {
+        setCamErr('Camera permission denied. Click the lock/camera icon in your address bar and select Allow.');
+      } else if (lastErr?.name === 'NotFoundError' || lastErr?.name === 'DevicesNotFoundError') {
+        setCamErr('No camera hardware detected on this device.');
+      } else if (lastErr?.name === 'AbortError') {
+        setCamErr('Camera hardware locked by another process (Zoom, Teams, or Windows settings). Please close other camera apps or click Upload QR.');
+      } else {
+        setCamErr(`Camera access issue (${lastErr?.name || 'Error'}). Switch to Upload QR tab to scan immediately.`);
+      }
       return;
     }
 
@@ -146,15 +205,15 @@ const Scanner = () => {
       runLoop();
     }).catch(() => {
       setCamLoading(false);
-      setCamErr('Video play blocked. Tap the screen to retry.');
+      setCamErr('Video play blocked. Tap screen to activate.');
     });
 
     if (video.readyState >= 1) play();
     else {
       video.addEventListener('loadedmetadata', play, { once: true });
-      setTimeout(() => { if (!camReady) play(); }, 3000);
+      setTimeout(() => { play(); }, 2500);
     }
-  }, [stopCam, runLoop, camReady]);
+  }, [stopCam, runLoop]);
 
   /* ──── MODE SWITCH ───────────────────────────────────────────── */
   useEffect(() => {
