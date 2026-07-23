@@ -621,18 +621,7 @@ const Scanner = () => {
             <div className="relative w-full h-64 md:h-72 rounded-2xl overflow-hidden bg-slate-950 flex items-center justify-center">
               
               {/* Html5Qrcode Live Scanner Mount Point */}
-              <div id="qr-reader" className="absolute inset-0 w-full h-full z-0" />
-
-              {/* Real Mobile Camera Stream Video Fallback */}
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline 
-                muted 
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                  cameraActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
-              />
+              <div id="qr-reader" className="absolute inset-0 w-full h-full z-0 overflow-hidden" />
 
               {/* Canvas Viewfinder Animation fallback when camera is off */}
               {!cameraActive && (
