@@ -76,10 +76,10 @@ const Scanner = () => {
         const preferredFacing = usingFrontCamera ? "user" : "environment";
 
         const config = {
-          fps: 10, // slightly lower fps gives more processing time per frame
+          fps: 15, // frame rate for decoding
           qrbox: (viewfinderWidth, viewfinderHeight) => {
-            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-            const qrboxSize = Math.floor(minEdge * 0.85); // Make qr box larger
+            const minEdge = Math.min(viewfinderWidth || 300, viewfinderHeight || 300);
+            const qrboxSize = Math.max(180, Math.floor(minEdge * 0.8)); // Ensure minimum 180px box
             return { width: qrboxSize, height: qrboxSize };
           },
           aspectRatio: 1.0,
@@ -202,8 +202,8 @@ const Scanner = () => {
 
   // Snap live camera frame and decode QR
   const handleSnapAndVerify = () => {
-    const video = videoRef.current;
-    if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+    const video = document.querySelector('#qr-reader video') || videoRef.current;
+    if (video && (video.videoWidth > 0 || video.readyState >= 2)) {
       const jsQRDecode = typeof jsQR === 'function' ? jsQR : (jsQR && jsQR.default);
       if (typeof jsQRDecode !== 'function') {
         console.error("jsQR library is not resolved as a function:", jsQR);
@@ -211,8 +211,8 @@ const Scanner = () => {
         return;
       }
       const scanCanvas = document.createElement('canvas');
-      scanCanvas.width = video.videoWidth;
-      scanCanvas.height = video.videoHeight;
+      scanCanvas.width = video.videoWidth || video.clientWidth || 640;
+      scanCanvas.height = video.videoHeight || video.clientHeight || 480;
       const scanCtx = scanCanvas.getContext('2d');
       scanCtx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
       const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
@@ -227,7 +227,7 @@ const Scanner = () => {
       // No QR detected — prompt user
       setCameraStatus('⚠️ No QR code detected — hold steady & try again');
     } else {
-      setCameraStatus('⚠️ Camera not ready');
+      setCameraStatus('⚠️ Camera video feed not active yet — tap Start Camera');
     }
   };
 
