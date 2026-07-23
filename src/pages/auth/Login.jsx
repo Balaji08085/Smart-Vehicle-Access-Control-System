@@ -16,26 +16,36 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useEntry();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    login(activeTab);
+    let credentials = {};
     if (activeTab === 'guard') {
-      navigate('/scanner');
+      credentials = { guardId, guardPin };
     } else if (activeTab === 'admin') {
-      navigate('/dashboard');
-    } else {
-      navigate('/search');
+      credentials = { adminEmail, adminPassword };
+    }
+    const success = await login(activeTab, credentials);
+    if (success) {
+      if (activeTab === 'guard') {
+        navigate('/scanner');
+      } else if (activeTab === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/search');
+      }
     }
   };
 
-  const quickDemoLogin = (role) => {
-    login(role);
-    if (role === 'guard') {
-      navigate('/scanner');
-    } else if (role === 'admin') {
-      navigate('/dashboard');
-    } else {
-      navigate('/search');
+  const quickDemoLogin = async (role) => {
+    const success = await login(role);
+    if (success) {
+      if (role === 'guard') {
+        navigate('/scanner');
+      } else if (role === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/search');
+      }
     }
   };
 

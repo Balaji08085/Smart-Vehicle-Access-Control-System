@@ -22,6 +22,7 @@ const Scanner = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStatus, setCameraStatus] = useState('Initializing scanner...');
   const [usingFrontCamera, setUsingFrontCamera] = useState(false);
+  const [cameraStartKey, setCameraStartKey] = useState(0);
 
   const fileInputRef = useRef(null);
 
@@ -31,161 +32,191 @@ const Scanner = () => {
   const laserYRef = useRef(0);
   const laserDirRef = useRef(1);
 
-  // Start Real Mobile/Desktop Camera Feed
-  const startCamera = async (forceFront = false) => {
-    setCameraStatus('Requesting camera permission...');
+  const html5QrCodeRef = useRef(null);
 
-    // Stop any existing stream first
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
-    }
-
-    const facingMode = forceFront ? 'user' : 'environment';
-
-    // Multi-fallback strategy for maximum WebView/mobile compatibility:
-    // 1. Exact environment (best for mobile)
-    // 2. Ideal environment (most browsers)
-    // 3. Any video without facing preference (old WebViews)
-    // 4. Plain video: true (last resort)
-    const constraints = [
-      { video: { facingMode: { exact: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } } },
-      { video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } } },
-      { video: { facingMode: { ideal: facingMode } } },
-      { video: true },
-    ];
-
-    let stream = null;
-    let lastErr = null;
-
-    for (const constraint of constraints) {
+  // Stop Html5Qrcode scanner safely
+  const stopHtml5Scanner = async () => {
+    if (html5QrCodeRef.current) {
       try {
-        stream = await navigator.mediaDevices.getUserMedia(constraint);
-        break; // success
+        if (html5QrCodeRef.current.isScanning) {
+          await html5QrCodeRef.current.stop();
+        }
+        html5QrCodeRef.current.clear();
+      } catch (e) {
+        console.warn('Error stopping Html5Qrcode scanner:', e);
+      }
+      html5QrCodeRef.current = null;
+    }
+  };
+
+  // Primary Html5Qrcode Live Camera Engine Lifecycle
+  useEffect(() => {
+    if (result || scanning) return;
+
+    let isSubscribed = true;
+
+    const initScanner = async () => {
+      await stopHtml5Scanner();
+
+      // Check Secure Context / MediaDevices availability
+      if (!navigator.mediaDevices && !window.isSecureContext) {
+        if (isSubscribed) {
+          setCameraActive(false);
+          setCameraStatus('⚠️ HTTPS or localhost required for live camera. Use photo upload or manual entry below.');
+        }
+        return;
+      }
+
+      setCameraStatus('Starting live camera scanner...');
+
+      try {
+        const scanner = new Html5Qrcode("qr-reader");
+        html5QrCodeRef.current = scanner;
+
+        const preferredFacing = usingFrontCamera ? "user" : "environment";
+
+        const config = {
+          fps: 10, // slightly lower fps gives more processing time per frame
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const qrboxSize = Math.floor(minEdge * 0.85); // Make qr box larger
+            return { width: qrboxSize, height: qrboxSize };
+          },
+          aspectRatio: 1.0,
+          disableFlip: false, // allow flipping for front camera
+        };
+
+        const onScanSuccess = (decodedText) => {
+          if (isSubscribed && decodedText && decodedText.trim()) {
+            console.log("🟢 Html5Qrcode Decoded QR:", decodedText);
+            stopHtml5Scanner().then(() => {
+              handleScanTrigger(decodedText.trim());
+            });
+          }
+        };
+
+        // Attempt 1: Explicitly get cameras and pick the right one by label
+        try {
+          const cameras = await Html5Qrcode.getCameras();
+          if (cameras && cameras.length > 0) {
+            let selectedCameraId = cameras[0].id;
+            
+            if (usingFrontCamera) {
+              const front = cameras.find(c => c.label.toLowerCase().includes('front') || c.label.toLowerCase().includes('user'));
+              if (front) selectedCameraId = front.id;
+            } else {
+              const back = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('rear') || c.label.toLowerCase().includes('environment'));
+              if (back) selectedCameraId = back.id;
+            }
+
+            await scanner.start(selectedCameraId, config, onScanSuccess, () => {});
+            if (isSubscribed) {
+              setCameraActive(true);
+              setCameraStatus('Camera Active — Point at QR Pass');
+            }
+          } else {
+            throw new Error("No cameras detected by browser");
+          }
+        } catch (cameraErr) {
+          console.warn('getCameras attempt failed, falling back to facingMode constraint:', cameraErr);
+          if (!isSubscribed) return;
+
+          // Attempt 2: Try preferred facingMode
+          try {
+            await scanner.start({ facingMode: preferredFacing }, config, onScanSuccess, () => {});
+            if (isSubscribed) {
+              setCameraActive(true);
+              setCameraStatus(usingFrontCamera ? 'Front Camera Active' : 'Rear Camera Active');
+            }
+          } catch (firstErr) {
+            console.warn('Preferred camera facingMode failed, trying fallback:', firstErr);
+            if (!isSubscribed) return;
+
+            // Attempt 3: Try alternate facing mode
+            const fallbackFacing = usingFrontCamera ? "environment" : "user";
+            try {
+              await scanner.start({ facingMode: fallbackFacing }, config, onScanSuccess, () => {});
+              if (isSubscribed) {
+                setCameraActive(true);
+                setCameraStatus('Camera Active');
+              }
+            } catch (secondErr) {
+              console.warn('Fallback facingMode failed, trying generic video constraint:', secondErr);
+              if (!isSubscribed) return;
+
+              // Attempt 4: Generic video true
+              try {
+                await scanner.start({ video: true }, config, onScanSuccess, () => {});
+                if (isSubscribed) {
+                  setCameraActive(true);
+                  setCameraStatus('Camera Active');
+                }
+              } catch (finalErr) {
+                console.error('All camera startup attempts failed:', finalErr);
+                if (isSubscribed) {
+                  setCameraActive(false);
+                  if (finalErr?.name === 'NotAllowedError' || finalErr?.message?.includes('Permission') || cameraErr?.name === 'NotAllowedError') {
+                    setCameraStatus('⚠️ Camera permission denied — enable camera in browser settings');
+                  } else if (finalErr?.name === 'NotReadableError' || cameraErr?.name === 'NotReadableError') {
+                    setCameraStatus('⚠️ Camera in use by another app (Zoom/Teams) — close it & retry');
+                  } else {
+                    setCameraStatus('⚠️ Live camera unavailable — use photo upload or manual entry below');
+                  }
+                }
+              }
+            }
+          }
+        }
       } catch (err) {
-        lastErr = err;
-        console.warn('Camera constraint failed, trying next:', constraint, err.message);
+        console.error('Html5Qrcode initialization error:', err);
+        if (isSubscribed) {
+          setCameraActive(false);
+          setCameraStatus('⚠️ Camera initialization error — use photo upload or manual entry');
+        }
       }
-    }
+    };
 
-    if (!stream) {
-      console.error('All camera constraints failed:', lastErr);
-      setCameraActive(false);
-      setCameraStatus('⚠️ Camera permission denied — allow camera access in your browser settings');
-      return;
-    }
+    initScanner();
 
-    streamRef.current = stream;
-    setUsingFrontCamera(forceFront);
+    return () => {
+      isSubscribed = false;
+      stopHtml5Scanner();
+    };
+  }, [usingFrontCamera, result, scanning, cameraStartKey]);
 
-    try {
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute('playsinline', 'true');
-        videoRef.current.setAttribute('muted', 'true');
-        await videoRef.current.play();
-        setCameraActive(true);
-        setCameraStatus(
-          forceFront
-            ? 'Front Camera Active'
-            : 'Rear Camera Active — Point at QR Pass'
-        );
-      }
-    } catch (playErr) {
-      console.warn('Video play failed:', playErr);
-      setCameraActive(false);
-      setCameraStatus('⚠️ Camera started but video failed to play');
-    }
+  const toggleCamera = () => {
+    setUsingFrontCamera((prev) => !prev);
+  };
+
+  const startCamera = () => {
+    setResult(null);
+    setUsingFrontCamera(false);
+    setCameraStartKey((prev) => prev + 1);
   };
 
   const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
+    stopHtml5Scanner();
     setCameraActive(false);
     setCameraStatus('Camera Stopped');
   };
-
-  const toggleCamera = () => {
-    startCamera(!usingFrontCamera);
-  };
-
-  useEffect(() => {
-    startCamera();
-    return () => {
-      stopCamera();
-    };
-  }, []);
-
-  // Ultra-Fast Real-Time Live QR Code Decoding Frame Loop (jsQR Dual-Pass)
-  useEffect(() => {
-    if (!cameraActive || result || scanning) return;
-
-    const scanCanvas = document.createElement('canvas');
-    const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
-
-    const intervalId = setInterval(() => {
-      const video = videoRef.current;
-      if (video && video.videoWidth > 0 && video.videoHeight > 0) {
-        // Multi-resolution pass 1: Downscaled 640px for high speed
-        const scale = Math.min(1, 640 / video.videoWidth);
-        scanCanvas.width = Math.floor(video.videoWidth * scale);
-        scanCanvas.height = Math.floor(video.videoHeight * scale);
-
-        scanCtx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
-
-        let imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-        let code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: "attemptBoth",
-        });
-
-        if (code && code.data && code.data.trim()) {
-          console.log("🟢 Live Camera Decoded QR Code (Pass 1):", code.data.trim());
-          clearInterval(intervalId);
-          handleScanTrigger(code.data.trim());
-          return;
-        }
-
-        // Multi-resolution pass 2: Native Resolution
-        if (video.videoWidth <= 1280) {
-          scanCanvas.width = video.videoWidth;
-          scanCanvas.height = video.videoHeight;
-          scanCtx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
-          imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-          code = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "attemptBoth",
-          });
-
-          if (code && code.data && code.data.trim()) {
-            console.log("🟢 Live Camera Decoded QR Code (Pass 2):", code.data.trim());
-            clearInterval(intervalId);
-            handleScanTrigger(code.data.trim());
-            return;
-          }
-        }
-      }
-    }, 60);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [cameraActive, result, scanning]);
 
   // Snap live camera frame and decode QR
   const handleSnapAndVerify = () => {
     const video = videoRef.current;
     if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+      const jsQRDecode = typeof jsQR === 'function' ? jsQR : (jsQR && jsQR.default);
+      if (typeof jsQRDecode !== 'function') {
+        console.error("jsQR library is not resolved as a function:", jsQR);
+        setCameraStatus("⚠️ Scanner library load error");
+        return;
+      }
       const scanCanvas = document.createElement('canvas');
       scanCanvas.width = video.videoWidth;
       scanCanvas.height = video.videoHeight;
       const scanCtx = scanCanvas.getContext('2d');
       scanCtx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
       const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      const code = jsQRDecode(imageData.data, imageData.width, imageData.height, {
         inversionAttempts: "attemptBoth",
       });
 
@@ -224,13 +255,20 @@ const Scanner = () => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
       img.onload = () => {
+        const jsQRDecode = typeof jsQR === 'function' ? jsQR : (jsQR && jsQR.default);
+        if (typeof jsQRDecode !== 'function') {
+          console.error("jsQR library is not resolved as a function:", jsQR);
+          alert("Scanner library load error");
+          setCameraStatus('Ready to Scan');
+          return;
+        }
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        const code = jsQRDecode(imageData.data, imageData.width, imageData.height, {
           inversionAttempts: "attemptBoth",
         });
 
@@ -582,7 +620,10 @@ const Scanner = () => {
             
             <div className="relative w-full h-64 md:h-72 rounded-2xl overflow-hidden bg-slate-950 flex items-center justify-center">
               
-              {/* Real Mobile Camera Stream Video */}
+              {/* Html5Qrcode Live Scanner Mount Point */}
+              <div id="qr-reader" className="absolute inset-0 w-full h-full z-0" />
+
+              {/* Real Mobile Camera Stream Video Fallback */}
               <video 
                 ref={videoRef} 
                 autoPlay 

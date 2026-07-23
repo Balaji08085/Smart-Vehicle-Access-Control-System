@@ -35,6 +35,10 @@ export const EntryProvider = ({ children }) => {
     return localStorage.getItem('smart_campus_role') || 'guard'; // 'guard' or 'admin'
   });
 
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem('smart_campus_token') || '';
+  });
+
   const [vehicles, setVehicles] = useState(() => {
     try {
       const saved = localStorage.getItem('smart_campus_vehicles');
@@ -114,6 +118,14 @@ export const EntryProvider = ({ children }) => {
   }, [userRole]);
 
   useEffect(() => {
+    if (token) {
+      localStorage.setItem('smart_campus_token', token);
+    } else {
+      localStorage.removeItem('smart_campus_token');
+    }
+  }, [token]);
+
+  useEffect(() => {
     localStorage.setItem('smart_campus_vehicles', JSON.stringify(vehicles));
   }, [vehicles]);
 
@@ -121,27 +133,130 @@ export const EntryProvider = ({ children }) => {
     localStorage.setItem('smart_campus_history', JSON.stringify(history));
   }, [history]);
 
+  // Load database from backend (if token is present)
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchDatabase = async () => {
+      try {
+        const res = await fetch('/api/vehicles', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setVehicles(data.vehicles);
+          setHistory(data.history);
+        } else {
+          console.error('Failed to load database from backend', data.error);
+        }
+      } catch (err) {
+        console.error('Error fetching database', err);
+      }
+    };
+
+    fetchDatabase();
+  }, [token]);
+
   const addNotification = useCallback((message, type = 'info') => {
     setNotifications((prev) => [{ id: Date.now(), message, type, time: new Date().toLocaleTimeString() }, ...prev].slice(0, 10));
   }, []);
 
-  const login = useCallback((role) => {
-    setUserRole(role);
-    addNotification(`Logged in as ${role === 'admin' ? 'System Administrator' : 'Security Staff'}`, 'success');
+  const login = useCallback(async (role, credentials = {}) => {
+    try {
+      let body = { role };
+      if (role === 'guard') {
+        body.guardId = credentials.guardId || 'SEC-GATE-01';
+        body.guardPin = credentials.guardPin || '1234';
+      } else if (role === 'admin') {
+        body.adminEmail = credentials.adminEmail || 'admin@college.edu';
+        body.adminPassword = credentials.adminPassword || 'admin123';
+      } else {
+        body.role = 'student';
+      }
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      setToken(data.token);
+      setUserRole(role);
+      addNotification(`Logged in as ${role === 'admin' ? 'System Administrator' : 'Security Staff'}`, 'success');
+      return true;
+    } catch (err) {
+      console.error(err);
+      addNotification(`Authentication Failed: ${err.message}`, 'error');
+      return false;
+    }
   }, [addNotification]);
 
   const logout = useCallback(() => {
     setUserRole('guard');
+    setToken('');
     addNotification('Logged out successfully', 'info');
   }, [addNotification]);
 
-  // Core Access Verification Method
+  // Core Access Verification Method (Dual Mode: Live API with Offline Fallback)
   const verifyQrCode = useCallback((scannedQuery, gateName = 'Main Entrance Gate') => {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       const rawInput = (scannedQuery || '').trim();
       const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const nowDate = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
 
+      // Attempt live verification via Express Backend if token is present
+      if (token) {
+        try {
+          const res = await fetch('/api/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ scannedQuery, gateName })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            // Append log dynamically on frontend
+            setHistory((prev) => {
+              const newLog = {
+                id: `LOG-${Date.now()}`,
+                date: nowDate,
+                time: nowTime,
+                vehicleNumber: data.vehicleNumber,
+                ownerName: data.ownerName,
+                registerId: data.registerId,
+                department: data.department,
+                vehicleType: data.vehicleType,
+                gate: gateName,
+                status: data.status === 'GRANTED' ? 'Granted' : 'Denied',
+                reason: data.reason
+              };
+              const updated = [newLog, ...prev];
+              localStorage.setItem('smart_campus_history', JSON.stringify(updated));
+              return updated;
+            });
+
+            addNotification(
+              data.status === 'GRANTED'
+                ? `🟢 Access Granted: ${data.ownerName} (${data.vehicleNumber})`
+                : `🔴 Access Denied: ${data.vehicleNumber} — ${data.reason}`,
+              data.status === 'GRANTED' ? 'success' : 'error'
+            );
+
+            resolve(data);
+            return;
+          }
+        } catch (err) {
+          console.warn('Backend verification API offline, running local verification fallback:', err);
+        }
+      }
+
+      // Offline Fallback Verification Logic (Using Local State/LocalStorage)
       if (!rawInput) {
         const deniedPayload = {
           status: 'DENIED',
@@ -158,7 +273,6 @@ export const EntryProvider = ({ children }) => {
           gate: gateName,
         };
 
-        // Record log
         setHistory((prev) => [{
           id: `LOG-${Date.now()}`,
           date: nowDate,
@@ -177,7 +291,6 @@ export const EntryProvider = ({ children }) => {
         return;
       }
 
-      // Search vehicle by QR Code, Vehicle Number, Register ID, or ID
       const targetKey = Object.keys(vehicles).find((key) => {
         const v = vehicles[key];
         const q = rawInput.toLowerCase().replace(/[\s\-]+/g, '');
@@ -227,7 +340,6 @@ export const EntryProvider = ({ children }) => {
         return;
       }
 
-      // Check sticker status & expiry
       const computed = getValidityStatus(matchedVehicle);
 
       if (computed === 'Active') {
@@ -264,7 +376,6 @@ export const EntryProvider = ({ children }) => {
         addNotification(`🟢 Access Granted: ${matchedVehicle.name} (${matchedVehicle.vehicleNumber})`, 'success');
         resolve(grantedResult);
       } else {
-        // Denied case
         let denialReason = 'Sticker Expired';
         if (computed === 'Blacklisted') denialReason = 'Blacklisted Vehicle';
         else if (computed === 'Suspended' || computed === 'Disabled') denialReason = 'Sticker Disabled';
@@ -303,10 +414,10 @@ export const EntryProvider = ({ children }) => {
         resolve(deniedResult);
       }
     });
-  }, [vehicles, addNotification]);
+  }, [vehicles, token, addNotification]);
 
-  // CRUD Operations for Admin Vehicle Management
-  const addVehicle = useCallback((newVehicle) => {
+  // CRUD Operations for Admin Vehicle Management with optimistic updates
+  const addVehicle = useCallback(async (newVehicle) => {
     const formattedId = newVehicle.vehicleNumber ? newVehicle.vehicleNumber.replace(/\s+/g, '-').toUpperCase() : `VEH-${Date.now()}`;
     const vehicleRecord = {
       id: formattedId,
@@ -324,31 +435,77 @@ export const EntryProvider = ({ children }) => {
       return updated;
     });
 
-    addNotification(`Vehicle ${vehicleRecord.vehicleNumber} registered successfully!`, 'success');
-  }, [addNotification]);
+    try {
+      if (token) {
+        const res = await fetch('/api/vehicles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(newVehicle)
+        });
+        if (!res.ok) console.error('Failed to sync new vehicle with backend');
+      }
+    } catch (err) {
+      console.warn('Backend offline, registered vehicle in offline mode:', err);
+    }
 
-  const updateVehicle = useCallback((id, updatedData) => {
+    addNotification(`Vehicle ${vehicleRecord.vehicleNumber} registered successfully!`, 'success');
+  }, [token, addNotification]);
+
+  const updateVehicle = useCallback(async (id, updatedData) => {
     setVehicles((prev) => {
       if (!prev[id]) return prev;
       const updated = { ...prev, [id]: { ...prev[id], ...updatedData } };
       localStorage.setItem('smart_campus_vehicles', JSON.stringify(updated));
       return updated;
     });
-    addNotification(`Vehicle details updated!`, 'info');
-  }, [addNotification]);
 
-  const deleteVehicle = useCallback((id) => {
+    try {
+      if (token) {
+        const res = await fetch(`/api/vehicles/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updatedData)
+        });
+        if (!res.ok) console.error('Failed to sync vehicle update with backend');
+      }
+    } catch (err) {
+      console.warn('Backend offline, updated vehicle in offline mode:', err);
+    }
+    addNotification(`Vehicle details updated!`, 'info');
+  }, [token, addNotification]);
+
+  const deleteVehicle = useCallback(async (id) => {
     setVehicles((prev) => {
       const copy = { ...prev };
-      const vNum = copy[id]?.vehicleNumber || id;
       delete copy[id];
       localStorage.setItem('smart_campus_vehicles', JSON.stringify(copy));
       return copy;
     });
-    addNotification(`Vehicle removed from system`, 'warning');
-  }, [addNotification]);
 
-  const renewSticker = useCallback((id, years = 1) => {
+    try {
+      if (token) {
+        const res = await fetch(`/api/vehicles/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!res.ok) console.error('Failed to sync vehicle deletion with backend');
+      }
+    } catch (err) {
+      console.warn('Backend offline, deleted vehicle in offline mode:', err);
+    }
+    addNotification(`Vehicle removed from system`, 'warning');
+  }, [token, addNotification]);
+
+  const renewSticker = useCallback(async (id, years = 1) => {
+    let updatedFields = {};
     setVehicles((prev) => {
       if (!prev[id]) return prev;
       const item = prev[id];
@@ -357,44 +514,92 @@ export const EntryProvider = ({ children }) => {
       base.setFullYear(base.getFullYear() + years);
       const newExp = base.toISOString().split('T')[0];
 
+      updatedFields = { expiryDate: newExp, status: 'Active' };
+
       const updated = {
         ...prev,
         [id]: {
           ...item,
-          expiryDate: newExp,
-          status: 'Active'
+          ...updatedFields
         }
       };
       localStorage.setItem('smart_campus_vehicles', JSON.stringify(updated));
       return updated;
     });
-    addNotification(`Sticker renewed for 1 Year!`, 'success');
-  }, [addNotification]);
 
-  const disableSticker = useCallback((id, newStatus = 'Blacklisted') => {
+    try {
+      if (token) {
+        const res = await fetch(`/api/vehicles/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updatedFields)
+        });
+        if (!res.ok) console.error('Failed to sync sticker renewal with backend');
+      }
+    } catch (err) {
+      console.warn('Backend offline, renewed sticker in offline mode:', err);
+    }
+    addNotification(`Sticker renewed for 1 Year!`, 'success');
+  }, [token, addNotification]);
+
+  const disableSticker = useCallback(async (id, newStatus = 'Blacklisted') => {
+    const updatedFields = { status: newStatus };
     setVehicles((prev) => {
       if (!prev[id]) return prev;
       const updated = {
         ...prev,
-        [id]: { ...prev[id], status: newStatus }
+        [id]: { ...prev[id], ...updatedFields }
       };
       localStorage.setItem('smart_campus_vehicles', JSON.stringify(updated));
       return updated;
     });
-    addNotification(`Sticker status set to ${newStatus}`, 'error');
-  }, [addNotification]);
 
-  const resetAllData = useCallback(() => {
+    try {
+      if (token) {
+        const res = await fetch(`/api/vehicles/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updatedFields)
+        });
+        if (!res.ok) console.error('Failed to sync sticker status with backend');
+      }
+    } catch (err) {
+      console.warn('Backend offline, disabled sticker in offline mode:', err);
+    }
+    addNotification(`Sticker status set to ${newStatus}`, 'error');
+  }, [token, addNotification]);
+
+  const resetAllData = useCallback(async () => {
     localStorage.removeItem('smart_campus_vehicles');
     localStorage.removeItem('smart_campus_history');
+    localStorage.removeItem('smart_campus_token');
     setVehicles({ ...INITIAL_MOCK_USERS });
     setHistory([]);
+    setToken('');
+
+    try {
+      if (token) {
+        await fetch('/api/reset', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (err) {
+      console.warn('Backend offline, database reset locally only:', err);
+    }
     addNotification('Database reset to defaults', 'info');
-  }, [addNotification]);
+  }, [token, addNotification]);
 
   return (
     <EntryContext.Provider value={{
       userRole,
+      token,
       login,
       logout,
       vehicles,
@@ -419,6 +624,7 @@ export const useEntry = () => {
   if (!ctx) {
     return {
       userRole: 'guard',
+      token: '',
       login: () => {},
       logout: () => {},
       vehicles: {},

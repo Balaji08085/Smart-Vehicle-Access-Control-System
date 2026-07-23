@@ -1,0 +1,209 @@
+{
+  "vehicles": {
+    "TN-38-TEST-007": {
+      "id": "TN-38-TEST-007",
+      "qrCode": "TN-38-TEST-007",
+      "status": "Active",
+      "issueDate": "2026-07-23",
+      "createdAt": 1784791627359,
+      "photo": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&q=80",
+      "vehicleNumber": "TN-38-TEST-007",
+      "name": "Backend Test User",
+      "registerId": "TEST007",
+      "department": "Information Technology",
+      "vehicleType": "Bike (Motorcycle)",
+      "expiryDate": "2027-12-31",
+      "type": "Staff"
+    },
+    "TN-38-AB-1234": {
+      "id": "TN-38-AB-1234",
+      "qrCode": "TN-38-AB-1234",
+      "type": "Student",
+      "name": "Balaji S",
+      "registerId": "23BCS045",
+      "department": "Computer Science & Engineering",
+      "vehicleNumber": "TN 38 AB 1234",
+      "vehicleType": "Bike (Two-Wheeler)",
+      "brand": "Royal Enfield Hunter 350",
+      "status": "Active",
+      "issueDate": "2024-01-10",
+      "expiryDate": "2027-12-31",
+      "mobile": "+91 98765 43210",
+      "email": "balaji.s@college.edu",
+      "photo": "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&q=80",
+      "vehicleDetails": {
+        "number": "TN 38 AB 1234",
+        "type": "Bike",
+        "brand": "Royal Enfield"
+      }
+    },
+    "TN-38-XY-9999": {
+      "id": "TN-38-XY-9999",
+      "qrCode": "TN-38-XY-9999",
+      "type": "Faculty",
+      "name": "Dr. Ramesh Kumar",
+      "registerId": "EMP9023",
+      "department": "Mechanical Engineering",
+      "vehicleNumber": "TN 38 XY 9999",
+      "vehicleType": "Car (Four-Wheeler)",
+      "brand": "Honda City i-VTEC",
+      "status": "Active",
+      "issueDate": "2021-06-15",
+      "expiryDate": "2030-06-15",
+      "mobile": "+91 98765 11111",
+      "email": "ramesh.k@college.edu",
+      "photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
+      "vehicleDetails": {
+        "number": "TN 38 XY 9999",
+        "type": "Car",
+        "brand": "Honda City"
+      }
+    },
+    "TN-38-CC-5555": {
+      "id": "TN-38-CC-5555",
+      "qrCode": "TN-38-CC-5555",
+      "type": "Staff",
+      "name": "Suresh Menon",
+      "registerId": "ADM405",
+      "department": "Administration & Finance",
+      "vehicleNumber": "TN 38 CC 5555",
+      "vehicleType": "Bike (Two-Wheeler)",
+      "brand": "TVS Jupiter 125",
+      "status": "Active",
+      "issueDate": "2019-01-10",
+      "expiryDate": "2026-12-31",
+      "mobile": "+91 98765 22222",
+      "email": "suresh.m@college.edu",
+      "photo": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80",
+      "vehicleDetails": {
+        "number": "TN 38 CC 5555",
+        "type": "Bike",
+        "brand": "TVS Jupiter"
+      }
+    },
+    "TN-38-EXP-2025": {
+      "id": "TN-38-EXP-2025",
+      "qrCode": "TN-38-EXP-2025",
+      "type": "Student",
+      "name": "Vikram T",
+      "registerId": "21BME102",
+      "department": "Mechanical Engineering",
+      "vehicleNumber": "TN 38 EXP 2025",
+      "vehicleType": "Bike (Two-Wheeler)",
+      "brand": "Yamaha FZ-S",
+      "status": "Expired",
+      "issueDate": "2021-08-01",
+      "expiryDate": "2025-01-01",
+      "mobile": "+91 98765 33333",
+      "email": "vikram.t@college.edu",
+      "photo": "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&q=80",
+      "vehicleDetails": {
+        "number": "TN 38 EXP 2025",
+        "type": "Bike",
+        "brand": "Yamaha FZ"
+      }
+    },
+    "TN-38-ZZZ-999": {
+      "id": "TN-38-ZZZ-999",
+      "qrCode": "TN-38-ZZZ-999",
+      "type": "Visitor",
+      "name": "Rohan Malhotra",
+      "registerId": "VIS8902",
+      "department": "Outsourcing Partner",
+      "vehicleNumber": "TN 38 ZZZ 999",
+      "vehicleType": "Bike (Two-Wheeler)",
+      "brand": "Hero Splendor Plus",
+      "status": "Blacklisted",
+      "issueDate": "2026-06-01",
+      "expiryDate": "2026-06-02",
+      "mobile": "+91 98765 44444",
+      "email": "rohan.m@gmail.com",
+      "photo": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80",
+      "vehicleDetails": {
+        "number": "TN 38 ZZZ 999",
+        "type": "Bike",
+        "brand": "Hero Splendor"
+      }
+    }
+  },
+  "history": [
+    {
+      "id": "LOG-1784792373755",
+      "date": "Jul 23, 2026",
+      "time": "01:09:33 pm",
+      "vehicleNumber": "ABC-999",
+      "ownerName": "Unregistered Vehicle",
+      "registerId": "N/A",
+      "department": "N/A",
+      "vehicleType": "Unknown",
+      "gate": "Main Gate",
+      "status": "Denied",
+      "reason": "QR Code Not Registered"
+    },
+    {
+      "id": "LOG-1784792373744",
+      "date": "Jul 23, 2026",
+      "time": "01:09:33 pm",
+      "vehicleNumber": "TN 38 ZZZ 999",
+      "ownerName": "Rohan Malhotra",
+      "registerId": "VIS8902",
+      "department": "Outsourcing Partner",
+      "vehicleType": "Bike (Two-Wheeler)",
+      "gate": "Main Gate",
+      "status": "Denied",
+      "reason": "Blacklisted Vehicle"
+    },
+    {
+      "id": "LOG-1784792373732",
+      "date": "Jul 23, 2026",
+      "time": "01:09:33 pm",
+      "vehicleNumber": "TN 38 AB 1234",
+      "ownerName": "Balaji S",
+      "registerId": "23BCS045",
+      "department": "Computer Science & Engineering",
+      "vehicleType": "Bike (Two-Wheeler)",
+      "gate": "Main Gate",
+      "status": "Granted",
+      "reason": ""
+    },
+    {
+      "id": "LOG-101",
+      "date": "23/7/2026",
+      "time": "09:12 AM",
+      "vehicleNumber": "TN 38 AB 1234",
+      "ownerName": "Balaji S",
+      "registerId": "23BCS045",
+      "department": "Computer Science & Engineering",
+      "vehicleType": "Bike (Two-Wheeler)",
+      "gate": "Main Entrance Gate",
+      "status": "Granted",
+      "reason": ""
+    },
+    {
+      "id": "LOG-102",
+      "date": "23/7/2026",
+      "time": "08:30 AM",
+      "vehicleNumber": "TN 38 XY 9999",
+      "ownerName": "Dr. Ramesh Kumar",
+      "registerId": "EMP9023",
+      "department": "Mechanical Engineering",
+      "vehicleType": "Car (Four-Wheeler)",
+      "gate": "Main Entrance Gate",
+      "status": "Granted",
+      "reason": ""
+    },
+    {
+      "id": "LOG-103",
+      "date": "23/7/2026",
+      "time": "08:15 AM",
+      "vehicleNumber": "TN 38 ZZZ 999",
+      "ownerName": "Rohan Malhotra",
+      "registerId": "VIS8902",
+      "department": "Outsourcing Partner",
+      "vehicleType": "Bike (Two-Wheeler)",
+      "gate": "Main Entrance Gate",
+      "status": "Denied",
+      "reason": "Blacklisted Vehicle"
+    }
+  ]
+}
