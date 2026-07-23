@@ -1,274 +1,232 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Scan, CheckCircle2, XCircle, Camera, Zap, AlertTriangle, RefreshCw,
-  Upload, Check, X, FlipHorizontal
+  Upload, Check, X, FlipHorizontal, ImagePlus, QrCode
 } from 'lucide-react';
 import jsQR from 'jsqr';
 import { useEntry } from '../context/EntryContext';
 
-// Detect mobile device
+/* ───────────────────────────────────────────────────────────────
+   Helpers
+   ─────────────────────────────────────────────────────────────── */
 const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-// getUserMedia with a timeout so it never hangs forever
-const getUserMediaWithTimeout = (constraints, timeoutMs = 8000) => {
-  return Promise.race([
+const getMedia = (constraints, ms = 5000) =>
+  Promise.race([
     navigator.mediaDevices.getUserMedia(constraints),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Camera request timed out')), timeoutMs)
-    ),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
   ]);
-};
 
+/* ───────────────────────────────────────────────────────────────
+   Scanner Component
+   ─────────────────────────────────────────────────────────────── */
 const Scanner = () => {
   const { verifyQrCode } = useEntry();
 
+  /* UI state */
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState(null);
   const [manualInput, setManualInput] = useState('');
   const [selectedGate, setSelectedGate] = useState('Main Entrance Gate');
+  const [mode, setMode] = useState('upload'); // 'upload' | 'camera'
+  const [uploadPreview, setUploadPreview] = useState(null);
+  const [uploadError, setUploadError] = useState('');
 
-  // Camera state
+  /* Camera state */
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
-  const fileInputRef = useRef(null);
   const scanLoopRef = useRef(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState('');
-  const [cameraLoading, setCameraLoading] = useState(false);
-  const [usingFront, setUsingFront] = useState(false); // false = rear/default, true = front
+  const [camReady, setCamReady] = useState(false);
+  const [camErr, setCamErr] = useState('');
+  const [camLoading, setCamLoading] = useState(false);
+  const [front, setFront] = useState(false);
 
-  // Keep a ref to the latest handleScanTrigger for use in scan loop
-  const handleScanTriggerRef = useRef(null);
+  const triggerRef = useRef(null);
 
-  // --- Stop Camera ---
-  const stopCamera = useCallback(() => {
-    if (scanLoopRef.current) {
-      cancelAnimationFrame(scanLoopRef.current);
-      scanLoopRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setCameraActive(false);
+  /* ──── SCAN TRIGGER ──────────────────────────────────────────── */
+  useEffect(() => {
+    triggerRef.current = async (query) => {
+      if (scanning) return;
+      setScanning(true);
+      stopCam();
+      await new Promise(r => setTimeout(r, 200));
+      const res = await verifyQrCode(query, selectedGate);
+      setResult(res);
+      setScanning(false);
+    };
+  }, [scanning, selectedGate, verifyQrCode]);
+
+  /* ──── CAMERA: stop ──────────────────────────────────────────── */
+  const stopCam = useCallback(() => {
+    if (scanLoopRef.current) { cancelAnimationFrame(scanLoopRef.current); scanLoopRef.current = null; }
+    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCamReady(false);
   }, []);
 
-  // --- QR Scan Loop (uses ref to avoid stale closure) ---
-  const startScanLoop = useCallback(() => {
+  /* ──── CAMERA: scan loop ─────────────────────────────────────── */
+  const runLoop = useCallback(() => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
     if (!canvas || !video) return;
-
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
     const tick = () => {
       if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) return;
-      if (videoRef.current.readyState < 2) {
-        scanLoopRef.current = requestAnimationFrame(tick);
-        return;
-      }
+      if (videoRef.current.readyState < 2) { scanLoopRef.current = requestAnimationFrame(tick); return; }
 
       canvas.width = videoRef.current.videoWidth || 640;
       canvas.height = videoRef.current.videoHeight || 480;
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: 'attemptBoth',
-      });
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
 
-      if (code && code.data && code.data.trim() && handleScanTriggerRef.current) {
-        // QR found — stop loop and trigger
-        if (scanLoopRef.current) cancelAnimationFrame(scanLoopRef.current);
+      if (code?.data?.trim() && triggerRef.current) {
+        cancelAnimationFrame(scanLoopRef.current);
         scanLoopRef.current = null;
-        handleScanTriggerRef.current(code.data.trim());
+        triggerRef.current(code.data.trim());
         return;
       }
-
       scanLoopRef.current = requestAnimationFrame(tick);
     };
-
     scanLoopRef.current = requestAnimationFrame(tick);
   }, []);
 
-  // --- Attach stream to video element and start playing ---
-  const attachAndPlay = useCallback((stream) => {
+  /* ──── CAMERA: start ─────────────────────────────────────────── */
+  const startCam = useCallback(async (useFront = false) => {
+    stopCam();
+    setCamLoading(true);
+    setCamErr('');
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCamLoading(false);
+      setCamErr('Camera API unavailable. Use HTTPS or localhost.');
+      return;
+    }
+
+    const constraints = [];
+    if (isMobile()) {
+      const fm = useFront ? 'user' : 'environment';
+      constraints.push({ video: { facingMode: fm, width: { ideal: 1280 }, height: { ideal: 720 } } });
+      constraints.push({ video: { facingMode: fm } });
+    }
+    constraints.push({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
+    constraints.push({ video: true });
+
+    let stream = null, lastErr = null;
+    for (const c of constraints) {
+      try {
+        stream = await getMedia(c, 5000);
+        break;
+      } catch (e) { lastErr = e; }
+    }
+
+    if (!stream) {
+      setCamLoading(false);
+      if (lastErr?.name === 'NotAllowedError') setCamErr('Camera permission denied. Allow camera in browser settings.');
+      else if (lastErr?.name === 'NotFoundError') setCamErr('No camera found. Use Upload QR instead.');
+      else setCamErr('Camera unavailable. Use Upload QR to scan.');
+      return;
+    }
+
+    streamRef.current = stream;
     const video = videoRef.current;
-    if (!video) return;
+    if (!video) { stream.getTracks().forEach(t => t.stop()); setCamLoading(false); return; }
 
     video.srcObject = stream;
     video.muted = true;
     video.playsInline = true;
 
-    const onReady = () => {
-      video.play()
-        .then(() => {
-          setCameraLoading(false);
-          setCameraActive(true);
-          startScanLoop();
-        })
-        .catch((err) => {
-          console.error('Video play failed:', err);
-          setCameraLoading(false);
-          setCameraError('Camera started but video playback failed. Try clicking "Retry".');
-        });
-    };
+    const play = () => video.play().then(() => {
+      setCamLoading(false);
+      setCamReady(true);
+      runLoop();
+    }).catch(() => {
+      setCamLoading(false);
+      setCamErr('Video play blocked. Tap the screen to retry.');
+    });
 
-    if (video.readyState >= 1) {
-      onReady();
-    } else {
-      video.addEventListener('loadedmetadata', onReady, { once: true });
-      // Safety timeout: if loadedmetadata never fires, force play
-      setTimeout(() => {
-        if (!cameraActive) {
-          video.play().then(() => {
-            setCameraLoading(false);
-            setCameraActive(true);
-            startScanLoop();
-          }).catch(() => {});
-        }
-      }, 3000);
+    if (video.readyState >= 1) play();
+    else {
+      video.addEventListener('loadedmetadata', play, { once: true });
+      setTimeout(() => { if (!camReady) play(); }, 3000);
     }
-  }, [startScanLoop, cameraActive]);
+  }, [stopCam, runLoop, camReady]);
 
-  // --- Start Camera ---
-  const startCamera = useCallback(async (front = false) => {
-    stopCamera();
-    setCameraLoading(true);
-    setCameraError('');
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraLoading(false);
-      setCameraError('Camera API not available. Please use HTTPS or localhost.');
-      return;
-    }
-
-    const mobile = isMobile();
-
-    // Build constraint list — from most specific to most permissive
-    const constraintList = [];
-
-    if (mobile) {
-      // On mobile: try facingMode first
-      const facingMode = front ? 'user' : 'environment';
-      constraintList.push({ video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } });
-      constraintList.push({ video: { facingMode } });
-    }
-    // Always add a plain video:true fallback (works on all laptops/desktops)
-    constraintList.push({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
-    constraintList.push({ video: true });
-
-    let stream = null;
-    let lastError = null;
-
-    for (const constraints of constraintList) {
-      try {
-        console.log('Trying camera constraints:', JSON.stringify(constraints));
-        stream = await getUserMediaWithTimeout(constraints, 6000);
-        console.log('✅ Camera started with constraints:', JSON.stringify(constraints));
-        break;
-      } catch (err) {
-        lastError = err;
-        console.warn(`Camera attempt failed (${err.name}): ${err.message}`);
-      }
-    }
-
-    if (!stream) {
-      setCameraLoading(false);
-      if (lastError?.name === 'NotAllowedError' || lastError?.name === 'PermissionDeniedError') {
-        setCameraError('Camera permission denied. Please click the camera icon in your browser address bar and allow access, then click Retry.');
-      } else if (lastError?.name === 'NotFoundError' || lastError?.name === 'DevicesNotFoundError') {
-        setCameraError('No camera found on this device. Use "Upload QR" to scan from an image.');
-      } else {
-        setCameraError(`Camera unavailable: ${lastError?.message || 'Unknown error'}. Try clicking Retry.`);
-      }
-      return;
-    }
-
-    streamRef.current = stream;
-    attachAndPlay(stream);
-  }, [stopCamera, attachAndPlay]);
-
-  // Keep handleScanTriggerRef up to date
+  /* ──── MODE SWITCH ───────────────────────────────────────────── */
   useEffect(() => {
-    handleScanTriggerRef.current = async (query) => {
-      if (scanning) return;
-      setScanning(true);
-      stopCamera();
-      await new Promise(r => setTimeout(r, 300));
-      const res = await verifyQrCode(query, selectedGate);
-      setResult(res);
-      setScanning(false);
-    };
-  }, [scanning, stopCamera, verifyQrCode, selectedGate]);
+    if (mode === 'camera' && !result) startCam(front);
+    else stopCam();
+    return () => stopCam();
+  }, [mode]); // eslint-disable-line
 
-  // Auto-start camera on mount
   useEffect(() => {
-    startCamera(usingFront);
-    return () => stopCamera();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (result === null && !scanning && mode === 'camera') startCam(front);
+  }, [result]); // eslint-disable-line
 
-  // Restart camera when result is cleared
-  useEffect(() => {
-    if (result === null && !scanning) {
-      startCamera(usingFront);
-    }
-  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
+  const switchCam = () => { const f = !front; setFront(f); startCam(f); };
 
-  // --- Switch Camera (front/rear) ---
-  const switchCamera = useCallback(() => {
-    const newFront = !usingFront;
-    setUsingFront(newFront);
-    startCamera(newFront);
-  }, [usingFront, startCamera]);
-
-  // --- File Upload Decode ---
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
+  /* ──── FILE UPLOAD (PRIMARY METHOD) ──────────────────────────── */
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
+    setUploadError('');
+    setUploadPreview(null);
+
+    const url = URL.createObjectURL(file);
+    setUploadPreview(url);
 
     const img = new Image();
-    const url = URL.createObjectURL(file);
     img.src = url;
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: 'attemptBoth',
-      });
-      URL.revokeObjectURL(url);
-      if (code && code.data && code.data.trim()) {
-        if (handleScanTriggerRef.current) handleScanTriggerRef.current(code.data.trim());
+
+      // Try multiple sizes for better detection
+      const tryDecode = (w, h) => {
+        const sc = document.createElement('canvas');
+        sc.width = w; sc.height = h;
+        const sctx = sc.getContext('2d');
+        sctx.drawImage(img, 0, 0, w, h);
+        const data = sctx.getImageData(0, 0, w, h);
+        return jsQR(data.data, data.width, data.height, { inversionAttempts: 'attemptBoth' });
+      };
+
+      // Try original size first, then scaled versions
+      let code = tryDecode(img.width, img.height);
+      if (!code && (img.width > 800 || img.height > 800)) {
+        code = tryDecode(800, Math.round(800 * img.height / img.width));
+      }
+      if (!code) {
+        code = tryDecode(400, Math.round(400 * img.height / img.width));
+      }
+
+      if (code?.data?.trim()) {
+        if (triggerRef.current) triggerRef.current(code.data.trim());
       } else {
-        alert('No QR code detected in this image. Please use a clear, well-lit photo of the QR pass.');
+        setUploadError('No QR code detected. Make sure the image is clear and well-lit.');
       }
     };
+    img.onerror = () => setUploadError('Failed to load image.');
     e.target.value = '';
   };
 
-  // --- Manual Submit ---
-  const handleManualSubmit = (e) => {
+  /* ──── MANUAL ────────────────────────────────────────────────── */
+  const handleManual = (e) => {
     e.preventDefault();
-    if (!manualInput.trim() || !handleScanTriggerRef.current) return;
-    handleScanTriggerRef.current(manualInput.trim());
+    if (!manualInput.trim() || !triggerRef.current) return;
+    triggerRef.current(manualInput.trim());
   };
 
-  // --- Reset ---
-  const resetScanner = () => {
-    setResult(null);
-    setManualInput('');
-  };
+  /* ──── RESET ─────────────────────────────────────────────────── */
+  const reset = () => { setResult(null); setManualInput(''); setUploadPreview(null); setUploadError(''); };
 
-  const sampleVehicles = [
+  const samples = [
     { label: 'Valid Student Bike', code: 'TN-38-AB-1234', color: 'emerald' },
     { label: 'Valid Faculty Car', code: 'TN-38-XY-9999', color: 'emerald' },
     { label: 'Expired Sticker', code: 'TN-38-EXP-2025', color: 'amber' },
@@ -276,29 +234,24 @@ const Scanner = () => {
     { label: 'Unregistered Vehicle', code: 'TN-99-UNKNOWN', color: 'slate' },
   ];
 
-  // ─── ACCESS GRANTED SCREEN ─────────────────────────────────────────────────
-  if (result && result.status === 'GRANTED') {
+  /* ═══════════════════════════════════════════════════════════════
+     RESULT: ACCESS GRANTED
+     ═══════════════════════════════════════════════════════════════ */
+  if (result?.status === 'GRANTED') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="fixed inset-0 z-50 bg-[#062013] flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto"
-      >
+      <motion.div initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }}
+        className="fixed inset-0 z-50 bg-[#062013] flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
         <div className="absolute inset-0 bg-radial from-emerald-600/40 via-transparent to-transparent animate-pulse pointer-events-none" />
         <div className="max-w-xl w-full relative z-10 flex flex-col items-center text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 14 }}
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#16A34A] flex items-center justify-center border-4 border-emerald-300 shadow-[0_0_90px_rgba(22,163,74,0.9)] mb-6"
-          >
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 14 }}
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#16A34A] flex items-center justify-center border-4 border-emerald-300 shadow-[0_0_90px_rgba(22,163,74,0.9)] mb-6">
             <Check className="w-20 h-20 md:w-24 md:h-24 text-white stroke-[4]" />
           </motion.div>
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-widest uppercase mb-2">ACCESS GRANTED</h1>
-          <p className="text-emerald-300 font-extrabold text-sm md:text-base tracking-widest uppercase mb-6 bg-emerald-950/90 px-6 py-2 rounded-full border-2 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+          <p className="text-emerald-300 font-extrabold text-sm tracking-widest uppercase mb-6 bg-emerald-950/90 px-6 py-2 rounded-full border-2 border-emerald-400">
             ✓ VEHICLE ALLOWED TO ENTER CAMPUS
           </p>
-          <div className="w-full bg-slate-900/90 p-6 md:p-8 rounded-3xl border-2 border-[#16A34A] shadow-[0_0_60px_rgba(22,163,74,0.5)] text-left space-y-4 mb-8">
+          <div className="w-full bg-slate-900/90 p-6 rounded-3xl border-2 border-[#16A34A] shadow-[0_0_60px_rgba(22,163,74,0.5)] text-left space-y-4 mb-8">
             <div className="flex items-center justify-between border-b border-emerald-500/30 pb-4">
               <div>
                 <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider block">Vehicle Plate Number</span>
@@ -309,22 +262,13 @@ const Scanner = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              {[
-                ['Owner Name', result.ownerName, 'text-white'],
-                ['Student / Staff ID', result.registerId, 'text-emerald-300 font-mono'],
-                ['Department', result.department, 'text-slate-200'],
-                ['Vehicle Type', result.vehicleType, 'text-slate-200'],
-                ['Sticker Expiry', result.expiryDate, 'text-emerald-400'],
-                ['Gate Entry Time', `${result.gateEntryTime} (${result.gate})`, 'text-white font-mono'],
-              ].map(([label, val, cls]) => (
-                <div key={label}>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{label}</span>
-                  <span className={`text-sm font-bold block ${cls}`}>{val}</span>
-                </div>
-              ))}
+              {[['Owner Name', result.ownerName, 'text-white'], ['Student / Staff ID', result.registerId, 'text-emerald-300 font-mono'],
+                ['Department', result.department, 'text-slate-200'], ['Vehicle Type', result.vehicleType, 'text-slate-200'],
+                ['Sticker Expiry', result.expiryDate, 'text-emerald-400'], ['Gate Entry Time', `${result.gateEntryTime} (${result.gate})`, 'text-white font-mono'],
+              ].map(([l, v, c]) => <div key={l}><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{l}</span><span className={`text-sm font-bold block ${c}`}>{v}</span></div>)}
             </div>
           </div>
-          <button onClick={resetScanner} className="w-full py-4 bg-[#16A34A] hover:bg-emerald-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-[0_0_35px_rgba(22,163,74,0.6)] transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
+          <button onClick={reset} className="w-full py-4 bg-[#16A34A] hover:bg-emerald-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-[0_0_35px_rgba(22,163,74,0.6)] transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
             <Scan className="w-5 h-5" /> Scan Next Vehicle
           </button>
         </div>
@@ -332,29 +276,24 @@ const Scanner = () => {
     );
   }
 
-  // ─── ACCESS DENIED SCREEN ──────────────────────────────────────────────────
-  if (result && result.status === 'DENIED') {
+  /* ═══════════════════════════════════════════════════════════════
+     RESULT: ACCESS DENIED
+     ═══════════════════════════════════════════════════════════════ */
+  if (result?.status === 'DENIED') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="fixed inset-0 z-50 bg-[#200606] flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto"
-      >
+      <motion.div initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }}
+        className="fixed inset-0 z-50 bg-[#200606] flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
         <div className="absolute inset-0 bg-radial from-red-600/40 via-transparent to-transparent animate-pulse pointer-events-none" />
         <div className="max-w-xl w-full relative z-10 flex flex-col items-center text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 14 }}
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#DC2626] flex items-center justify-center border-4 border-red-300 shadow-[0_0_90px_rgba(220,38,38,0.9)] mb-6"
-          >
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 14 }}
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#DC2626] flex items-center justify-center border-4 border-red-300 shadow-[0_0_90px_rgba(220,38,38,0.9)] mb-6">
             <X className="w-20 h-20 md:w-24 md:h-24 text-white stroke-[4]" />
           </motion.div>
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-widest uppercase mb-2">ACCESS DENIED</h1>
-          <p className="text-red-300 font-extrabold text-sm md:text-base tracking-widest uppercase mb-6 bg-red-950/90 px-6 py-2 rounded-full border-2 border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]">
+          <p className="text-red-300 font-extrabold text-sm tracking-widest uppercase mb-6 bg-red-950/90 px-6 py-2 rounded-full border-2 border-red-400">
             ✕ VEHICLE NOT ALLOWED (STOP ENTRY)
           </p>
-          <div className="w-full bg-slate-900/90 p-6 md:p-8 rounded-3xl border-2 border-[#DC2626] shadow-[0_0_60px_rgba(220,38,38,0.6)] text-left space-y-4 mb-8">
+          <div className="w-full bg-slate-900/90 p-6 rounded-3xl border-2 border-[#DC2626] shadow-[0_0_60px_rgba(220,38,38,0.6)] text-left space-y-4 mb-8">
             <div className="flex items-center justify-between border-b border-red-500/30 pb-4">
               <div>
                 <span className="text-[10px] font-black uppercase text-red-400 tracking-wider block">Vehicle Plate Number</span>
@@ -365,28 +304,18 @@ const Scanner = () => {
               </div>
             </div>
             <div className="p-4 bg-red-950/50 border border-red-500/50 rounded-2xl space-y-2">
-              <span className="text-xs font-black text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4" /> Denial Reason:
-              </span>
+              <span className="text-xs font-black text-red-400 uppercase tracking-wider flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> Denial Reason:</span>
               <p className="text-lg font-black text-white pl-2">• {result.reason}</p>
             </div>
             {result.vehicle && (
               <div className="grid grid-cols-2 gap-4 pt-2">
-                {[
-                  ['Owner Name', result.ownerName, 'text-white'],
-                  ['Student / Staff ID', result.registerId, 'text-slate-300 font-mono'],
-                  ['Sticker Expiry', result.expiryDate, 'text-red-400'],
-                  ['Attempt Time', result.gateEntryTime, 'text-white font-mono'],
-                ].map(([label, val, cls]) => (
-                  <div key={label}>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{label}</span>
-                    <span className={`text-sm font-bold block ${cls}`}>{val}</span>
-                  </div>
-                ))}
+                {[['Owner Name', result.ownerName, 'text-white'], ['Student / Staff ID', result.registerId, 'text-slate-300 font-mono'],
+                  ['Sticker Expiry', result.expiryDate, 'text-red-400'], ['Attempt Time', result.gateEntryTime, 'text-white font-mono'],
+                ].map(([l, v, c]) => <div key={l}><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{l}</span><span className={`text-sm font-bold block ${c}`}>{v}</span></div>)}
               </div>
             )}
           </div>
-          <button onClick={resetScanner} className="w-full py-4 bg-[#DC2626] hover:bg-red-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-[0_0_35px_rgba(220,38,38,0.6)] transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
+          <button onClick={reset} className="w-full py-4 bg-[#DC2626] hover:bg-red-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-[0_0_35px_rgba(220,38,38,0.6)] transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
             <RefreshCw className="w-5 h-5" /> Scan Again
           </button>
         </div>
@@ -394,15 +323,16 @@ const Scanner = () => {
     );
   }
 
-  // ─── MAIN SCANNER VIEW ─────────────────────────────────────────────────────
+  /* ═══════════════════════════════════════════════════════════════
+     MAIN SCANNER VIEW
+     ═══════════════════════════════════════════════════════════════ */
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 bg-[#080C16] flex flex-col items-center justify-center">
-      {/* Hidden canvas for QR decode */}
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="max-w-xl w-full space-y-6">
+      <div className="max-w-xl w-full space-y-5">
 
-        {/* Header */}
+        {/* ─── Header ──────────────────────────────────────────── */}
         <div className="glass-card p-5 rounded-3xl border border-white/10 bg-slate-900/80 backdrop-blur-xl flex items-center justify-between">
           <div>
             <h2 className="text-lg font-black text-white flex items-center gap-2">
@@ -410,11 +340,8 @@ const Scanner = () => {
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">Gate Security Verification</p>
           </div>
-          <select
-            value={selectedGate}
-            onChange={(e) => setSelectedGate(e.target.value)}
-            className="bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-amber-400 font-bold focus:outline-none"
-          >
+          <select value={selectedGate} onChange={e => setSelectedGate(e.target.value)}
+            className="bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-amber-400 font-bold focus:outline-none">
             <option value="Main Entrance Gate">Main Gate</option>
             <option value="North Gate">North Gate</option>
             <option value="South Gate">South Gate</option>
@@ -422,95 +349,140 @@ const Scanner = () => {
           </select>
         </div>
 
-        {/* Camera Viewport */}
-        <div className="glass-card rounded-3xl border border-white/10 bg-slate-950 overflow-hidden shadow-2xl">
-          <div className="relative w-full bg-slate-950" style={{ aspectRatio: '4/3', maxHeight: '340px' }}>
-
-            {/* Live Video — always in DOM so ref is always set */}
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${cameraActive ? 'opacity-100' : 'opacity-0'}`}
-              style={{ transform: usingFront ? 'scaleX(-1)' : 'none' }}
-            />
-
-            {/* Loading / Error / Idle overlay */}
-            {!cameraActive && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 gap-4 p-4">
-                {cameraLoading ? (
-                  <>
-                    <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                    <p className="text-emerald-400 text-sm font-bold text-center">Starting camera...</p>
-                    <p className="text-slate-500 text-[11px] text-center max-w-xs">
-                      If you see a permission prompt in your browser, click <strong className="text-white">"Allow"</strong>
-                    </p>
-                  </>
-                ) : cameraError ? (
-                  <>
-                    <Camera className="w-12 h-12 text-red-400 opacity-60" />
-                    <p className="text-red-300 text-xs font-semibold text-center max-w-xs leading-relaxed">{cameraError}</p>
-                    <button
-                      onClick={() => startCamera(usingFront)}
-                      className="mt-1 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-black rounded-xl transition-all flex items-center gap-2"
-                    >
-                      <RefreshCw className="w-4 h-4" /> Retry Camera
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            )}
-
-            {/* QR Target Bracket Overlay (shown when camera is active) */}
-            {cameraActive && (
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="relative w-52 h-52">
-                  <div className="absolute inset-0 border-2 border-emerald-500/30 rounded-xl" />
-                  <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-400 rounded-tl-xl" />
-                  <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-emerald-400 rounded-tr-xl" />
-                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-emerald-400 rounded-bl-xl" />
-                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-emerald-400 rounded-br-xl" />
-                  <div className="absolute inset-x-4 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#10B981] animate-pulse" />
-                </div>
-              </div>
-            )}
-
-            {/* Camera switch button (top right) */}
-            <div className="absolute top-3 right-3 z-20 flex flex-col gap-2 items-end">
-              <button
-                onClick={switchCamera}
-                title={usingFront ? 'Switch to Rear Camera' : 'Switch to Front Camera'}
-                className="px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 font-bold text-[10px] flex items-center gap-1.5 hover:bg-slate-800 shadow-lg transition-all active:scale-95"
-              >
-                <FlipHorizontal className="w-3.5 h-3.5 text-cyan-400" />
-                {usingFront ? 'Rear Cam' : 'Front Cam'}
-              </button>
-            </div>
-
-            {/* Status bar */}
-            <div className="absolute bottom-0 inset-x-0 bg-black/70 backdrop-blur-sm px-4 py-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${cameraActive ? 'bg-emerald-400 animate-pulse' : cameraLoading ? 'bg-amber-400 animate-pulse' : 'bg-red-400'}`} />
-                <span className="text-[10px] font-mono text-slate-300 truncate max-w-[200px]">
-                  {cameraLoading
-                    ? 'Starting camera...'
-                    : cameraActive
-                    ? (usingFront ? 'Front Camera — Auto-scanning for QR' : 'Camera Active — Auto-scanning for QR')
-                    : cameraError
-                    ? 'Camera unavailable — use Upload QR'
-                    : 'Camera off'}
-                </span>
-              </div>
-              <label className="cursor-pointer text-amber-400 font-bold text-[10px] uppercase flex items-center gap-1 hover:text-amber-300 shrink-0">
-                <Upload className="w-3.5 h-3.5" /> Upload QR
-                <input type="file" ref={fileInputRef} accept="image/*" onChange={handleFileUpload} className="hidden" />
-              </label>
-            </div>
-          </div>
+        {/* ─── Mode Toggle ─────────────────────────────────────── */}
+        <div className="flex gap-2">
+          <button onClick={() => setMode('upload')}
+            className={`flex-1 py-3 rounded-2xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all border ${
+              mode === 'upload'
+                ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                : 'bg-slate-900/60 text-slate-400 border-white/10 hover:bg-slate-800'
+            }`}>
+            <ImagePlus className="w-4 h-4" /> Upload QR
+          </button>
+          <button onClick={() => setMode('camera')}
+            className={`flex-1 py-3 rounded-2xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all border ${
+              mode === 'camera'
+                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                : 'bg-slate-900/60 text-slate-400 border-white/10 hover:bg-slate-800'
+            }`}>
+            <Camera className="w-4 h-4" /> Live Camera
+          </button>
         </div>
 
-        {/* Processing indicator */}
+        {/* ─── Upload QR Mode ──────────────────────────────────── */}
+        <AnimatePresence mode="wait">
+          {mode === 'upload' && (
+            <motion.div key="upload" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              className="glass-card rounded-3xl border border-white/10 bg-slate-950 overflow-hidden shadow-2xl">
+              <div className="p-8 flex flex-col items-center justify-center text-center gap-4" style={{ minHeight: '280px' }}>
+
+                {uploadPreview ? (
+                  <div className="relative w-48 h-48 rounded-2xl overflow-hidden border-2 border-amber-500/50 shadow-lg">
+                    <img src={uploadPreview} alt="QR Preview" className="w-full h-full object-contain bg-white" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border-2 border-dashed border-amber-500/40 flex items-center justify-center">
+                      <QrCode className="w-10 h-10 text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-base">Upload QR Code Image</p>
+                      <p className="text-slate-400 text-xs mt-1">Take a photo of the vehicle QR pass or choose from gallery</p>
+                    </div>
+                  </>
+                )}
+
+                {uploadError && (
+                  <div className="px-4 py-2 bg-red-950/60 border border-red-500/50 rounded-xl flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span className="text-red-300 text-xs font-semibold">{uploadError}</span>
+                  </div>
+                )}
+
+                <label className="cursor-pointer px-8 py-3.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                  <Upload className="w-5 h-5" />
+                  {uploadPreview ? 'Choose Another Image' : 'Select QR Image'}
+                  <input type="file" accept="image/*" capture="environment" onChange={handleFile} className="hidden" />
+                </label>
+
+                <p className="text-slate-500 text-[10px]">Supports JPG, PNG, WebP • Camera capture on mobile</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ─── Live Camera Mode ────────────────────────────────── */}
+          {mode === 'camera' && (
+            <motion.div key="camera" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              className="glass-card rounded-3xl border border-white/10 bg-slate-950 overflow-hidden shadow-2xl">
+              <div className="relative w-full bg-slate-950" style={{ aspectRatio: '4/3', maxHeight: '340px' }}>
+
+                <video ref={videoRef} autoPlay playsInline muted
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${camReady ? 'opacity-100' : 'opacity-0'}`}
+                  style={{ transform: front ? 'scaleX(-1)' : 'none' }} />
+
+                {!camReady && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 gap-4 p-4">
+                    {camLoading ? (
+                      <>
+                        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                        <p className="text-cyan-400 text-sm font-bold">Starting camera...</p>
+                        <p className="text-slate-500 text-[11px] text-center max-w-xs">
+                          Click <strong className="text-white">"Allow"</strong> if your browser asks for camera permission
+                        </p>
+                      </>
+                    ) : camErr ? (
+                      <>
+                        <Camera className="w-12 h-12 text-red-400 opacity-60" />
+                        <p className="text-red-300 text-xs font-semibold text-center max-w-xs leading-relaxed">{camErr}</p>
+                        <div className="flex gap-2">
+                          <button onClick={() => startCam(front)}
+                            className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-black rounded-xl transition-all flex items-center gap-2">
+                            <RefreshCw className="w-4 h-4" /> Retry
+                          </button>
+                          <button onClick={() => setMode('upload')}
+                            className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-black rounded-xl transition-all flex items-center gap-2">
+                            <Upload className="w-4 h-4" /> Upload Instead
+                          </button>
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+                )}
+
+                {camReady && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                    <div className="relative w-52 h-52">
+                      <div className="absolute inset-0 border-2 border-emerald-500/30 rounded-xl" />
+                      <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-400 rounded-tl-xl" />
+                      <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-emerald-400 rounded-tr-xl" />
+                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-emerald-400 rounded-bl-xl" />
+                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-emerald-400 rounded-br-xl" />
+                      <div className="absolute inset-x-4 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#10B981] animate-pulse" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="absolute top-3 right-3 z-20">
+                  <button onClick={switchCam} className="px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 font-bold text-[10px] flex items-center gap-1.5 hover:bg-slate-800 shadow-lg transition-all active:scale-95">
+                    <FlipHorizontal className="w-3.5 h-3.5 text-cyan-400" />
+                    {front ? 'Rear Cam' : 'Front Cam'}
+                  </button>
+                </div>
+
+                <div className="absolute bottom-0 inset-x-0 bg-black/70 backdrop-blur-sm px-4 py-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${camReady ? 'bg-emerald-400 animate-pulse' : camLoading ? 'bg-amber-400 animate-pulse' : 'bg-red-400'}`} />
+                    <span className="text-[10px] font-mono text-slate-300 truncate max-w-[200px]">
+                      {camLoading ? 'Starting...' : camReady ? 'Auto-scanning for QR' : 'Camera off'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ─── Processing indicator ────────────────────────────── */}
         {scanning && (
           <div className="glass-card p-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/30 flex items-center gap-3">
             <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0" />
@@ -518,55 +490,35 @@ const Scanner = () => {
           </div>
         )}
 
-        {/* Quick Test Buttons */}
+        {/* ─── Quick Test ──────────────────────────────────────── */}
         <div className="glass-card p-5 rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl space-y-3">
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">
-            ⚡ Quick Test — Tap to Simulate Scan
-          </span>
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">⚡ Quick Test — Tap to Simulate Scan</span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {sampleVehicles.map((sample) => (
-              <button
-                key={sample.code}
-                onClick={() => handleScanTriggerRef.current && handleScanTriggerRef.current(sample.code)}
-                disabled={scanning}
+            {samples.map(s => (
+              <button key={s.code} onClick={() => triggerRef.current?.(s.code)} disabled={scanning}
                 className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between hover:scale-[1.02] active:scale-[0.98] ${
-                  sample.color === 'emerald'
-                    ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/40'
-                    : sample.color === 'amber'
-                    ? 'bg-amber-950/30 border-amber-500/40 text-amber-300 hover:bg-amber-900/40'
-                    : sample.color === 'red'
-                    ? 'bg-red-950/30 border-red-500/40 text-red-300 hover:bg-red-900/40'
-                    : 'bg-slate-800/40 border-white/10 text-slate-300 hover:bg-slate-800'
-                }`}
-              >
-                <div>
-                  <span className="text-xs font-bold block">{sample.label}</span>
-                  <span className="text-[10px] font-mono opacity-70 block">{sample.code}</span>
-                </div>
+                  s.color === 'emerald' ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/40' :
+                  s.color === 'amber' ? 'bg-amber-950/30 border-amber-500/40 text-amber-300 hover:bg-amber-900/40' :
+                  s.color === 'red' ? 'bg-red-950/30 border-red-500/40 text-red-300 hover:bg-red-900/40' :
+                  'bg-slate-800/40 border-white/10 text-slate-300 hover:bg-slate-800'
+                }`}>
+                <div><span className="text-xs font-bold block">{s.label}</span><span className="text-[10px] font-mono opacity-70 block">{s.code}</span></div>
                 <Zap className="w-4 h-4 shrink-0 opacity-80" />
               </button>
             ))}
           </div>
         </div>
 
-        {/* Manual Input */}
-        <form onSubmit={handleManualSubmit} className="glass-card p-4 rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl flex gap-2">
-          <input
-            type="text"
-            value={manualInput}
-            onChange={(e) => setManualInput(e.target.value)}
+        {/* ─── Manual Input ────────────────────────────────────── */}
+        <form onSubmit={handleManual} className="glass-card p-4 rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl flex gap-2">
+          <input type="text" value={manualInput} onChange={e => setManualInput(e.target.value)}
             placeholder="Enter Vehicle Plate or QR Code..."
-            className="flex-1 bg-black/60 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-amber-500"
-          />
-          <button
-            type="submit"
-            disabled={scanning || !manualInput.trim()}
-            className="px-5 py-3 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-lg shrink-0"
-          >
+            className="flex-1 bg-black/60 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-amber-500" />
+          <button type="submit" disabled={scanning || !manualInput.trim()}
+            className="px-5 py-3 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-lg shrink-0">
             {scanning ? 'Verifying...' : 'Verify'}
           </button>
         </form>
-
       </div>
     </div>
   );
