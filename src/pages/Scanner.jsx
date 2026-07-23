@@ -95,24 +95,24 @@ const Scanner = () => {
           }
         };
 
-        // Attempt 1: Explicitly get cameras and pick the right one by label
+        // Attempt 1: Explicitly get cameras and pick the right one by label/index
         try {
           const cameras = await Html5Qrcode.getCameras();
           if (cameras && cameras.length > 0) {
             let selectedCameraId = cameras[0].id;
             
             if (usingFrontCamera) {
-              const front = cameras.find(c => c.label.toLowerCase().includes('front') || c.label.toLowerCase().includes('user'));
-              if (front) selectedCameraId = front.id;
+              const front = cameras.find(c => (c.label || '').toLowerCase().includes('front') || (c.label || '').toLowerCase().includes('user'));
+              selectedCameraId = front ? front.id : cameras[0].id;
             } else {
-              const back = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('rear') || c.label.toLowerCase().includes('environment'));
-              if (back) selectedCameraId = back.id;
+              const back = cameras.find(c => (c.label || '').toLowerCase().includes('back') || (c.label || '').toLowerCase().includes('rear') || (c.label || '').toLowerCase().includes('environment'));
+              selectedCameraId = back ? back.id : cameras[cameras.length - 1].id;
             }
 
             await scanner.start(selectedCameraId, config, onScanSuccess, () => {});
             if (isSubscribed) {
               setCameraActive(true);
-              setCameraStatus('Camera Active — Point at QR Pass');
+              setCameraStatus(usingFrontCamera ? 'Front Camera Active — Point at QR Pass' : 'Rear Camera Active — Point at QR Pass');
             }
           } else {
             throw new Error("No cameras detected by browser");
@@ -158,7 +158,7 @@ const Scanner = () => {
                   if (finalErr?.name === 'NotAllowedError' || finalErr?.message?.includes('Permission') || cameraErr?.name === 'NotAllowedError') {
                     setCameraStatus('⚠️ Camera permission denied — enable camera in browser settings');
                   } else if (finalErr?.name === 'NotReadableError' || cameraErr?.name === 'NotReadableError') {
-                    setCameraStatus('⚠️ Camera in use by another app (Zoom/Teams) — close it & retry');
+                    setCameraStatus('⚠️ Camera in use by another app — close it & retry');
                   } else {
                     setCameraStatus('⚠️ Live camera unavailable — use photo upload or manual entry below');
                   }
@@ -659,22 +659,22 @@ const Scanner = () => {
 
               {/* Camera Status & Control Pill */}
               <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
-                {/* Flip camera button (only shown when camera is active) */}
-                {cameraActive && (
-                  <button
-                    onClick={toggleCamera}
-                    title={usingFrontCamera ? 'Switch to Rear Camera' : 'Switch to Front Camera'}
-                    className="p-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-white/20 text-white hover:bg-slate-800 shadow-lg"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
-                  </button>
-                )}
+                {/* Switch Rear / Front Camera button */}
+                <button
+                  onClick={toggleCamera}
+                  title={usingFrontCamera ? 'Switch to Rear (Back) Camera' : 'Switch to Front (Selfie) Camera'}
+                  className="px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 font-bold text-[10px] flex items-center gap-1.5 hover:bg-slate-800 shadow-lg transition-all active:scale-95"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-cyan-400 animate-spin-slow" />
+                  {usingFrontCamera ? '📷 Switch to Rear Cam' : '🤳 Switch to Front Cam'}
+                </button>
+
                 <button 
                   onClick={cameraActive ? stopCamera : () => startCamera(false)}
                   className="px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md text-[10px] font-bold text-white border border-white/20 flex items-center gap-1.5 hover:bg-slate-800 shadow-lg"
                 >
                   {cameraActive ? <Video className="w-3.5 h-3.5 text-emerald-400" /> : <VideoOff className="w-3.5 h-3.5 text-amber-400" />}
-                  {cameraActive ? (usingFrontCamera ? 'Front Cam' : 'Rear Cam') : 'Start Camera'}
+                  {cameraActive ? 'Stop' : 'Start Camera'}
                 </button>
               </div>
 

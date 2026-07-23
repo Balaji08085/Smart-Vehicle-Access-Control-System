@@ -291,15 +291,51 @@ export const EntryProvider = ({ children }) => {
         return;
       }
 
+      // Robust QR Code payload parsing (handles raw strings, URLs, and JSON QR payloads)
+      let parsedSearchTerms = [rawInput.toLowerCase().replace(/[\s\-]+/g, '')];
+
+      // Try parsing JSON payload if QR code contains JSON
+      try {
+        if (rawInput.startsWith('{') && rawInput.endsWith('}')) {
+          const jsonObj = JSON.parse(rawInput);
+          const fields = [jsonObj.plate, jsonObj.vehicleNumber, jsonObj.registerId, jsonObj.id, jsonObj.code, jsonObj.qrCode, jsonObj.name];
+          fields.forEach(f => {
+            if (f && typeof f === 'string') {
+              parsedSearchTerms.push(f.toLowerCase().replace(/[\s\-]+/g, ''));
+            }
+          });
+        }
+      } catch (jsonErr) {
+        // Not JSON
+      }
+
+      // Try parsing URL parameters if QR code contains a web URL
+      if (rawInput.startsWith('http://') || rawInput.startsWith('https://')) {
+        try {
+          const urlObj = new URL(rawInput);
+          urlObj.searchParams.forEach((val) => {
+            if (val) parsedSearchTerms.push(val.toLowerCase().replace(/[\s\-]+/g, ''));
+          });
+          const pathSegments = urlObj.pathname.split('/').filter(Boolean);
+          if (pathSegments.length > 0) {
+            parsedSearchTerms.push(pathSegments[pathSegments.length - 1].toLowerCase().replace(/[\s\-]+/g, ''));
+          }
+        } catch (urlErr) {
+          // Not valid URL
+        }
+      }
+
       const targetKey = Object.keys(vehicles).find((key) => {
         const v = vehicles[key];
-        const q = rawInput.toLowerCase().replace(/[\s\-]+/g, '');
-        return (
-          (v.qrCode && v.qrCode.toLowerCase().replace(/[\s\-]+/g, '') === q) ||
-          (v.vehicleNumber && v.vehicleNumber.toLowerCase().replace(/[\s\-]+/g, '') === q) ||
-          (v.registerId && v.registerId.toLowerCase().replace(/[\s\-]+/g, '') === q) ||
-          (v.id && v.id.toLowerCase().replace(/[\s\-]+/g, '') === q)
-        );
+        const vFields = [
+          v.qrCode,
+          v.vehicleNumber,
+          v.registerId,
+          v.id,
+          v.name
+        ].filter(Boolean).map(val => val.toLowerCase().replace(/[\s\-]+/g, ''));
+
+        return parsedSearchTerms.some(term => vFields.some(fieldVal => fieldVal === term || (term.length >= 4 && fieldVal.includes(term))));
       });
 
       const matchedVehicle = targetKey ? vehicles[targetKey] : null;
