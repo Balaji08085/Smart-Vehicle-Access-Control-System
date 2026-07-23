@@ -49,7 +49,58 @@ const Scanner = () => {
     }
   };
 
-  // Primary Html5Qrcode Live Camera Engine Lifecycle
+  // Direct Native WebCam Stream Fallback Engine
+  const startNativeMediaStream = async (isSubscribed) => {
+    try {
+      const constraints = {
+        video: {
+          facingMode: usingFrontCamera ? "user" : "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(e => console.warn('Video play error:', e));
+      }
+
+      if (isSubscribed) {
+        setCameraActive(true);
+        setCameraStatus(usingFrontCamera ? 'Front Camera Active — Point at QR Pass' : 'Rear Camera Active — Point at QR Pass');
+      }
+    } catch (nativeErr) {
+      console.error('Native getUserMedia fallback failed:', nativeErr);
+      try {
+        // Retry generic video: true constraint
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(e => console.warn('Video play error:', e));
+        }
+        if (isSubscribed) {
+          setCameraActive(true);
+          setCameraStatus('Camera Active — Point at QR Pass');
+        }
+      } catch (finalErr) {
+        console.error('All native camera attempts failed:', finalErr);
+        if (isSubscribed) {
+          setCameraActive(false);
+          if (finalErr?.name === 'NotAllowedError') {
+            setCameraStatus('⚠️ Camera permission denied — enable camera in browser settings');
+          } else {
+            setCameraStatus('⚠️ Live camera unavailable — use photo upload or manual entry below');
+          }
+        }
+      }
+    }
+  };
+
+  // Primary Live Camera Engine Lifecycle
   useEffect(() => {
     if (result || scanning) return;
 
@@ -57,8 +108,11 @@ const Scanner = () => {
 
     const initScanner = async () => {
       await stopHtml5Scanner();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
 
-      // Check Secure Context / MediaDevices availability
       if (!navigator.mediaDevices && !window.isSecureContext) {
         if (isSubscribed) {
           setCameraActive(false);
@@ -76,14 +130,14 @@ const Scanner = () => {
         const preferredFacing = usingFrontCamera ? "user" : "environment";
 
         const config = {
-          fps: 15, // frame rate for decoding
+          fps: 15,
           qrbox: (viewfinderWidth, viewfinderHeight) => {
             const minEdge = Math.min(viewfinderWidth || 300, viewfinderHeight || 300);
-            const qrboxSize = Math.max(180, Math.floor(minEdge * 0.8)); // Ensure minimum 180px box
+            const qrboxSize = Math.max(180, Math.floor(minEdge * 0.8));
             return { width: qrboxSize, height: qrboxSize };
           },
           aspectRatio: 1.0,
-          disableFlip: false, // allow flipping for front camera
+          disableFlip: false,
         };
 
         const onScanSuccess = (decodedText) => {
@@ -95,7 +149,6 @@ const Scanner = () => {
           }
         };
 
-        // Attempt 1: Explicitly get cameras and pick the right one by label/index
         try {
           const cameras = await Html5Qrcode.getCameras();
           if (cameras && cameras.length > 0) {
@@ -115,63 +168,18 @@ const Scanner = () => {
               setCameraStatus(usingFrontCamera ? 'Front Camera Active — Point at QR Pass' : 'Rear Camera Active — Point at QR Pass');
             }
           } else {
-            throw new Error("No cameras detected by browser");
+            throw new Error("No cameras detected via getCameras");
           }
         } catch (cameraErr) {
-          console.warn('getCameras attempt failed, falling back to facingMode constraint:', cameraErr);
-          if (!isSubscribed) return;
-
-          // Attempt 2: Try preferred facingMode
-          try {
-            await scanner.start({ facingMode: preferredFacing }, config, onScanSuccess, () => {});
-            if (isSubscribed) {
-              setCameraActive(true);
-              setCameraStatus(usingFrontCamera ? 'Front Camera Active' : 'Rear Camera Active');
-            }
-          } catch (firstErr) {
-            console.warn('Preferred camera facingMode failed, trying fallback:', firstErr);
-            if (!isSubscribed) return;
-
-            // Attempt 3: Try alternate facing mode
-            const fallbackFacing = usingFrontCamera ? "environment" : "user";
-            try {
-              await scanner.start({ facingMode: fallbackFacing }, config, onScanSuccess, () => {});
-              if (isSubscribed) {
-                setCameraActive(true);
-                setCameraStatus('Camera Active');
-              }
-            } catch (secondErr) {
-              console.warn('Fallback facingMode failed, trying generic video constraint:', secondErr);
-              if (!isSubscribed) return;
-
-              // Attempt 4: Generic video true
-              try {
-                await scanner.start({ video: true }, config, onScanSuccess, () => {});
-                if (isSubscribed) {
-                  setCameraActive(true);
-                  setCameraStatus('Camera Active');
-                }
-              } catch (finalErr) {
-                console.error('All camera startup attempts failed:', finalErr);
-                if (isSubscribed) {
-                  setCameraActive(false);
-                  if (finalErr?.name === 'NotAllowedError' || finalErr?.message?.includes('Permission') || cameraErr?.name === 'NotAllowedError') {
-                    setCameraStatus('⚠️ Camera permission denied — enable camera in browser settings');
-                  } else if (finalErr?.name === 'NotReadableError' || cameraErr?.name === 'NotReadableError') {
-                    setCameraStatus('⚠️ Camera in use by another app — close it & retry');
-                  } else {
-                    setCameraStatus('⚠️ Live camera unavailable — use photo upload or manual entry below');
-                  }
-                }
-              }
-            }
+          console.warn('Html5Qrcode getCameras failed, attempting native getUserMedia fallback:', cameraErr);
+          if (isSubscribed) {
+            await startNativeMediaStream(isSubscribed);
           }
         }
       } catch (err) {
-        console.error('Html5Qrcode initialization error:', err);
+        console.warn('Html5Qrcode initialization error, starting native media stream:', err);
         if (isSubscribed) {
-          setCameraActive(false);
-          setCameraStatus('⚠️ Camera initialization error — use photo upload or manual entry');
+          await startNativeMediaStream(isSubscribed);
         }
       }
     };
@@ -181,6 +189,10 @@ const Scanner = () => {
     return () => {
       isSubscribed = false;
       stopHtml5Scanner();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
     };
   }, [usingFrontCamera, result, scanning, cameraStartKey]);
 
