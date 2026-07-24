@@ -42,6 +42,8 @@ const playAudioFeedback = (status) => {
 /* ───────────────────────────────────────────────────────────────
    Scanner Component
    ─────────────────────────────────────────────────────────────── */
+let globalCameraLock = Promise.resolve();
+
 const Scanner = () => {
   const { verifyQrCode } = useEntry();
 
@@ -79,18 +81,17 @@ const Scanner = () => {
   /* ──── STOP CAMERA ───────────────────────────────────────────── */
   const stopCam = useCallback(() => {
     if (html5QrCodeRef.current) {
-      try {
-        html5QrCodeRef.current.stop().then(() => {
-          if (html5QrCodeRef.current) {
-            html5QrCodeRef.current.clear();
-            html5QrCodeRef.current = null;
-          }
-        }).catch(() => {
-          html5QrCodeRef.current = null;
-        });
-      } catch (e) {
-        html5QrCodeRef.current = null;
-      }
+      const scannerToStop = html5QrCodeRef.current;
+      html5QrCodeRef.current = null;
+      
+      globalCameraLock = globalCameraLock.then(async () => {
+        try {
+          await scannerToStop.stop();
+          scannerToStop.clear();
+        } catch (e) {
+          // ignore errors during cleanup
+        }
+      });
     }
     if (isMountedRef.current) setCamReady(false);
   }, []);
@@ -98,9 +99,9 @@ const Scanner = () => {
   /* ──── SCAN TRIGGER & VERIFICATION WORKFLOW ──────────────────── */
   useEffect(() => {
     triggerRef.current = async (query) => {
-      if (scanning) return;
+      if (scanning || result) return;
       setScanning(true);
-      stopCam();
+      
       await new Promise(r => setTimeout(r, 150));
 
       const res = await verifyQrCode(query, selectedGate);
@@ -110,7 +111,7 @@ const Scanner = () => {
         setScanning(false);
       }
     };
-  }, [scanning, selectedGate, verifyQrCode, stopCam]);
+  }, [scanning, result, selectedGate, verifyQrCode]);
 
   /* ──── START CAMERA ──────────────────────────────────────────── */
   const startCam = useCallback(async (useFront = false) => {
@@ -124,6 +125,14 @@ const Scanner = () => {
     }
 
     try {
+      // Wait for any previous scanner instances to fully release the camera
+      await globalCameraLock;
+      
+      if (!isMountedRef.current) {
+        startingCamRef.current = false;
+        return;
+      }
+
       const html5QrCode = new Html5Qrcode("qr-reader");
       html5QrCodeRef.current = html5QrCode;
       
@@ -167,7 +176,7 @@ const Scanner = () => {
   /* ──── MODE & STATE LIFECYCLE ────────────────────────────────── */
   useEffect(() => {
     let timeoutId;
-    if (mode === 'camera' && !result && !scanning) {
+    if (mode === 'camera') {
       timeoutId = setTimeout(() => {
         startCam(front);
       }, 50);
@@ -175,7 +184,7 @@ const Scanner = () => {
       stopCam();
     }
     return () => clearTimeout(timeoutId);
-  }, [mode, result, scanning, front, startCam, stopCam]);
+  }, [mode, front, startCam, stopCam]);
 
   const switchCam = () => {
     setFront(!front);
@@ -226,95 +235,86 @@ const Scanner = () => {
   ];
 
   /* ═══════════════════════════════════════════════════════════════
-     VERIFICATION OVERLAY: ACCESS GRANTED
-     ═══════════════════════════════════════════════════════════════ */
-  if (result?.status === 'GRANTED') {
-    return (
-      <motion.div initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }}
-        className="fixed inset-0 z-50 bg-[#062013] flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
-        <div className="absolute inset-0 bg-radial from-emerald-600/40 via-transparent to-transparent animate-pulse pointer-events-none" />
-        <div className="max-w-xl w-full relative z-10 flex flex-col items-center text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 14 }}
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#16A34A] flex items-center justify-center border-4 border-emerald-300 shadow-[0_0_90px_rgba(22,163,74,0.9)] mb-6">
-            <Check className="w-20 h-20 md:w-24 md:h-24 text-white stroke-[4]" />
-          </motion.div>
-
-          <h1 className="text-3xl md:text-5xl font-black text-white tracking-widest uppercase mb-2">✅ VERIFIED</h1>
-          <p className="text-emerald-300 font-extrabold text-sm tracking-widest uppercase mb-6 bg-emerald-950/90 px-6 py-2 rounded-full border-2 border-emerald-400">
-            ACCESS ALLOWED
-          </p>
-
-          <div className="w-full bg-slate-900/90 p-6 rounded-3xl border-2 border-[#16A34A] shadow-[0_0_60px_rgba(22,163,74,0.5)] text-left space-y-4 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              {[
-                ['Staff Name', result.ownerName, 'text-white'],
-                ['Employee ID', result.registerId, 'text-emerald-300 font-mono'],
-                ['Department', result.department, 'text-slate-200'],
-                ['Vehicle Number', result.vehicleNumber, 'text-white font-mono'],
-                ['Vehicle Type', result.vehicleType, 'text-slate-200'],
-                ['Issue Date', result.issueDate, 'text-slate-200'],
-                ['Expiry Date', result.expiryDate, 'text-emerald-400'],
-              ].map(([l, v, c]) => (
-                <div key={l}>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{l}</span>
-                  <span className={`text-sm font-bold block ${c}`}>{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <button onClick={reset} className="w-full py-4 bg-[#16A34A] hover:bg-emerald-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-[0_0_35px_rgba(22,163,74,0.6)] transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
-            <Scan className="w-5 h-5" /> Scan Next Vehicle
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-     VERIFICATION OVERLAY: ACCESS DENIED
-     ═══════════════════════════════════════════════════════════════ */
-  if (result?.status === 'DENIED') {
-    return (
-      <motion.div initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }}
-        className="fixed inset-0 z-50 bg-[#200606] flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
-        <div className="absolute inset-0 bg-radial from-red-600/40 via-transparent to-transparent animate-pulse pointer-events-none" />
-        <div className="max-w-xl w-full relative z-10 flex flex-col items-center text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 14 }}
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#DC2626] flex items-center justify-center border-4 border-red-300 shadow-[0_0_90px_rgba(220,38,38,0.9)] mb-6">
-            <X className="w-20 h-20 md:w-24 md:h-24 text-white stroke-[4]" />
-          </motion.div>
-
-          <h1 className="text-3xl md:text-5xl font-black text-white tracking-widest uppercase mb-2">
-            {result.reason?.includes('Expired') ? '❌ EXPIRED QR' : 
-             result.reason?.includes('Blocked') || result.reason?.includes('Blacklisted') ? '❌ BLOCKED' : 
-             '❌ INVALID QR'}
-          </h1>
-          <p className="text-red-300 font-extrabold text-sm tracking-widest uppercase mb-6 bg-red-950/90 px-6 py-2 rounded-full border-2 border-red-400">
-            ACCESS DENIED
-          </p>
-
-          <div className="w-full bg-slate-900/90 p-6 rounded-3xl border-2 border-[#DC2626] shadow-[0_0_60px_rgba(220,38,38,0.6)] text-left space-y-4 mb-8">
-            <div className="p-4 bg-red-950/50 border border-red-500/50 rounded-2xl text-center">
-              <span className="text-xl font-black text-white uppercase tracking-wider">
-                {result.reason === 'QR Code Not Registered' ? 'QR Expired / QR Not Found' : result.reason}
-              </span>
-            </div>
-          </div>
-
-          <button onClick={reset} className="w-full py-4 bg-[#DC2626] hover:bg-red-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-[0_0_35px_rgba(220,38,38,0.6)] transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
-            <RefreshCw className="w-5 h-5" /> Scan Again
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
      MAIN TERMINAL VIEW
      ═══════════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 bg-[#080C16] flex flex-col items-center justify-center">
+    <div className="min-h-screen pt-24 pb-12 px-4 bg-[#080C16] flex flex-col items-center justify-center relative">
+      
+      {/* ──── OVERLAYS (Rendered on top of the scanner) ──── */}
+      {result?.status === 'GRANTED' && (
+        <motion.div initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }}
+          className="fixed inset-0 z-50 bg-[#062013]/95 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto backdrop-blur-sm">
+          <div className="absolute inset-0 bg-radial from-emerald-600/40 via-transparent to-transparent animate-pulse pointer-events-none" />
+          <div className="max-w-xl w-full relative z-10 flex flex-col items-center text-center">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 14 }}
+              className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#16A34A] flex items-center justify-center border-4 border-emerald-300 shadow-[0_0_90px_rgba(22,163,74,0.9)] mb-6">
+              <Check className="w-20 h-20 md:w-24 md:h-24 text-white stroke-[4]" />
+            </motion.div>
+  
+            <h1 className="text-3xl md:text-5xl font-black text-white tracking-widest uppercase mb-2">✅ VERIFIED</h1>
+            <p className="text-emerald-300 font-extrabold text-sm tracking-widest uppercase mb-6 bg-emerald-950/90 px-6 py-2 rounded-full border-2 border-emerald-400">
+              ACCESS ALLOWED
+            </p>
+  
+            <div className="w-full bg-slate-900/90 p-6 rounded-3xl border-2 border-[#16A34A] shadow-[0_0_60px_rgba(22,163,74,0.5)] text-left space-y-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {[
+                  ['Staff Name', result.ownerName, 'text-white'],
+                  ['Employee ID', result.registerId, 'text-emerald-300 font-mono'],
+                  ['Department', result.department, 'text-slate-200'],
+                  ['Vehicle Number', result.vehicleNumber, 'text-white font-mono'],
+                  ['Vehicle Type', result.vehicleType, 'text-slate-200'],
+                  ['Issue Date', result.issueDate, 'text-slate-200'],
+                  ['Expiry Date', result.expiryDate, 'text-emerald-400'],
+                ].map(([l, v, c]) => (
+                  <div key={l}>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{l}</span>
+                    <span className={`text-sm font-bold block ${c}`}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+  
+            <button onClick={reset} className="w-full py-4 bg-[#16A34A] hover:bg-emerald-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-[0_0_35px_rgba(22,163,74,0.6)] transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
+              <Scan className="w-5 h-5" /> Scan Next Vehicle
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {result?.status === 'DENIED' && (
+        <motion.div initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }}
+          className="fixed inset-0 z-50 bg-[#200606]/95 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto backdrop-blur-sm">
+          <div className="absolute inset-0 bg-radial from-red-600/40 via-transparent to-transparent animate-pulse pointer-events-none" />
+          <div className="max-w-xl w-full relative z-10 flex flex-col items-center text-center">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 14 }}
+              className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#DC2626] flex items-center justify-center border-4 border-red-300 shadow-[0_0_90px_rgba(220,38,38,0.9)] mb-6">
+              <X className="w-20 h-20 md:w-24 md:h-24 text-white stroke-[4]" />
+            </motion.div>
+  
+            <h1 className="text-3xl md:text-5xl font-black text-white tracking-widest uppercase mb-2">
+              {result.reason?.includes('Expired') ? '❌ EXPIRED QR' : 
+               result.reason?.includes('Blocked') || result.reason?.includes('Blacklisted') ? '❌ BLOCKED' : 
+               '❌ INVALID QR'}
+            </h1>
+            <p className="text-red-300 font-extrabold text-sm tracking-widest uppercase mb-6 bg-red-950/90 px-6 py-2 rounded-full border-2 border-red-400">
+              ACCESS DENIED
+            </p>
+  
+            <div className="w-full bg-slate-900/90 p-6 rounded-3xl border-2 border-[#DC2626] shadow-[0_0_60px_rgba(220,38,38,0.6)] text-left space-y-4 mb-8">
+              <div className="p-4 bg-red-950/50 border border-red-500/50 rounded-2xl text-center">
+                <span className="text-xl font-black text-white uppercase tracking-wider">
+                  {result.reason === 'QR Code Not Registered' ? 'QR Expired / QR Not Found' : result.reason}
+                </span>
+              </div>
+            </div>
+  
+            <button onClick={reset} className="w-full py-4 bg-[#DC2626] hover:bg-red-500 text-white font-black text-base uppercase tracking-wider rounded-2xl shadow-[0_0_35px_rgba(220,38,38,0.6)] transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
+              <RefreshCw className="w-5 h-5" /> Scan Again
+            </button>
+          </div>
+        </motion.div>
+      )}
       <canvas ref={canvasRef} className="hidden" />
 
       <div className="max-w-xl w-full space-y-5">
