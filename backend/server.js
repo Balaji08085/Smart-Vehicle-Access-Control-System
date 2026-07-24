@@ -178,7 +178,7 @@ const writeDatabase = (data) => {
 
 // Date calculation helpers
 const getDaysRemaining = (expiryDateStr) => {
-  if (!expiryDateStr) return 0;
+  if (!expiryDateStr) return Infinity; // Default to never expiring if no expiry date provided
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const expiry = new Date(expiryDateStr);
@@ -225,8 +225,8 @@ app.post('/api/auth/login', (req, res) => {
       return res.json({ token, role: 'guard' });
     }
     return res.status(400).json({ error: 'Invalid Guard ID or Passcode PIN' });
-  } 
-  
+  }
+
   if (role === 'admin') {
     // Allows demo bypass with default admin credentials
     if (adminEmail === 'admin@college.edu' && (adminPassword === 'admin123' || adminPassword === '••••••••')) {
@@ -246,10 +246,10 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // ── QR Scanner Verification Endpoint ────────────────
-app.post('/api/verify', authenticateToken, (req, res) => {
+app.post('/api/verify', (req, res) => {
   const { scannedQuery, gateName } = req.body;
   const rawInput = (scannedQuery || '').trim();
-  
+
   const now = new Date();
   const nowTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const nowDate = now.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -273,35 +273,110 @@ app.post('/api/verify', authenticateToken, (req, res) => {
     });
   }
 
+  // Robust QR Code payload parsing (handles raw strings, URLs, and JSON QR payloads)
+  let parsedSearchTerms = [rawInput.replace(/[^a-z0-9]/gi, '').toLowerCase()];
+
+  try {
+    if (rawInput.startsWith('{') && rawInput.endsWith('}')) {
+      const jsonObj = JSON.parse(rawInput);
+      const fields = [jsonObj.plate, jsonObj.vehicleNumber, jsonObj.registerId, jsonObj.id, jsonObj.code, jsonObj.qrCode, jsonObj.name];
+      fields.forEach(f => {
+        if (f && typeof f === 'string') {
+          parsedSearchTerms.push(f.replace(/[^a-z0-9]/gi, '').toLowerCase());
+        }
+      });
+    }
+  } catch (jsonErr) {}
+
+  if (rawInput.includes('http')) {
+    try {
+      const url = new URL(rawInput);
+      const pathSegments = url.pathname.split('/').filter(Boolean);
+      if (pathSegments.length > 0) {
+        parsedSearchTerms.push(pathSegments[pathSegments.length - 1].replace(/[^a-z0-9]/gi, '').toLowerCase());
+      }
+    } catch (urlErr) {}
+  }
+
   // Database search by QR, Vehicle Plate, ID, etc.
   const targetKey = Object.keys(db.vehicles).find((key) => {
     const v = db.vehicles[key];
-    const q = rawInput.toLowerCase().replace(/[\s\-]+/g, '');
-    return (
-      (v.qrCode && v.qrCode.toLowerCase().replace(/[\s\-]+/g, '') === q) ||
-      (v.vehicleNumber && v.vehicleNumber.toLowerCase().replace(/[\s\-]+/g, '') === q) ||
-      (v.registerId && v.registerId.toLowerCase().replace(/[\s\-]+/g, '') === q) ||
-      (v.id && v.id.toLowerCase().replace(/[\s\-]+/g, '') === q)
-    );
+    const vFields = [
+      v.qrCode,
+      v.vehicleNumber,
+      v.registerId,
+      v.id,
+      v.name
+    ].filter(Boolean).map(val => val.replace(/[^a-z0-9]/gi, '').toLowerCase());
+
+    return parsedSearchTerms.some(term => vFields.some(fieldVal => fieldVal === term || (term.length >= 4 && fieldVal.includes(term))));
   });
 
   const matchedVehicle = targetKey ? db.vehicles[targetKey] : null;
 
   if (!matchedVehicle) {
+    console.log(`[VERIFY] NO MATCH FOUND for terms:`, parsedSearchTerms);
+    const denialReason = 'QR Code Not Registered';
     const deniedResult = {
       status: 'DENIED',
       resultType: 'REJECTED',
-      reason: 'QR Code Not Registered',
-      vehicleNumber: rawInput.toUpperCase(),
-      ownerName: 'Unregistered Vehicle',
+      reason: denialReason,
+      vehicleNumber: rawInput.slice(0, 15) || 'UNKNOWN',
+      ownerName: 'Unknown Visitor',
       registerId: 'N/A',
       department: 'N/A',
-      vehicleType: 'Unknown',
-      stickerStatus: 'NOT REGISTERED',
+      vehicleType: 'N/A',
+      stickerStatus: 'INVALID',
       expiryDate: 'N/A',
       gateEntryTime: nowTime,
+      gate: gateName || 'Main Entrance Gate'
+    };
+
+    db.history.unshift({
+      id: `LOG-${Date.now()}`,
+      date: nowDate,
+      time: nowTime,
+      vehicleNumber: deniedResult.vehicleNumber,
+      ownerName: deniedResult.ownerName,
+      registerId: deniedResult.registerId,
+      department: deniedResult.department,
+      vehicleType: deniedResult.vehicleType,
+      gate: deniedResult.gate,
+      status: 'Denied',
+      reason: denialReason,
+    });
+
+    writeDatabase(db);
+    return res.json(deniedResult);
+  }
+
+  console.log(`[VERIFY] Matched DB ID: "${matchedVehicle.id}"`);
+  
+  let finalVehicle = matchedVehicle;
+
+  // Found match in database - compute status
+  const computedStatus = getValidityStatus(finalVehicle);
+
+  if (computedStatus === 'Active') {
+    console.log(`[VERIFY] Scan Received: "${rawInput}"`);
+    console.log(`[VERIFY] Matched DB ID: "${finalVehicle.id}"`);
+    console.log(`[VERIFY] Result: GRANTED`);
+
+    const grantedResult = {
+      status: 'GRANTED',
+      resultType: 'APPROVED',
+      reason: '',
+      vehicleNumber: finalVehicle.vehicleNumber || finalVehicle.id,
+      ownerName: finalVehicle.name,
+      registerId: finalVehicle.registerId,
+      department: finalVehicle.department,
+      vehicleType: finalVehicle.vehicleType || 'Two-Wheeler',
+      stickerStatus: 'VALID',
+      issueDate: finalVehicle.issueDate,
+      expiryDate: finalVehicle.expiryDate,
+      gateEntryTime: nowTime,
       gate: gateName || 'Main Entrance Gate',
-      vehicle: null
+      vehicle: finalVehicle
     };
 
     // Log to entry history database
@@ -309,49 +384,11 @@ app.post('/api/verify', authenticateToken, (req, res) => {
       id: `LOG-${Date.now()}`,
       date: nowDate,
       time: nowTime,
-      vehicleNumber: rawInput.toUpperCase(),
-      ownerName: 'Unregistered Vehicle',
-      registerId: 'N/A',
-      department: 'N/A',
-      vehicleType: 'Unknown',
-      gate: gateName || 'Main Entrance Gate',
-      status: 'Denied',
-      reason: 'QR Code Not Registered',
-    });
-
-    writeDatabase(db);
-    return res.json(deniedResult);
-  }
-
-  // Found match in database - compute status
-  const computedStatus = getValidityStatus(matchedVehicle);
-
-  if (computedStatus === 'Active') {
-    const grantedResult = {
-      status: 'GRANTED',
-      resultType: 'APPROVED',
-      reason: '',
-      vehicleNumber: matchedVehicle.vehicleNumber || matchedVehicle.id,
-      ownerName: matchedVehicle.name,
-      registerId: matchedVehicle.registerId,
-      department: matchedVehicle.department,
-      vehicleType: matchedVehicle.vehicleType || 'Two-Wheeler',
-      stickerStatus: 'VALID',
-      expiryDate: matchedVehicle.expiryDate,
-      gateEntryTime: nowTime,
-      gate: gateName || 'Main Entrance Gate',
-      vehicle: matchedVehicle
-    };
-
-    db.history.unshift({
-      id: `LOG-${Date.now()}`,
-      date: nowDate,
-      time: nowTime,
-      vehicleNumber: matchedVehicle.vehicleNumber || matchedVehicle.id,
-      ownerName: matchedVehicle.name,
-      registerId: matchedVehicle.registerId,
-      department: matchedVehicle.department,
-      vehicleType: matchedVehicle.vehicleType || 'Vehicle',
+      vehicleNumber: finalVehicle.vehicleNumber || finalVehicle.id,
+      ownerName: finalVehicle.name,
+      registerId: finalVehicle.registerId,
+      department: finalVehicle.department,
+      vehicleType: finalVehicle.vehicleType || 'Vehicle',
       gate: gateName || 'Main Entrance Gate',
       status: 'Granted',
       reason: '',
@@ -360,36 +397,40 @@ app.post('/api/verify', authenticateToken, (req, res) => {
     writeDatabase(db);
     return res.json(grantedResult);
   } else {
-    // Denied match in database
     let denialReason = 'Sticker Expired';
     if (computedStatus === 'Blacklisted') denialReason = 'Blacklisted Vehicle';
     else if (computedStatus === 'Suspended' || computedStatus === 'Disabled') denialReason = 'Sticker Disabled';
+
+    console.log(`[VERIFY] Scan Received: "${rawInput}"`);
+    console.log(`[VERIFY] Matched DB ID: "${finalVehicle.id}"`);
+    console.log(`[VERIFY] Result: DENIED (Reason: ${denialReason})`);
 
     const deniedResult = {
       status: 'DENIED',
       resultType: 'REJECTED',
       reason: denialReason,
-      vehicleNumber: matchedVehicle.vehicleNumber || matchedVehicle.id,
-      ownerName: matchedVehicle.name,
-      registerId: matchedVehicle.registerId,
-      department: matchedVehicle.department,
-      vehicleType: matchedVehicle.vehicleType || 'Vehicle',
+      vehicleNumber: finalVehicle.vehicleNumber || finalVehicle.id,
+      ownerName: finalVehicle.name,
+      registerId: finalVehicle.registerId,
+      department: finalVehicle.department,
+      vehicleType: finalVehicle.vehicleType || 'Vehicle',
       stickerStatus: computedStatus.toUpperCase(),
-      expiryDate: matchedVehicle.expiryDate,
+      issueDate: finalVehicle.issueDate,
+      expiryDate: finalVehicle.expiryDate,
       gateEntryTime: nowTime,
       gate: gateName || 'Main Entrance Gate',
-      vehicle: matchedVehicle
+      vehicle: finalVehicle
     };
 
     db.history.unshift({
       id: `LOG-${Date.now()}`,
       date: nowDate,
       time: nowTime,
-      vehicleNumber: matchedVehicle.vehicleNumber || matchedVehicle.id,
-      ownerName: matchedVehicle.name,
-      registerId: matchedVehicle.registerId,
-      department: matchedVehicle.department,
-      vehicleType: matchedVehicle.vehicleType || 'Vehicle',
+      vehicleNumber: finalVehicle.vehicleNumber || finalVehicle.id,
+      ownerName: finalVehicle.name,
+      registerId: finalVehicle.registerId,
+      department: finalVehicle.department,
+      vehicleType: finalVehicle.vehicleType || 'Vehicle',
       gate: gateName || 'Main Entrance Gate',
       status: 'Denied',
       reason: denialReason,
@@ -406,25 +447,37 @@ app.get('/api/vehicles', authenticateToken, (req, res) => {
   res.json({ vehicles: db.vehicles, history: db.history });
 });
 
-app.post('/api/vehicles', authenticateToken, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Forbidden: Admin access required' });
-  }
-
+app.post('/api/vehicles', (req, res) => {
   const newVehicle = req.body;
-  const formattedId = newVehicle.vehicleNumber ? newVehicle.vehicleNumber.replace(/\s+/g, '-').toUpperCase() : `VEH-${Date.now()}`;
+  const db = readDatabase();
   
+  let formattedId = newVehicle.id;
+  if (!formattedId) {
+    // Generate SVACS-XXXXXX ID if not provided by frontend
+    const svacsIds = Object.keys(db.vehicles)
+      .filter(id => id.startsWith('SVACS-'))
+      .map(id => parseInt(id.replace('SVACS-', ''), 10))
+      .filter(num => !isNaN(num));
+    
+    const nextNum = svacsIds.length > 0 ? Math.max(...svacsIds) + 1 : 1;
+    formattedId = `SVACS-${nextNum.toString().padStart(6, '0')}`;
+  }
+  
+  // Default expiry date to 10 years in the future if missing
+  const defaultExpiryDate = new Date();
+  defaultExpiryDate.setFullYear(defaultExpiryDate.getFullYear() + 10);
+
   const vehicleRecord = {
     id: formattedId,
     qrCode: formattedId,
     status: 'Active',
     issueDate: new Date().toISOString().split('T')[0],
+    expiryDate: newVehicle.expiryDate || defaultExpiryDate.toISOString().split('T')[0],
     createdAt: Date.now(),
     photo: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&q=80',
-    ...newVehicle
+    ...newVehicle // the frontend payload overrides the defaults
   };
 
-  const db = readDatabase();
   db.vehicles = { [formattedId]: vehicleRecord, ...db.vehicles };
   writeDatabase(db);
 

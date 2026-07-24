@@ -208,16 +208,15 @@ export const EntryProvider = ({ children }) => {
       const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const nowDate = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
 
-      // Attempt live verification via Express Backend if token is present
-      if (token) {
-        try {
-          const res = await fetch('/api/verify', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ scannedQuery, gateName })
+      // Always attempt live verification via Express Backend
+      try {
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          },
+          body: JSON.stringify({ scannedQuery, gateName })
           });
           const data = await res.json();
           if (res.ok) {
@@ -254,8 +253,7 @@ export const EntryProvider = ({ children }) => {
         } catch (err) {
           console.warn('Backend verification API offline, running local verification fallback:', err);
         }
-      }
-
+        
       // Offline Fallback Verification Logic (Using Local State/LocalStorage)
       if (!rawInput) {
         const deniedPayload = {
@@ -389,6 +387,7 @@ export const EntryProvider = ({ children }) => {
           department: matchedVehicle.department,
           vehicleType: matchedVehicle.vehicleType || 'Two-Wheeler',
           stickerStatus: 'VALID',
+          issueDate: formatDateDisplay(matchedVehicle.issueDate),
           expiryDate: formatDateDisplay(matchedVehicle.expiryDate),
           gateEntryTime: nowTime,
           gate: gateName,
@@ -426,6 +425,7 @@ export const EntryProvider = ({ children }) => {
           department: matchedVehicle.department,
           vehicleType: matchedVehicle.vehicleType || 'Vehicle',
           stickerStatus: computed.toUpperCase(),
+          issueDate: formatDateDisplay(matchedVehicle.issueDate),
           expiryDate: formatDateDisplay(matchedVehicle.expiryDate),
           gateEntryTime: nowTime,
           gate: gateName,
@@ -454,32 +454,46 @@ export const EntryProvider = ({ children }) => {
 
   // CRUD Operations for Admin Vehicle Management with optimistic updates
   const addVehicle = useCallback(async (newVehicle) => {
-    const formattedId = newVehicle.vehicleNumber ? newVehicle.vehicleNumber.replace(/\s+/g, '-').toUpperCase() : `VEH-${Date.now()}`;
-    const vehicleRecord = {
-      id: formattedId,
-      qrCode: formattedId,
-      status: 'Active',
-      issueDate: new Date().toISOString().split('T')[0],
-      createdAt: Date.now(),
-      photo: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&q=80',
-      ...newVehicle
-    };
-
+    let finalVehicleRecord = null;
+    
     setVehicles((prev) => {
-      const updated = { [formattedId]: vehicleRecord, ...prev };
+      // Generate SVACS-XXXXXX ID
+      const svacsIds = Object.keys(prev)
+        .filter(id => id.startsWith('SVACS-'))
+        .map(id => parseInt(id.replace('SVACS-', ''), 10))
+        .filter(num => !isNaN(num));
+      
+      const nextNum = svacsIds.length > 0 ? Math.max(...svacsIds) + 1 : 1;
+      const formattedId = `SVACS-${nextNum.toString().padStart(6, '0')}`;
+
+      const defaultExpiryDate = new Date();
+      defaultExpiryDate.setFullYear(defaultExpiryDate.getFullYear() + 10);
+
+      finalVehicleRecord = {
+        id: formattedId,
+        qrCode: formattedId,
+        status: 'Active',
+        issueDate: new Date().toISOString().split('T')[0],
+        expiryDate: newVehicle.expiryDate || defaultExpiryDate.toISOString().split('T')[0],
+        createdAt: Date.now(),
+        photo: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&q=80',
+        ...newVehicle
+      };
+
+      const updated = { [formattedId]: finalVehicleRecord, ...prev };
       localStorage.setItem('smart_campus_vehicles', JSON.stringify(updated));
       return updated;
     });
 
     try {
-      if (token) {
+      if (finalVehicleRecord) {
         const res = await fetch('/api/vehicles', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            ...(token && { 'Authorization': `Bearer ${token}` })
           },
-          body: JSON.stringify(newVehicle)
+          body: JSON.stringify(finalVehicleRecord)
         });
         if (!res.ok) console.error('Failed to sync new vehicle with backend');
       }
@@ -487,7 +501,9 @@ export const EntryProvider = ({ children }) => {
       console.warn('Backend offline, registered vehicle in offline mode:', err);
     }
 
-    addNotification(`Vehicle ${vehicleRecord.vehicleNumber} registered successfully!`, 'success');
+    if (finalVehicleRecord) {
+      addNotification(`Vehicle ${finalVehicleRecord.vehicleNumber} registered successfully!`, 'success');
+    }
   }, [token, addNotification]);
 
   const updateVehicle = useCallback(async (id, updatedData) => {
@@ -661,19 +677,19 @@ export const useEntry = () => {
     return {
       userRole: 'guard',
       token: '',
-      login: () => {},
-      logout: () => {},
+      login: () => { },
+      logout: () => { },
       vehicles: {},
       history: [],
       notifications: [],
       verifyQrCode: () => Promise.resolve({ status: 'DENIED', reason: 'Error' }),
-      addVehicle: () => {},
-      updateVehicle: () => {},
-      deleteVehicle: () => {},
-      renewSticker: () => {},
-      disableSticker: () => {},
-      resetAllData: () => {},
-      addNotification: () => {}
+      addVehicle: () => { },
+      updateVehicle: () => { },
+      deleteVehicle: () => { },
+      renewSticker: () => { },
+      disableSticker: () => { },
+      resetAllData: () => { },
+      addNotification: () => { }
     };
   }
   return ctx;
