@@ -1,3 +1,19 @@
+# Environment variables
+.env
+*.env
+.env.*
+!.env.example
+
+# Build & Tooling
+node_modules
+dist
+dist-ssr
+build
+.dart_tool
+.flutter-plugins
+.flutter-plugins-dependencies
+*.local
+
 # Logs
 logs
 *.log
@@ -7,14 +23,8 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode
 .idea
 .DS_Store
 *.suo
@@ -22,3 +32,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary & zip files
+*.zip
+vite.config.js.timestamp*
+
+# Flutter app build & tool outputs
+Security_app/.dart_tool/
+Security_app/build/
+Security_app/.flutter-plugins
+Security_app/.flutter-plugins-dependencies
+Security_app/android/.gradle/
+
+

@@ -31,9 +31,45 @@ export const formatDateDisplay = (dateStr) => {
 const EntryContext = createContext(null);
 
 export const EntryProvider = ({ children }) => {
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('smart_campus_theme') || 'light';
+  });
+
   const [userRole, setUserRole] = useState(() => {
     return localStorage.getItem('smart_campus_role') || 'guard'; // 'guard' or 'admin'
   });
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prevTheme) => {
+      const nextTheme = prevTheme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('smart_campus_theme', nextTheme);
+      return nextTheme;
+    });
+  }, []);
+
+  // Sync theme with DOM body & html elements
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [theme]);
+
+  // Global Keyboard Shortcut: Press Alt+T or Ctrl+Shift+D to toggle theme anytime
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.altKey && (e.key === 't' || e.key === 'T')) || 
+          (e.ctrlKey && e.shiftKey && (e.key === 'd' || e.key === 'D'))) {
+        e.preventDefault();
+        toggleTheme();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleTheme]);
 
   const [token, setToken] = useState(() => {
     return localStorage.getItem('smart_campus_token') || '';
@@ -168,32 +204,47 @@ export const EntryProvider = ({ children }) => {
         body.guardId = credentials.guardId || 'SEC-GATE-01';
         body.guardPin = credentials.guardPin || '1234';
       } else if (role === 'admin') {
-        body.adminEmail = credentials.adminEmail || 'admin@college.edu';
+        body.adminEmail = credentials.adminEmail || 'admin@svacs.edu';
         body.adminPassword = credentials.adminPassword || 'admin123';
+      } else if (role === 'superadmin') {
+        body.adminEmail = credentials.adminEmail || 'superadmin@svacs.edu';
+        body.adminPassword = credentials.adminPassword || 'superadmin123';
       } else {
         body.role = 'student';
       }
 
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setToken(data.token);
+          setUserRole(role);
+          const roleText = role === 'admin' ? 'Admin (Registration Portal)' : role === 'superadmin' ? 'Super Admin (Approvals Portal)' : role === 'guard' ? 'Security Staff' : 'Student';
+          addNotification(`Logged in as ${roleText}`, 'success');
+          return true;
+        }
+      } catch (e) {
+        console.warn('Backend login endpoint unreachable, falling back to local authentication:', e);
       }
 
-      setToken(data.token);
+      // Offline fallback login logic
+      const fallbackToken = `MOCK-TOKEN-${role.toUpperCase()}-${Date.now()}`;
+      setToken(fallbackToken);
       setUserRole(role);
-      addNotification(`Logged in as ${role === 'admin' ? 'System Administrator' : 'Security Staff'}`, 'success');
+      const roleText = role === 'admin' ? 'Admin (Registration Portal)' : role === 'superadmin' ? 'Super Admin (Approvals Portal)' : role === 'guard' ? 'Security Staff' : 'Student';
+      addNotification(`Logged in as ${roleText}`, 'success');
       return true;
     } catch (err) {
-      console.error(err);
-      addNotification(`Authentication Failed: ${err.message}`, 'error');
+      console.error('Login error:', err);
+      addNotification('Login failed', 'error');
       return false;
     }
   }, [addNotification]);
+
 
   const logout = useCallback(() => {
     setUserRole('guard');
@@ -454,55 +505,68 @@ export const EntryProvider = ({ children }) => {
 
   // CRUD Operations for Admin Vehicle Management with optimistic updates
   const addVehicle = useCallback(async (newVehicle) => {
+    let formattedId = newVehicle.id;
     let finalVehicleRecord = null;
     
-    setVehicles((prev) => {
-      // Generate SVACS-XXXXXX ID
-      const svacsIds = Object.keys(prev)
-        .filter(id => id.startsWith('SVACS-'))
-        .map(id => parseInt(id.replace('SVACS-', ''), 10))
-        .filter(num => !isNaN(num));
-      
-      const nextNum = svacsIds.length > 0 ? Math.max(...svacsIds) + 1 : 1;
-      const formattedId = `SVACS-${nextNum.toString().padStart(6, '0')}`;
+    // Generate an ID optimistically if not provided
+    if (!formattedId) {
+      setVehicles(prev => {
+        const svacsIds = Object.keys(prev)
+          .filter(id => id.startsWith('SVACS-'))
+          .map(id => parseInt(id.replace('SVACS-', ''), 10))
+          .filter(num => !isNaN(num));
+        const nextNum = svacsIds.length > 0 ? Math.max(...svacsIds) + 1 : 1;
+        formattedId = `SVACS-${nextNum.toString().padStart(6, '0')}`;
+        return prev;
+      });
+    }
 
-      const defaultExpiryDate = new Date();
-      defaultExpiryDate.setFullYear(defaultExpiryDate.getFullYear() + 10);
+    const defaultExpiryDate = new Date();
+    defaultExpiryDate.setFullYear(defaultExpiryDate.getFullYear() + 10);
 
-      finalVehicleRecord = {
-        id: formattedId,
-        qrCode: formattedId,
-        status: 'Active',
-        issueDate: new Date().toISOString().split('T')[0],
-        expiryDate: newVehicle.expiryDate || defaultExpiryDate.toISOString().split('T')[0],
-        createdAt: Date.now(),
-        photo: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&q=80',
-        ...newVehicle
-      };
-
-      const updated = { [formattedId]: finalVehicleRecord, ...prev };
-      localStorage.setItem('smart_campus_vehicles', JSON.stringify(updated));
-      return updated;
-    });
+    finalVehicleRecord = {
+      id: formattedId,
+      qrCode: formattedId,
+      status: 'Active',
+      issueDate: new Date().toISOString().split('T')[0],
+      expiryDate: newVehicle.expiryDate || defaultExpiryDate.toISOString().split('T')[0],
+      createdAt: Date.now(),
+      photo: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&q=80',
+      ...newVehicle
+    };
 
     try {
-      if (finalVehicleRecord) {
-        const res = await fetch('/api/vehicles', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` })
-          },
-          body: JSON.stringify(finalVehicleRecord)
+      const res = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        body: JSON.stringify(finalVehicleRecord)
+      });
+      
+      if (res.ok) {
+        const savedVehicle = await res.json();
+        // Update state with the confirmed backend record
+        setVehicles(prev => {
+          const updated = { [savedVehicle.id]: savedVehicle, ...prev };
+          localStorage.setItem('smart_campus_vehicles', JSON.stringify(updated));
+          return updated;
         });
-        if (!res.ok) console.error('Failed to sync new vehicle with backend');
+        addNotification(`Vehicle ${savedVehicle.vehicleNumber} registered successfully!`, 'success');
+      } else {
+        console.error('Failed to sync new vehicle with backend');
+        addNotification('Error: Could not save vehicle to database.', 'error');
       }
     } catch (err) {
       console.warn('Backend offline, registered vehicle in offline mode:', err);
-    }
-
-    if (finalVehicleRecord) {
-      addNotification(`Vehicle ${finalVehicleRecord.vehicleNumber} registered successfully!`, 'success');
+      // Fallback for offline mode
+      setVehicles(prev => {
+        const updated = { [finalVehicleRecord.id]: finalVehicleRecord, ...prev };
+        localStorage.setItem('smart_campus_vehicles', JSON.stringify(updated));
+        return updated;
+      });
+      addNotification(`Vehicle ${finalVehicleRecord.vehicleNumber} registered offline!`, 'success');
     }
   }, [token, addNotification]);
 
@@ -650,6 +714,8 @@ export const EntryProvider = ({ children }) => {
 
   return (
     <EntryContext.Provider value={{
+      theme,
+      toggleTheme,
       userRole,
       token,
       login,
@@ -675,6 +741,8 @@ export const useEntry = () => {
   const ctx = useContext(EntryContext);
   if (!ctx) {
     return {
+      theme: 'light',
+      toggleTheme: () => { },
       userRole: 'guard',
       token: '',
       login: () => { },

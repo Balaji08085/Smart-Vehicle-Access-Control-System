@@ -1,0 +1,39 @@
+[
+  {
+    "_id": "REQ-1001",
+    "name": "Balaji S",
+    "photoUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
+    "employeeId": "23BCS045",
+    "department": "Computer Science & Engineering",
+    "company": "MRF Innovation Lab",
+    "designation": "Research Fellow",
+    "bikeNumber": "TN 14 AE 8495",
+    "vehicleType": "Bike",
+    "token": "BIKE-2026-000849-2A316E4E",
+    "email": "balaji@mrf-innovationpark.edu",
+    "mobile": "+91 98765 43210",
+    "accessStartDate": "2026-01-01T00:00:00.000Z",
+    "accessExpiryDate": "2027-01-01T00:00:00.000Z",
+    "status": "Approved",
+    "createdAt": "2026-07-30T09:38:25.272Z",
+    "actionDate": "2026-07-30T10:29:29.373Z"
+  },
+  {
+    "_id": "REQ-DISABLED",
+    "name": "Vijay Kumar",
+    "photoUrl": "https://images.unsplash.com/photo-1463453091185-61582044d556?w=400&q=80",
+    "employeeId": "EMP-9999",
+    "department": "Civil",
+    "company": "Vendor",
+    "designation": "Driver",
+    "bikeNumber": "TN 38 DIS 9999",
+    "vehicleType": "Car",
+    "token": "disabled-token",
+    "email": "vijay@vendor.com",
+    "mobile": "+91 91111 22222",
+    "accessStartDate": "2026-01-01T00:00:00.000Z",
+    "accessExpiryDate": "2027-01-01T00:00:00.000Z",
+    "status": "Disabled",
+    "createdAt": "2026-07-30T09:38:25.272Z"
+  }
+]
