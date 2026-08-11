@@ -20,15 +20,22 @@ In the `backend/` directory, configure your `.env` file with the database URI an
 # MongoDB Connection String (Local or Remote Server)
 MONGO_URI=mongodb://admin:YourStrongPasswordHere@127.0.0.1:27017/svacs?authSource=admin
 
+# Local MongoDB Connection
+MONGO_URI=mongodb://127.0.0.1:27017/svacs
+
 PORT=5000
 JWT_SECRET=mcc_secure_jwt_secret_key_987654321
 
-# Email Notifications (Gmail SMTP)
+# Gmail SMTP Configuration Example
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
+SMTP_FROM="SVACS Security Gate" <your_email@gmail.com>
+NOTIFICATION_EMAIL=your_email@gmail.com
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
 ```
 
 ---
