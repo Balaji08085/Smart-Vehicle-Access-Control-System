@@ -27,42 +27,89 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         children: _screens,
       ),
       bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: const BoxDecoration(
           color: AppColors.cardBackground,
           border: Border(
-            top: BorderSide(color: AppColors.borderDark, width: 1.0),
+            top: BorderSide(color: AppColors.borderGlass, width: 1.5),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black45,
-              blurRadius: 10,
-              offset: Offset(0, -2),
+              color: Colors.black54,
+              blurRadius: 15,
+              offset: Offset(0, -4),
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          backgroundColor: AppColors.cardBackground,
-          selectedItemColor: AppColors.accentAmber,
-          unselectedItemColor: AppColors.textSecondary,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.8),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.qr_code_scanner_rounded),
-              activeIcon: Icon(Icons.qr_code_scanner_rounded, size: 28, color: AppColors.accentAmber),
-              label: 'QR Scanner',
+        child: SafeArea(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(
+                index: 0,
+                icon: Icons.qr_code_scanner_rounded,
+                label: 'QR Scanner',
+              ),
+              _buildNavItem(
+                index: 1,
+                icon: Icons.receipt_long_rounded,
+                label: 'Scan Audit Logs',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+  }) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accentAmber.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.accentAmber.withValues(alpha: 0.5) : Colors.transparent,
+            width: 1.2,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.accentAmber.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.accentAmberGlow : AppColors.textSecondary,
+              size: isSelected ? 24 : 22,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history_rounded),
-              activeIcon: Icon(Icons.history_rounded, size: 28, color: AppColors.accentAmber),
-              label: 'Scan Audit Logs',
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                fontSize: 12,
+                letterSpacing: 0.6,
+              ),
             ),
           ],
         ),

@@ -20,6 +20,8 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
 
   bool _hasCameraPermission = false;
   bool _isPermissionChecked = false;
+  bool _isTorchOn = false;
+  CameraFacing _currentFacing = CameraFacing.back;
 
   @override
   void initState() {
@@ -31,16 +33,16 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
 
   void _initController() {
     _cameraController = MobileScannerController(
-      detectionSpeed: DetectionSpeed.unrestricted,
-      facing: CameraFacing.back,
+      detectionSpeed: DetectionSpeed.normal,
+      facing: _currentFacing,
       torchEnabled: false,
-      autoStart: true,
+      returnImage: false,
     );
   }
 
   Future<void> _checkPermission() async {
     var status = await Permission.camera.status;
-    if (status.isDenied) {
+    if (status.isDenied || status.isPermanentlyDenied) {
       status = await Permission.camera.request();
     }
 
@@ -59,14 +61,51 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
   Future<void> _restartCamera() async {
     try {
       await _cameraController.stop();
-    } catch (_) {}
-    await Future.delayed(const Duration(milliseconds: 300));
-    try {
-      await _cameraController.start();
+      await _cameraController.dispose();
     } catch (e) {
-      debugPrint('⚠️ Restart camera error: $e');
+      debugPrint('⚠️ Error disposing old camera controller: $e');
     }
-    if (mounted) setState(() {});
+
+    _isTorchOn = false;
+    _initController();
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _toggleTorch() async {
+    try {
+      await _cameraController.toggleTorch();
+      if (mounted) {
+        setState(() {
+          _isTorchOn = !_isTorchOn;
+        });
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error toggling torch: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Flashlight is unavailable on this camera mode'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _switchCamera() async {
+    try {
+      await _cameraController.switchCamera();
+      if (mounted) {
+        setState(() {
+          _currentFacing = _currentFacing == CameraFacing.back ? CameraFacing.front : CameraFacing.back;
+        });
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error switching camera: $e');
+    }
   }
 
   @override
@@ -155,10 +194,10 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: AppColors.accentAmber),
+              CircularProgressIndicator(color: AppColors.accentAmber, strokeWidth: 3),
               SizedBox(height: 16),
               Text(
-                'INITIALIZING GATE CAMERA...',
+                'CHECKING CAMERA PERMISSIONS...',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1.2),
               ),
             ],
@@ -169,25 +208,36 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
 
     if (!_hasCameraPermission) {
       return Container(
-        color: AppColors.darkBackground,
+        decoration: const BoxDecoration(
+          color: AppColors.darkBackground,
+          gradient: AppColors.darkCardGradient,
+        ),
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.no_photography_rounded, size: 70, color: AppColors.dangerRed),
-              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.dangerRed.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.4), width: 2),
+                ),
+                child: const Icon(Icons.no_photography_rounded, size: 60, color: AppColors.dangerRed),
+              ),
+              const SizedBox(height: 20),
               const Text(
                 'Camera Access Required',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               const Text(
-                'SVACS Gate QR Scanner requires camera permission to validate vehicle passes.',
+                'SVACS Gate QR Scanner requires camera permission to scan vehicle permits.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
@@ -196,21 +246,24 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
                   ElevatedButton.icon(
                     onPressed: _checkPermission,
                     icon: const Icon(Icons.camera_alt_rounded),
-                    label: const Text('ENABLE CAMERA ACCESS'),
+                    label: const Text('GRANT CAMERA PERMISSION', style: TextStyle(fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryRed,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      elevation: 6,
                     ),
                   ),
                   OutlinedButton.icon(
                     onPressed: () => openAppSettings(),
                     icon: const Icon(Icons.settings_rounded, size: 18),
-                    label: const Text('OPEN APP SETTINGS'),
+                    label: const Text('OPEN APP SETTINGS', style: TextStyle(fontWeight: FontWeight.bold)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.accentAmber,
-                      side: const BorderSide(color: AppColors.accentAmber),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      side: const BorderSide(color: AppColors.accentAmber, width: 1.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                   ),
                 ],
@@ -225,50 +278,68 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
       children: [
         // Native MobileScanner Camera Feed
         MobileScanner(
+          key: ValueKey(_cameraController.hashCode),
           controller: _cameraController,
           fit: BoxFit.cover,
           onDetect: _onDetect,
-          errorBuilder: (context, error, child) {
+          errorBuilder: (context, error) {
             return Container(
-              color: AppColors.darkBackground,
+              decoration: const BoxDecoration(
+                color: AppColors.darkBackground,
+                gradient: AppColors.darkCardGradient,
+              ),
               padding: const EdgeInsets.all(24),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.videocam_off_rounded, size: 60, color: AppColors.dangerRed),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Camera Feed Unreachable',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Error: ${error.errorCode}',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: AppColors.dangerRed.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.4), width: 2),
+                      ),
+                      child: const Icon(Icons.videocam_off_rounded, size: 50, color: AppColors.dangerRed),
                     ),
                     const SizedBox(height: 16),
+                    const Text(
+                      'Camera Feed Unreachable',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Error: ${error.errorCode}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                    const SizedBox(height: 24),
                     Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
+                      spacing: 12,
+                      runSpacing: 12,
                       alignment: WrapAlignment.center,
                       children: [
                         ElevatedButton.icon(
                           onPressed: _restartCamera,
                           icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('RESTART STREAM'),
+                          label: const Text('RESTART CAMERA STREAM', style: TextStyle(fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryRed,
                             foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 4,
                           ),
                         ),
                         OutlinedButton.icon(
                           onPressed: () => openAppSettings(),
                           icon: const Icon(Icons.settings_rounded, size: 18),
-                          label: const Text('APP SETTINGS'),
+                          label: const Text('APP SETTINGS', style: TextStyle(fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.accentAmber,
                             side: const BorderSide(color: AppColors.accentAmber),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ],
@@ -285,20 +356,36 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
           top: 16,
           left: 16,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.6),
+              color: Colors.black.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.5)),
+              border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.6)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.successGreen.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.fiber_manual_record_rounded, size: 10, color: AppColors.successGreen),
-                const SizedBox(width: 6),
-                const Text(
-                  'LIVE CAMERA STREAM',
-                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.successGreen,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: AppColors.successGreen, blurRadius: 6),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _currentFacing == CameraFacing.back ? 'LIVE REAR CAMERA' : 'LIVE FRONT CAMERA',
+                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2),
                 ),
               ],
             ),
@@ -310,39 +397,61 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
           child: Stack(
             alignment: Alignment.center,
             children: [
+              // Main Outer HUD Frame
               Container(
-                width: 250,
-                height: 250,
+                width: 260,
+                height: 260,
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.accentAmber, width: 2.5),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accentAmber.withValues(alpha: 0.2),
-                      blurRadius: 20,
+                      color: AppColors.accentAmber.withValues(alpha: 0.3),
+                      blurRadius: 25,
                       spreadRadius: 2,
                     ),
                   ],
                 ),
               ),
 
-              // Corner Accent Lines
+              // Corner Accent Bracket Frame
               Container(
-                width: 270,
-                height: 270,
+                width: 280,
+                height: 280,
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.accentAmber.withValues(alpha: 0.4), width: 1.5),
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+
+              // Horizontal Scan Laser Accent
+              Container(
+                width: 240,
+                height: 2,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.accentAmber.withValues(alpha: 0),
+                      AppColors.accentAmberGlow,
+                      AppColors.accentAmber.withValues(alpha: 0),
+                    ],
+                  ),
+                  boxShadow: const [
+                    BoxShadow(color: AppColors.accentAmber, blurRadius: 10, spreadRadius: 1),
+                  ],
                 ),
               ),
 
               // Center Crosshair Dot
               Container(
-                width: 8,
-                height: 8,
+                width: 10,
+                height: 10,
                 decoration: const BoxDecoration(
-                  color: AppColors.accentAmber,
+                  color: AppColors.accentAmberGlow,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: AppColors.accentAmber, blurRadius: 8),
+                  ],
                 ),
               ),
             ],
@@ -352,21 +461,21 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
         // Verifying Loading Overlay
         if (scannerProvider.isVerifying)
           Container(
-            color: Colors.black.withValues(alpha: 0.8),
+            color: Colors.black.withValues(alpha: 0.85),
             child: const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircularProgressIndicator(color: AppColors.accentAmber, strokeWidth: 3.5),
-                  SizedBox(height: 18),
+                  SizedBox(height: 20),
                   Text(
                     'VERIFYING VEHICLE PASS...',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 1.5),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1.5),
                   ),
                   SizedBox(height: 6),
                   Text(
-                    'Checking MongoDB & Token Encryption',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                    'Authenticating Token with Security Gate Database',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                 ],
               ),
@@ -385,87 +494,29 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
       appBar: AppBarWidget(
         title: 'SVACS GATE QR SCANNER',
         actions: [
-          // Torch / Flashlight Button
-          ValueListenableBuilder<MobileScannerState>(
-            valueListenable: _cameraController,
-            builder: (context, state, child) {
-              final isFlashOn = state.torchState == TorchState.on;
-              final isRunning = state.isRunning;
-              return IconButton(
-                icon: Icon(
-                  isFlashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
-                  color: isFlashOn ? AppColors.accentAmber : (isRunning ? Colors.white : Colors.white38),
-                ),
-                tooltip: isFlashOn ? 'Turn Flash Off' : 'Turn Flash On',
-                onPressed: isRunning
-                    ? () async {
-                        try {
-                          await _cameraController.toggleTorch();
-                        } catch (e) {
-                          debugPrint('⚠️ Torch toggle error: $e');
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Flashlight is unavailable on this camera device'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        }
-                      }
-                    : null,
-              );
-            },
+          // Flashlight (Torch) Toggle Button
+          IconButton(
+            icon: Icon(
+              _isTorchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+              color: _isTorchOn ? AppColors.accentAmberGlow : Colors.white,
+            ),
+            tooltip: _isTorchOn ? 'Turn Flash Off' : 'Turn Flash On',
+            onPressed: _toggleTorch,
           ),
           // Front / Back Camera Switch Button
-          ValueListenableBuilder<MobileScannerState>(
-            valueListenable: _cameraController,
-            builder: (context, state, child) {
-              final isFront = state.cameraDirection == CameraFacing.front;
-              final isRunning = state.isRunning;
-              return IconButton(
-                icon: Icon(
-                  isFront ? Icons.camera_front_rounded : Icons.camera_rear_rounded,
-                  color: isRunning ? AppColors.accentAmber : Colors.white38,
-                ),
-                tooltip: isFront ? 'Switch to Rear Camera' : 'Switch to Front Camera',
-                onPressed: isRunning
-                    ? () async {
-                        try {
-                          await _cameraController.switchCamera();
-                        } catch (e) {
-                          debugPrint('⚠️ Camera switch error: $e');
-                        }
-                      }
-                    : null,
-              );
-            },
+          IconButton(
+            icon: Icon(
+              _currentFacing == CameraFacing.front ? Icons.camera_front_rounded : Icons.camera_rear_rounded,
+              color: AppColors.accentAmber,
+            ),
+            tooltip: _currentFacing == CameraFacing.front ? 'Switch to Rear Camera' : 'Switch to Front Camera',
+            onPressed: _switchCamera,
           ),
-          // Camera Stream Pause / Resume Button
-          ValueListenableBuilder<MobileScannerState>(
-            valueListenable: _cameraController,
-            builder: (context, state, child) {
-              final isRunning = state.isRunning;
-              return IconButton(
-                icon: Icon(
-                  isRunning ? Icons.videocam_off_rounded : Icons.videocam_rounded,
-                  color: isRunning ? AppColors.dangerRed : AppColors.successGreen,
-                ),
-                tooltip: isRunning ? 'Pause Camera Stream' : 'Start Camera Stream',
-                onPressed: () async {
-                  try {
-                    if (isRunning) {
-                      await _cameraController.stop();
-                    } else {
-                      await _cameraController.start();
-                    }
-                    if (mounted) setState(() {});
-                  } catch (e) {
-                    debugPrint('⚠️ Toggle camera error: $e');
-                  }
-                },
-              );
-            },
+          // Refresh Camera Stream Button
+          IconButton(
+            icon: const Icon(Icons.sync_rounded, color: AppColors.infoBlue),
+            tooltip: 'Restart Camera Stream',
+            onPressed: _restartCamera,
           ),
           IconButton(
             icon: const Icon(Icons.settings_rounded, color: AppColors.accentAmber),
@@ -489,43 +540,67 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
                 color: AppColors.cardBackground,
-                border: Border(top: BorderSide(color: AppColors.borderDark, width: 1.5)),
+                border: Border(top: BorderSide(color: AppColors.borderGlass, width: 1.5)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black54, blurRadius: 15, offset: Offset(0, -4)),
+                ],
               ),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'MANUAL VERIFICATION',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textSecondary, letterSpacing: 1.2),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentAmber.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(Icons.verified_user_rounded, size: 14, color: AppColors.accentAmber),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'MANUAL VERIFICATION',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.2),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'INSTANT SEARCH',
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.accentAmber),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.infoBlue.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.infoBlue.withValues(alpha: 0.4)),
+                          ),
+                          child: const Text(
+                            'INSTANT SEARCH',
+                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppColors.infoBlue, letterSpacing: 0.8),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     TextField(
                       controller: _manualTokenController,
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                       decoration: InputDecoration(
-                        hintText: 'Enter QR token or Vehicle Number (e.g. TN 14 AE 8495)...',
+                        hintText: 'Enter QR Token or Vehicle No (e.g., TN 14 AF 5570)...',
                         hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                        prefixIcon: const Icon(Icons.pin_rounded, color: AppColors.accentAmber),
+                        prefixIcon: const Icon(Icons.qr_code_2_rounded, color: AppColors.accentAmber),
                         filled: true,
                         fillColor: AppColors.darkBackground,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppColors.borderDark),
+                          borderSide: const BorderSide(color: AppColors.borderGlass),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppColors.borderDark),
+                          borderSide: const BorderSide(color: AppColors.borderGlass),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -533,17 +608,32 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    ElevatedButton.icon(
-                      onPressed: scannerProvider.isVerifying ? null : _submitManualToken,
-                      icon: const Icon(Icons.verified_user_rounded),
-                      label: const Text('VERIFY VEHICLE PASS', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryRed,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryRed.withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: scannerProvider.isVerifying ? null : _submitManualToken,
+                        icon: const Icon(Icons.shield_outlined, color: Colors.white),
+                        label: const Text(
+                          'VERIFY VEHICLE PASS',
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1.2, color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
                       ),
                     ),
                   ],

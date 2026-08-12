@@ -32,7 +32,7 @@ class ApiClient {
     try {
       final headers = await _getHeaders();
       final response = await http.get(uri, headers: headers).timeout(_timeoutDuration);
-      return _processResponse<T>(response, parser);
+      return _processResponse<T>(response, parser, method: 'GET');
     } on SocketException catch (e) {
       debugPrint('❌ SocketException: $e');
       return ApiResponse.error('Unable to connect to server at ${AppConfig.baseUrl}. Check Wi-Fi & IP settings.');
@@ -61,7 +61,7 @@ class ApiClient {
       final response = await http
           .post(uri, headers: headers, body: jsonEncode(body ?? {}))
           .timeout(_timeoutDuration);
-      return _processResponse<T>(response, parser);
+      return _processResponse<T>(response, parser, method: 'POST', body: body);
     } on SocketException catch (e) {
       debugPrint('❌ SocketException: $e');
       return ApiResponse.error('Unable to connect to server at ${AppConfig.baseUrl}. Check Wi-Fi & IP settings.');
@@ -90,7 +90,7 @@ class ApiClient {
       final response = await http
           .put(uri, headers: headers, body: jsonEncode(body ?? {}))
           .timeout(_timeoutDuration);
-      return _processResponse<T>(response, parser);
+      return _processResponse<T>(response, parser, method: 'PUT', body: body);
     } on SocketException {
       return ApiResponse.error('Unable to connect to server. Check Wi-Fi & IP settings.');
     } on TimeoutException {
@@ -110,17 +110,54 @@ class ApiClient {
     try {
       final headers = await _getHeaders();
       final response = await http.delete(uri, headers: headers).timeout(_timeoutDuration);
-      return _processResponse<T>(response, parser);
+      return _processResponse<T>(response, parser, method: 'DELETE');
     } catch (e) {
       return ApiResponse.error('Network Error: $e');
     }
   }
 
-  static ApiResponse<T> _processResponse<T>(
+  static Future<ApiResponse<T>> _processResponse<T>(
     http.Response response,
-    T Function(dynamic json)? parser,
-  ) {
+    T Function(dynamic json)? parser, {
+    int redirectCount = 0,
+    String method = 'GET',
+    Map<String, dynamic>? body,
+  }) async {
     debugPrint('📥 Response Code: ${response.statusCode}');
+
+    // Handle HTTP Redirects (301, 302, 307, 308)
+    if ([301, 302, 307, 308].contains(response.statusCode) && redirectCount < 5) {
+      final redirectUrl = response.headers['location'];
+      if (redirectUrl != null && redirectUrl.isNotEmpty) {
+        debugPrint('🔀 Following Redirect (${response.statusCode}) -> $redirectUrl');
+        final targetUri = Uri.parse(redirectUrl);
+        final headers = await _getHeaders();
+
+        http.Response redirectedResponse;
+        if (method == 'POST') {
+          redirectedResponse = await http
+              .post(targetUri, headers: headers, body: jsonEncode(body ?? {}))
+              .timeout(_timeoutDuration);
+        } else if (method == 'PUT') {
+          redirectedResponse = await http
+              .put(targetUri, headers: headers, body: jsonEncode(body ?? {}))
+              .timeout(_timeoutDuration);
+        } else {
+          redirectedResponse = await http
+              .get(targetUri, headers: headers)
+              .timeout(_timeoutDuration);
+        }
+
+        return _processResponse<T>(
+          redirectedResponse,
+          parser,
+          redirectCount: redirectCount + 1,
+          method: method,
+          body: body,
+        );
+      }
+    }
+
     if (response.statusCode == 200 || response.statusCode == 201) {
       try {
         final decoded = jsonDecode(response.body);

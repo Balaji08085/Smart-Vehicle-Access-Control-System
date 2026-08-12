@@ -8,14 +8,13 @@ const MCC_COMPANIES = [
   { name: 'GREEN ERA', head: 'Prasanth', email: 'prasanth@greenera.in' },
   { name: 'LEXPOSH', head: 'Harishankar Ethiraj', email: 'harishankar@lexposh.com' },
   { name: 'ANMYWILL', head: 'Arun', email: 'arun@anmywill.com' },
-  { name: 'CLOUDLU', head: 'Arun', email: 'arun@cloudlu.com' },
   { name: 'TMS MEDIA', head: 'Jeeva', email: 'jeeva@tmsmedia.in' },
   { name: 'Papodos', head: 'Lee', email: 'lee@papodos.com' },
   { name: 'FIVE AMSTRONG', head: 'Abraham', email: 'abraham@fiveamstrong.com' },
   { name: 'DSRI', head: 'Franklin', email: 'franklin@dsri.in' },
   { name: 'PENTAGON', head: 'Mathew', email: 'mathew@pentagon.io' },
   { name: 'FAB LAB', head: 'Prince', email: 'prince@fablab.org' },
-  { name: 'SHE LEADS', head: 'Aishwarya', email: 'aishwarya@sheleads.org' },
+  { name: 'INNOVEITY', head: 'Tittus', email: 'tittus@innoveity.com' },
   { name: 'Other / Custom Startup', head: 'Custom Company Owner', email: '' }
 ];
 
@@ -212,7 +211,7 @@ const CreateRequest = () => {
                   <div className="space-y-1.5 flex-1">
                     <h3 className="font-black text-lg text-slate-900 dark:text-white">Startup</h3>
                     <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
-                      For MCC MRF Innovation Park startups (GREEN ERA, LEXPOSH, DSRI, etc.) interns & employees.
+                      For MCC MRF Innovation Park startups (GREEN ERA, LEXPOSH, DSRI, INNOVEITY, etc.) interns & employees.
                     </p>
                     <div className="pt-1 flex items-center gap-1.5 text-[11px] font-extrabold text-orange-700 dark:text-amber-400">
                       <UserCheck className="w-4 h-4 text-orange-600 dark:text-amber-400 shrink-0" /> 2-Tier Approval (Company Owner + Super Admin)

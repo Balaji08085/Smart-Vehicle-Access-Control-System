@@ -220,7 +220,7 @@ export const createRequest = async (req, res) => {
     const formattedBikeNum = bikeNumber.trim().toUpperCase();
     const formattedVehicleType = (vehicleType && ['Bike', 'Car'].includes(vehicleType)) ? vehicleType : 'Bike';
     const finalCompany = (company === 'Other / Custom Startup' && customCompany) ? customCompany.trim() : company.trim();
-    const initialStatus = (applicantCategory === 'Startup' || companyHeadEmail) ? 'Pending Company Approval' : 'Pending Super Admin Approval';
+    const initialStatus = (applicantCategory === 'Startup') ? 'Pending Company Approval' : 'Pending Super Admin Approval';
 
     // Standalone fallback if MongoDB Atlas is offline
     if (!isDbConnected()) {
@@ -254,7 +254,11 @@ export const createRequest = async (req, res) => {
       saveToDisk();
 
       if (initialStatus === 'Pending Company Approval') {
-        sendStartupOwnerApprovalEmail(newReq).catch(e => console.log('Owner email error:', e.message));
+        try {
+          await sendStartupOwnerApprovalEmail(newReq);
+        } catch (e) {
+          console.error('⚠️ Startup Owner Email Dispatch Error:', e.message);
+        }
       }
 
       return res.status(201).json(newReq);
@@ -298,7 +302,11 @@ export const createRequest = async (req, res) => {
     });
 
     if (initialStatus === 'Pending Company Approval') {
-      sendStartupOwnerApprovalEmail(newRequest).catch(e => console.log('Owner email error:', e.message));
+      try {
+        await sendStartupOwnerApprovalEmail(newRequest);
+      } catch (e) {
+        console.error('⚠️ Startup Owner Email Dispatch Error:', e.message);
+      }
     }
 
     res.status(201).json(newRequest);
@@ -374,27 +382,15 @@ export const ownerEmailAction = async (req, res) => {
     }
 
     if (!request) {
-      return res.status(404).send(buildResponsePage('❌ Request Not Found', 'This access request could not be found.', '#DC2626'));
+      return res.status(404).send(buildResponsePage('❌ Request Not Found', 'This vehicle access request could not be found or has expired.', '#DC2626'));
     }
 
-    const os = await import('os');
-    const getLocalIp = () => {
-      const interfaces = os.networkInterfaces();
-      for (const name of Object.keys(interfaces)) {
-        for (const iface of interfaces[name]) {
-          if (iface.family === 'IPv4' && !iface.internal) {
-            return iface.address;
-          }
-        }
-      }
-      return '127.0.0.1';
-    };
-    const localIp = getLocalIp();
-    const port = process.env.PORT || 5000;
-    const dashboardUrl = `http://${localIp}:${port}/admin/approval`;
-
     if (request.status !== 'Pending Company Approval') {
-      return res.redirect(`${dashboardUrl}?info=Already%20processed`);
+      return res.send(buildResponsePage(
+        'ℹ️ Already Processed',
+        `This vehicle pass request for <strong>${request.name}</strong> (${request.bikeNumber}) has already been actioned (Current Status: <strong>${request.status}</strong>).`,
+        '#D97706'
+      ));
     }
 
     if (action === 'approve') {
@@ -417,7 +413,11 @@ export const ownerEmailAction = async (req, res) => {
         } catch (_) {}
       }
 
-      return res.redirect(`${dashboardUrl}?msg=approved`);
+      return res.send(buildResponsePage(
+        '✓ Tier-1 Approval Granted',
+        `Thank you! The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company}) has been <strong>APPROVED</strong> by Startup Management and forwarded to Super Admin for final QR Gate Pass issuance.`,
+        '#059669'
+      ));
 
     } else {
       request.status = 'Rejected';
@@ -439,15 +439,22 @@ export const ownerEmailAction = async (req, res) => {
         } catch (_) {}
       }
 
-      return res.redirect(`${dashboardUrl}?msg=rejected`);
+      sendRejectionEmail(request, 'Rejected by Startup Company Owner').catch(e => console.log('Rejection email error:', e.message));
+
+      return res.send(buildResponsePage(
+        '❌ Request Rejected',
+        `The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company}) has been <strong>REJECTED</strong>. The applicant has been notified via email.`,
+        '#DC2626'
+      ));
     }
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).send(buildResponsePage('❌ Error', error.message, '#DC2626'));
   }
 };
 
 // Helper: Build a styled HTML response page for email action clicks
 function buildResponsePage(title, message, color) {
+  const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -457,23 +464,24 @@ function buildResponsePage(title, message, color) {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0F172A, #1E293B); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .card { background: #fff; border-radius: 24px; padding: 48px; max-width: 520px; width: 90%; text-align: center; box-shadow: 0 24px 48px rgba(0,0,0,0.15); }
-    .icon { font-size: 56px; margin-bottom: 20px; }
-    h1 { color: ${color}; font-size: 24px; font-weight: 900; margin-bottom: 16px; }
-    .msg { color: #475569; font-size: 15px; line-height: 1.7; }
-    .badge { display: inline-block; background: ${color}15; color: ${color}; padding: 8px 24px; border-radius: 50px; font-weight: 800; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; margin-top: 24px; border: 2px solid ${color}30; }
-    a.btn { display: inline-block; margin-top: 24px; background: ${color}; color: #fff; padding: 12px 32px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 14px; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0F172A, #1E293B); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: #fff; border-radius: 24px; padding: 44px 36px; max-width: 540px; width: 100%; text-align: center; box-shadow: 0 24px 48px rgba(0,0,0,0.25); border: 1px solid #E2E8F0; }
+    .icon { font-size: 56px; margin-bottom: 16px; }
+    h1 { color: ${color}; font-size: 22px; font-weight: 900; margin-bottom: 14px; letter-spacing: -0.5px; }
+    .msg { color: #475569; font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
+    .badge { display: inline-block; background: ${color}15; color: ${color}; padding: 8px 20px; border-radius: 50px; font-weight: 800; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border: 1.5px solid ${color}30; }
+    a.btn { display: inline-block; margin-top: 24px; background: linear-gradient(135deg, #0F172A, #1E293B); color: #fff; padding: 14px 36px; border-radius: 50px; text-decoration: none; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(15,23,42,0.3); }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="icon">${title.split(' ')[0]}</div>
     <h1>${title}</h1>
-    <p class="msg">${message}</p>
-    <div class="badge">SVACS — Smart Vehicle Access Control</div>
-    <br/>
-    <a class="btn" href="http://127.0.0.1:5000/admin/approval">Open Approval Dashboard</a>
+    <div class="msg">${message}</div>
+    <div class="badge">MCC-MRF Innovation Park &bull; Smart Access Control</div>
+    <div>
+      <a class="btn" href="${portalUrl}/admin/approval">Open Approval Dashboard</a>
+    </div>
   </div>
 </body>
 </html>`;

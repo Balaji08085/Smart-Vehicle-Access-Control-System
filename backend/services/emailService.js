@@ -819,22 +819,7 @@ export const sendScanAlertEmail = async (request, reason = 'ACCESS DENIED', qrTo
 // ██  5. STARTUP COMPANY OWNER APPROVAL EMAIL (Tier 1)
 // ═══════════════════════════════════════════════════════════════════
 export const sendStartupOwnerApprovalEmail = async (request) => {
-  const os = await import('os');
-  const getLocalIp = () => {
-    const interfaces = os.networkInterfaces();
-    for (const name of Object.keys(interfaces)) {
-      for (const iface of interfaces[name]) {
-        if (iface.family === 'IPv4' && !iface.internal) {
-          return iface.address;
-        }
-      }
-    }
-    return '127.0.0.1';
-  };
-
-  const localIp = getLocalIp();
-  const port = process.env.PORT || 5000;
-  const baseUrl = `http://${localIp}:${port}`;
+  const baseUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
 
   const targetEmail = request.companyHeadEmail || 'frankin@techquora.com';
   const ownerName = request.companyHead || 'Mr. Franklin';
@@ -910,18 +895,24 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
 
   const textBody = `Dear ${ownerName},\n\nApproval request for ${request.name} (${request.company}).\nVehicle: ${request.bikeNumber}\nDepartment: ${request.department}\nDesignation: ${request.designation}\n\nPlease approve at: ${baseUrl}/admin/approval`;
 
+  const notifyAdmin = process.env.NOTIFICATION_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER;
+  let recipients = targetEmail;
+  if (notifyAdmin && notifyAdmin.toLowerCase() !== targetEmail.toLowerCase()) {
+    recipients = `${targetEmail}, ${notifyAdmin}`;
+  }
+
   if (transporter) {
     try {
       await transporter.sendMail({
         from: `"SVACS Company Approval" <${transportObj.fromEmail}>`,
-        to: targetEmail,
+        to: recipients,
         subject,
         text: textBody,
         html: htmlBody
       });
-      console.log(`✅ Tier-1 Company Owner approval email dispatched to ${targetEmail} (${ownerName}) via LAN IP ${localIp}`);
+      console.log(`✅ Tier-1 Company Owner approval email dispatched to ${recipients} (${ownerName}) via ${baseUrl}`);
     } catch (e) {
-      console.error(`❌ Mail send error to ${targetEmail}:`, e.message);
+      console.error(`❌ Mail send error to ${recipients}:`, e.message);
     }
   }
 

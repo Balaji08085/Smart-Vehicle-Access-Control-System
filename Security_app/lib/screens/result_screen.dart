@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/qr_result.dart';
 import '../providers/scanner_provider.dart';
+import '../utils/app_colors.dart';
 import '../utils/date_formatter.dart';
 import '../widgets/app_bar_widget.dart';
 
@@ -47,6 +48,8 @@ class ResultScreen extends StatelessWidget {
       imageWidget = _buildPlaceholderAvatar(ownerName, isAllowed);
     }
 
+    final accentColor = isAllowed ? AppColors.successGreen : AppColors.dangerRed;
+
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
@@ -55,11 +58,11 @@ class ResultScreen extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.white,
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Colors.black38,
-                blurRadius: 15,
-                spreadRadius: 2,
+                color: accentColor.withValues(alpha: 0.5),
+                blurRadius: 20,
+                spreadRadius: 3,
               ),
             ],
           ),
@@ -76,11 +79,14 @@ class ResultScreen extends StatelessWidget {
           decoration: const BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: Colors.black45, blurRadius: 8),
+            ],
           ),
           child: Icon(
             isAllowed ? Icons.check_circle_rounded : Icons.cancel_rounded,
-            color: isAllowed ? const Color(0xFF047857) : const Color(0xFFDC2626),
-            size: 28,
+            color: isAllowed ? AppColors.successGreen : AppColors.dangerRed,
+            size: 30,
           ),
         ),
       ],
@@ -93,14 +99,19 @@ class ResultScreen extends StatelessWidget {
         : 'V';
 
     return Container(
-      color: isAllowed ? const Color(0xFF064E3B) : const Color(0xFF7F1D1D),
+      decoration: BoxDecoration(
+        gradient: isAllowed
+            ? const LinearGradient(colors: [Color(0xFF065F46), Color(0xFF10B981)])
+            : const LinearGradient(colors: [Color(0xFF991B1B), Color(0xFFEF4444)]),
+      ),
       child: Center(
         child: Text(
           initials,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 40,
+            fontSize: 42,
             fontWeight: FontWeight.w900,
+            shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
           ),
         ),
       ),
@@ -112,140 +123,186 @@ class ResultScreen extends StatelessWidget {
     final result = ModalRoute.of(context)?.settings.arguments as QrResult?;
     final isAllowed = result?.isAllowed ?? false;
 
-    // Full Screen Color Palette
-    final backgroundColor = isAllowed ? const Color(0xFF022C22) : const Color(0xFF450A0A);
-    final cardColor = isAllowed ? const Color(0xFF047857) : const Color(0xFFDC2626);
-    final reasonBoxColor = isAllowed ? const Color(0xFF064E3B) : const Color(0xFF7F1D1D);
+    // Full Screen Theme Gradients
+    final bgGradient = isAllowed
+        ? const LinearGradient(
+            colors: [Color(0xFF022C22), Color(0xFF064E3B), Color(0xFF021C16)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          )
+        : const LinearGradient(
+            colors: [Color(0xFF450A0A), Color(0xFF7F1D1D), Color(0xFF290505)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+
+    final cardBgColor = isAllowed ? const Color(0xFF065F46) : const Color(0xFF991B1B);
+    final reasonBoxColor = isAllowed ? const Color(0xFF022C22) : const Color(0xFF450A0A);
     final reasonText = result?.reason ?? (isAllowed ? 'ACCESS ALLOWED' : 'ACCESS DENIED');
 
     return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBarWidget(
-        title: isAllowed ? 'ACCESS ALLOWED' : 'ACCESS DENIED',
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Card(
-              color: cardColor,
-              elevation: 12,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-                side: const BorderSide(color: Colors.white38, width: 2),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Status Badge Icon
-                    Icon(
-                      isAllowed ? Icons.verified_user_rounded : Icons.gpp_bad_rounded,
-                      size: 70,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Main Status Title
-                    Text(
-                      isAllowed ? 'GATE ACCESS ALLOWED' : 'GATE ACCESS DENIED',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Prominent REASON Box
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      body: Container(
+        decoration: BoxDecoration(gradient: bgGradient),
+        child: Column(
+          children: [
+            AppBarWidget(
+              title: isAllowed ? 'GATE ACCESS GRANTED' : 'GATE ACCESS DENIED',
+            ),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: Container(
                       decoration: BoxDecoration(
-                        color: reasonBoxColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white54, width: 1.5),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3))
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'VERIFICATION REASON',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white70,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            reasonText.toUpperCase(),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.amberAccent,
-                              letterSpacing: 0.8,
-                            ),
+                        color: cardBgColor.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: isAllowed ? const Color(0x6034D399) : const Color(0x60F87171),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isAllowed ? AppColors.successGreen : AppColors.dangerRed).withValues(alpha: 0.3),
+                            blurRadius: 30,
+                            spreadRadius: 2,
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Status Badge Icon
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isAllowed ? Icons.verified_user_rounded : Icons.gpp_bad_rounded,
+                                size: 60,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
 
-                    // Visitor Photo Avatar
-                    _buildVisitorPhoto(result, isAllowed),
-                    const SizedBox(height: 20),
+                            // Main Status Title
+                            Text(
+                              isAllowed ? 'GATE ACCESS GRANTED' : 'GATE ACCESS DENIED',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: 1.5,
+                                shadows: [Shadow(color: Colors.black45, blurRadius: 6)],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
 
-                    const Divider(color: Colors.white38, height: 1),
-                    const SizedBox(height: 16),
+                            // Prominent REASON Box
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: reasonBoxColor,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isAllowed ? AppColors.successGreen.withValues(alpha: 0.6) : AppColors.dangerRed.withValues(alpha: 0.6),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'VERIFICATION REASON',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white70,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    reasonText.toUpperCase(),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.accentAmberGlow,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
 
-                    // Details Section
-                    _buildDetailRow('Vehicle Number', result?.vehicleNumber ?? 'N/A', isAccent: true),
-                    if (result?.ownerName != null) _buildDetailRow('Visitor / Owner Name', result!.ownerName!),
-                    if (result?.role != null) _buildDetailRow('Designation / Role', result!.role!),
-                    if (result?.validTill != null) _buildDetailRow('Valid Until', DateFormatter.formatDateOnly(result!.validTill!)),
-                    _buildDetailRow('Verification Time', DateFormatter.formatDateTime(result?.scannedAt)),
+                            // Visitor Photo Avatar
+                            _buildVisitorPhoto(result, isAllowed),
+                            const SizedBox(height: 20),
 
-                    const SizedBox(height: 28),
+                            const Divider(color: Colors.white30, height: 1),
+                            const SizedBox(height: 16),
 
-                    // Action Button
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Provider.of<ScannerProvider>(context, listen: false).resumeScanning();
-                        Navigator.pop(context);
-                      },
-                      icon: Icon(
-                        Icons.qr_code_scanner_rounded,
-                        color: isAllowed ? const Color(0xFF047857) : const Color(0xFFDC2626),
-                      ),
-                      label: Text(
-                        'SCAN NEXT VEHICLE',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                          color: isAllowed ? const Color(0xFF047857) : const Color(0xFFDC2626),
+                            // Details Section
+                            _buildDetailRow('Vehicle Number', result?.vehicleNumber ?? 'N/A', isAccent: true),
+                            if (result?.ownerName != null) _buildDetailRow('Visitor / Owner Name', result!.ownerName!),
+                            if (result?.role != null) _buildDetailRow('Designation / Role', result!.role!),
+                            if (result?.validTill != null) _buildDetailRow('Valid Until', DateFormatter.formatDateOnly(result!.validTill!)),
+                            _buildDetailRow('Verification Time', DateFormatter.formatDateTime(result?.scannedAt)),
+
+                            const SizedBox(height: 28),
+
+                            // Action Button
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: const [
+                                  BoxShadow(color: Colors.black38, blurRadius: 10, offset: Offset(0, 4)),
+                                ],
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Provider.of<ScannerProvider>(context, listen: false).resumeScanning();
+                                  Navigator.pop(context);
+                                },
+                                icon: Icon(
+                                  Icons.qr_code_scanner_rounded,
+                                  color: isAllowed ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+                                ),
+                                label: Text(
+                                  'SCAN NEXT VEHICLE',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 15,
+                                    letterSpacing: 1.0,
+                                    color: isAllowed ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  shadowColor: Colors.transparent,
+                                  minimumSize: const Size(double.infinity, 54),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 54),
-                        elevation: 6,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -266,7 +323,7 @@ class ResultScreen extends StatelessWidget {
               value,
               textAlign: TextAlign.end,
               style: TextStyle(
-                color: isAccent ? Colors.amberAccent : Colors.white,
+                color: isAccent ? AppColors.accentAmberGlow : Colors.white,
                 fontWeight: FontWeight.w900,
                 fontSize: isAccent ? 17 : 14,
               ),

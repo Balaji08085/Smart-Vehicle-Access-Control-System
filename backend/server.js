@@ -25,9 +25,18 @@ app.use('/api', apiRoutes);
 
 // Serve static frontend files from build dist folder
 const distPath = path.join(__dirname, '../dist');
-app.use(express.static(distPath));
+app.use(express.static(distPath, {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.join(distPath, 'index.html'));
   }
 });

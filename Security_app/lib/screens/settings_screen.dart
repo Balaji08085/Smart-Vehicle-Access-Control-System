@@ -83,7 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Enter your computer local IP address (e.g. http://192.168.1.10:5000) or emulator URL (http://10.0.2.2:5000).',
+                          'Enter live production server URL (e.g. https://smart-vehicle-access-control-system.mccmrfip.in) or local network IP.',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                         ),
@@ -91,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         CustomTextField(
                           controller: _urlController,
                           label: 'Server Base URL',
-                          hint: 'e.g., http://192.168.1.10:5000',
+                          hint: 'e.g., https://smart-vehicle-access-control-system.mccmrfip.in',
                           prefixIcon: Icons.link,
                           validator: Validators.validUrl,
                         ),
@@ -111,14 +111,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             if (mounted) {
                               messenger.showSnackBar(
                                 SnackBar(
-                                  content: Text('Reset to default IP: $defUrl'),
+                                  content: Text('Reset to default URL: $defUrl'),
                                   backgroundColor: AppColors.accentAmber,
                                 ),
                               );
                             }
                           },
                           icon: const Icon(Icons.wifi_rounded, size: 18),
-                          label: const Text('RESET TO DEFAULT SERVER IP (10.100.10.85)'),
+                          label: Text('RESET TO DEFAULT SERVER URL (${AppConfig.defaultUrl})'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.accentAmber,
                             side: const BorderSide(color: AppColors.accentAmber),

@@ -74,7 +74,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       appBar: AppBarWidget(
-        title: 'SCAN HISTORY & AUDIT',
+        title: 'SCAN HISTORY & AUDIT LOGS',
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_forever_rounded, color: AppColors.dangerRed),
@@ -103,7 +103,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.infoBlue),
+            tooltip: 'Refresh Logs',
             onPressed: () => provider.fetchScanHistory(),
           ),
           IconButton(
@@ -122,46 +123,57 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Daily Vehicle Access Summary Card (Refreshed Daily)
+                // Daily Vehicle Access Summary Card
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: AppColors.darkBackground,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.borderDark),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderGlass),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black38, blurRadius: 10, offset: Offset(0, 3)),
+                    ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildSummaryItem("TODAY'S SCANS", '${provider.todayTotalCount}', AppColors.infoBlue),
-                      Container(height: 30, width: 1, color: AppColors.borderDark),
+                      Container(height: 34, width: 1, color: AppColors.borderGlass),
                       _buildSummaryItem('ALLOWED', '${provider.todayAllowedCount}', AppColors.successGreen),
-                      Container(height: 30, width: 1, color: AppColors.borderDark),
+                      Container(height: 34, width: 1, color: AppColors.borderGlass),
                       _buildSummaryItem('DENIED', '${provider.todayDeniedCount}', AppColors.dangerRed),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
                 // Search Bar
                 TextField(
                   controller: _searchController,
                   onChanged: (val) => provider.setSearchQuery(val),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                   decoration: InputDecoration(
                     hintText: 'Search by vehicle number or owner name...',
-                    hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                    prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+                    hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    prefixIcon: const Icon(Icons.search_rounded, color: AppColors.accentAmber),
                     filled: true,
                     fillColor: AppColors.darkBackground,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.borderDark),
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppColors.borderGlass),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppColors.borderGlass),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppColors.accentAmber, width: 1.5),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
                 // Date Filter Mode Chips (All, Day, Week, Month, Year)
                 SingleChildScrollView(
@@ -191,7 +203,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       backgroundColor: AppColors.darkBackground,
                       foregroundColor: AppColors.accentAmber,
                       side: const BorderSide(color: AppColors.accentAmber),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ],
@@ -242,8 +254,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
                             color: AppColors.darkBackground,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.borderDark),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.borderGlass),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<int>(
@@ -269,8 +281,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
                             color: AppColors.darkBackground,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.borderDark),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.borderGlass),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<int>(
@@ -297,8 +309,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: AppColors.darkBackground,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.borderDark),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.borderGlass),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<int>(
@@ -371,12 +383,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 final log = provider.historyLogs[index];
                                 final isAllowed = log.isAllowed;
 
-                                return Card(
-                                  color: AppColors.cardBackground,
+                                return Container(
                                   margin: const EdgeInsets.only(bottom: 12),
-                                  shape: RoundedRectangleBorder(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.cardBackground,
                                     borderRadius: BorderRadius.circular(16),
-                                    side: const BorderSide(color: AppColors.borderDark),
+                                    border: Border.all(
+                                      color: isAllowed
+                                          ? AppColors.successGreen.withValues(alpha: 0.3)
+                                          : AppColors.dangerRed.withValues(alpha: 0.3),
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 3)),
+                                    ],
                                   ),
                                   child: ListTile(
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -410,39 +429,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ],
                                       ),
                                     ),
-                                     trailing: Row(
-                                       mainAxisSize: MainAxisSize.min,
-                                       children: [
-                                         StatusChip(status: log.status),
-                                         const SizedBox(width: 4),
-                                         IconButton(
-                                           icon: const Icon(Icons.delete_outline_rounded, color: AppColors.dangerRed, size: 20),
-                                           tooltip: 'Delete Log Entry',
-                                           onPressed: () {
-                                             showDialog(
-                                               context: context,
-                                               builder: (_) => ConfirmationDialog(
-                                                 title: 'Delete Scan Log Entry',
-                                                 content: 'Are you sure you want to delete the scan log entry for ${log.vehicleNumber}?',
-                                                 confirmText: 'DELETE LOG',
-                                                 confirmColor: AppColors.dangerRed,
-                                                 onConfirm: () async {
-                                                   final success = await provider.deleteHistoryLog(log.id);
-                                                   if (context.mounted && success) {
-                                                     ScaffoldMessenger.of(context).showSnackBar(
-                                                       const SnackBar(
-                                                         content: Text('Scan log entry deleted'),
-                                                         backgroundColor: AppColors.primaryRed,
-                                                       ),
-                                                     );
-                                                   }
-                                                 },
-                                               ),
-                                             );
-                                           },
-                                         ),
-                                       ],
-                                     ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        StatusChip(status: log.status),
+                                        const SizedBox(width: 4),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.dangerRed, size: 20),
+                                          tooltip: 'Delete Log Entry',
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (_) => ConfirmationDialog(
+                                                title: 'Delete Scan Log Entry',
+                                                content: 'Are you sure you want to delete the scan log entry for ${log.vehicleNumber}?',
+                                                confirmText: 'DELETE LOG',
+                                                confirmColor: AppColors.dangerRed,
+                                                onConfirm: () async {
+                                                  final success = await provider.deleteHistoryLog(log.id);
+                                                  if (context.mounted && success) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text('Scan log entry deleted'),
+                                                        backgroundColor: AppColors.primaryRed,
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },
@@ -464,7 +483,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
         const SizedBox(height: 4),
         Text(
           count,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: color),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: color,
+            shadows: [
+              Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10),
+            ],
+          ),
         ),
       ],
     );
