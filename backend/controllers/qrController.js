@@ -158,15 +158,24 @@ export const verifyToken = async (req, res) => {
       });
     }
 
-    // Handle full URLs like https://localhost:5173/verify/BIKE-2026-000344
+    // Handle full URLs, query strings, and trailing anchors
     if (inputToken.includes('/verify/')) {
       inputToken = inputToken.split('/verify/').pop().trim();
     }
+    if (inputToken.includes('?')) {
+      inputToken = inputToken.split('?')[0].trim();
+    }
+    if (inputToken.includes('#')) {
+      inputToken = inputToken.split('#')[0].trim();
+    }
+    inputToken = inputToken.replace(/\/+$/, '').trim();
     inputToken = decodeURIComponent(inputToken).trim();
 
-    const normalizedToken = inputToken;
+    // Regex extract BIKE token format if embedded in extra text
+    const tokenRegexMatch = inputToken.match(/(BIKE[-_][A-Za-z0-9\-_]+)/i);
+    const normalizedToken = tokenRegexMatch ? tokenRegexMatch[1] : inputToken;
     const cleanAlphaNum = normalizedToken.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    
+
     // Strip common prefix like BIKE-2026- or BIKE-
     let tokenNoPrefix = normalizedToken;
     if (tokenNoPrefix.toUpperCase().startsWith('BIKE-2026-')) {
@@ -178,13 +187,21 @@ export const verifyToken = async (req, res) => {
 
     // 1. Check MongoDB Database first if connected
     if (isDbConnected()) {
-      qrRecord = await QRCode.findOne({ token: normalizedToken }).populate('request');
+      qrRecord = await QRCode.findOne({
+        $or: [
+          { token: normalizedToken },
+          { token: new RegExp(`^${normalizedToken}$`, 'i') }
+        ]
+      }).populate('request');
+
       if (!qrRecord) {
         let reqDoc = await AccessRequest.findOne({ 
           $or: [
             { token: normalizedToken },
+            { token: new RegExp(`^${normalizedToken}$`, 'i') },
             { bikeNumber: normalizedToken },
-            { bikeNumber: new RegExp(normalizedToken, 'i') }
+            { bikeNumber: new RegExp(normalizedToken.replace(/[\s\-]/g, ''), 'i') },
+            { employeeId: normalizedToken }
           ]
         });
         
@@ -197,8 +214,8 @@ export const verifyToken = async (req, res) => {
             const reqEmpClean = (r.employeeId || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
             return (
-              (reqTokenClean && (reqTokenClean === cleanAlphaNum || reqTokenClean === cleanNoPrefixAlphaNum)) ||
-              (reqBikeClean && (reqBikeClean === cleanAlphaNum || reqBikeClean === cleanNoPrefixAlphaNum)) ||
+              (reqTokenClean && (reqTokenClean === cleanAlphaNum || reqTokenClean.includes(cleanAlphaNum) || cleanAlphaNum.includes(reqTokenClean))) ||
+              (reqBikeClean && (reqBikeClean === cleanAlphaNum || reqBikeClean === cleanNoPrefixAlphaNum || reqBikeClean.includes(cleanNoPrefixAlphaNum))) ||
               (reqIdClean && (reqIdClean === cleanAlphaNum || reqIdClean === cleanNoPrefixAlphaNum)) ||
               (reqEmpClean.length >= 2 && (reqEmpClean === cleanAlphaNum || reqEmpClean === cleanNoPrefixAlphaNum))
             );
@@ -216,6 +233,7 @@ export const verifyToken = async (req, res) => {
 
     // 2. Fallback to in-memory store if not found in MongoDB
     if (!qrRecord) {
+      try { loadScansFromDisk(); } catch (_) {}
       const foundInMemory = inMemoryRequests.find(r => {
         const reqTokenClean = (r.token || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         const reqBikeClean = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
@@ -223,8 +241,8 @@ export const verifyToken = async (req, res) => {
         const reqEmpClean = (r.employeeId || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
         return (
-          (reqTokenClean && (reqTokenClean === cleanAlphaNum || reqTokenClean === cleanNoPrefixAlphaNum)) ||
-          (reqBikeClean && (reqBikeClean === cleanAlphaNum || reqBikeClean === cleanNoPrefixAlphaNum)) ||
+          (reqTokenClean && (reqTokenClean === cleanAlphaNum || reqTokenClean.includes(cleanAlphaNum) || cleanAlphaNum.includes(reqTokenClean))) ||
+          (reqBikeClean && (reqBikeClean === cleanAlphaNum || reqBikeClean === cleanNoPrefixAlphaNum || reqBikeClean.includes(cleanNoPrefixAlphaNum))) ||
           (reqIdClean && (reqIdClean === cleanAlphaNum || reqIdClean === cleanNoPrefixAlphaNum)) ||
           (reqEmpClean.length >= 2 && (reqEmpClean === cleanAlphaNum || reqEmpClean === cleanNoPrefixAlphaNum))
         );
