@@ -615,23 +615,23 @@ export const approveRequest = async (req, res) => {
     if (isDbConnected()) {
       try {
         let dbReq = null;
+        const targetBike = request?.bikeNumber || id;
+        const targetId = request?._id || id;
+
         if (mongoose.Types.ObjectId.isValid(id)) {
           dbReq = await AccessRequest.findById(id);
         }
+        if (!dbReq && mongoose.Types.ObjectId.isValid(targetId)) {
+          dbReq = await AccessRequest.findById(targetId);
+        }
         if (!dbReq) {
-          const cleanId = String(id).trim();
           dbReq = await AccessRequest.findOne({
             $or: [
-              { _id: mongoose.Types.ObjectId.isValid(cleanId) ? cleanId : null },
-              { bikeNumber: cleanId },
-              { bikeNumber: cleanId.replace(/\s+/g, '') },
-              { bikeNumber: new RegExp(cleanId.replace(/[\s\-]/g, ''), 'i') },
-              { token: cleanId }
-            ].filter(Boolean)
+              { bikeNumber: targetBike },
+              { bikeNumber: targetBike.replace(/\s+/g, '') },
+              { bikeNumber: new RegExp(targetBike.replace(/[\s\-]/g, ''), 'i') }
+            ]
           });
-        }
-        if (!dbReq && request) {
-          dbReq = await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
         }
         if (dbReq) {
           dbReq.status = 'Approved';
