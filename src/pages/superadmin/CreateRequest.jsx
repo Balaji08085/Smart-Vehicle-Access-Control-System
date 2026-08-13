@@ -8,7 +8,6 @@ const MCC_COMPANIES = [
   { name: 'GREEN ERA', head: 'Prasanth', email: 'prasanth@greenera.in' },
   { name: 'LEXPOSH', head: 'Harishankar Ethiraj', email: 'harishankar@lexposh.com' },
   { name: 'ANMYWILL', head: 'Arun', email: 'arun@anmywill.com' },
-  { name: 'CLOUDLU', head: 'Arun', email: 'arun@cloudlu.com' },
   { name: 'TMS MEDIA', head: 'Jeeva', email: 'jeeva@tmsmedia.in' },
   { name: 'Papodos', head: 'Lee', email: 'lee@papodos.com' },
   { name: 'FIVE AMSTRONG', head: 'Abraham', email: 'abraham@fiveamstrong.com' },
@@ -16,7 +15,6 @@ const MCC_COMPANIES = [
   { name: 'PENTAGON', head: 'Mathew', email: 'mathew@pentagon.io' },
   { name: 'FAB LAB', head: 'Prince', email: 'prince@fablab.org' },
   { name: 'INNOVEITY', head: 'Tittus', email: 'tittus@innoveity.com' },
-  { name: 'SHE LEADS', head: 'Aishwarya', email: 'aishwarya@sheleads.org' },
   { name: 'Other / Custom Startup', head: 'Custom Company Owner', email: '' }
 ];
 
