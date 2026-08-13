@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head><title>Camera Test</title></head>
+<body style="background:#111;color:#fff;font-family:monospace;padding:20px;">
+<h2>Camera Diagnostic Test</h2>
+<div id="log" style="white-space:pre-wrap;font-size:13px;line-height:1.6;"></div>
+<video id="vid" autoplay playsinline muted style="width:400px;height:300px;background:#000;margin:20px 0;display:block;border:2px solid #333;"></video>
+<button onclick="runTest()" style="padding:10px 20px;font-size:14px;cursor:pointer;">Run Camera Test</button>
+<script>
+const log = (msg) => { document.getElementById('log').textContent += msg + '\n'; console.log(msg); };
+
+async function runTest() {
+  document.getElementById('log').textContent = '';
+  log('=== Camera Diagnostic ===');
+  log('URL: ' + location.href);
+  log('Secure context: ' + window.isSecureContext);
+  log('getUserMedia: ' + !!navigator.mediaDevices?.getUserMedia);
+  log('');
+
+  // Step 1: Enumerate
+  try {
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const cams = devs.filter(d => d.kind === 'videoinput');
+    log('Found ' + cams.length + ' camera(s):');
+    cams.forEach((c, i) => log('  [' + i + '] ' + (c.label || 'unlabeled') + ' id=' + c.deviceId.slice(0, 12)));
+  } catch (e) { log('enumerateDevices error: ' + e.message); }
+  log('');
+
+  // Step 2: Try different constraints
+  const tests = [
+    ['video: true', { video: true }],
+    ['640x480', { video: { width: 640, height: 480 } }],
+    ['1280x720', { video: { width: { ideal: 1280 }, height: { ideal: 720 } } }],
+  ];
+
+  for (const [name, constraints] of tests) {
+    log('--- Testing: ' + name + ' ---');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const track = stream.getVideoTracks()[0];
+      const settings = track.getSettings();
+      log('✅ SUCCESS! ' + settings.width + 'x' + settings.height + ' @ ' + (settings.frameRate||'?') + 'fps');
+      log('   Device: ' + (track.label || 'unknown'));
+
+      // Show on video
+      document.getElementById('vid').srcObject = stream;
+      log('   Video element attached - you should see your camera feed above');
+      log('');
+      log('🎉 Camera is working! The issue is in the React app, not the camera.');
+      return; // success — stop
+    } catch (e) {
+      log('❌ FAILED: ' + e.name + ': ' + e.message);
+      // wait before next attempt
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  log('');
+  log('❌ ALL TESTS FAILED');
+  log('');
+  log('Possible fixes:');
+  log('1. Check Windows Settings > Privacy > Camera > Allow apps to access camera');
+  log('2. Check browser address bar for blocked camera icon');
+  log('3. Close ALL other apps using camera (Zoom, Teams, Camera app)');
+  log('4. Try in Chrome Incognito mode');
+  log('5. Try restarting your browser');
+}
+
+runTest(); // auto-run
+</script>
+</body>
+</html>

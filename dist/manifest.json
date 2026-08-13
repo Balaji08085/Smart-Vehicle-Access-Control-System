@@ -1,0 +1,16 @@
+{
+  "short_name": "MCC-MRF Access",
+  "name": "MCC MRF Innovation Park — Smart Vehicle Access System",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#080C16",
+  "theme_color": "#080C16",
+  "display": "standalone",
+  "orientation": "portrait"
+}
