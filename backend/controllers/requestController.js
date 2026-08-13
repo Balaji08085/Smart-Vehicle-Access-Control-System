@@ -264,12 +264,16 @@ export const createRequest = async (req, res) => {
       return res.status(201).json(newReq);
     }
 
-    const existing = await AccessRequest.findOne({ 
-      bikeNumber: formattedBikeNum,
-      status: { $in: ['Pending', 'Pending Company Approval', 'Pending Super Admin Approval', 'Approved'] }
-    });
+    const existing = await AccessRequest.findOne({ bikeNumber: formattedBikeNum });
     if (existing) {
-      return res.status(400).json({ error: `Vehicle number ${formattedBikeNum} already has an active or pending registration.` });
+      if (['Rejected', 'Deleted'].includes(existing.status)) {
+        // Remove old rejected/deleted entry to allow re-registration without E11000 index conflict
+        await AccessRequest.deleteOne({ _id: existing._id });
+      } else {
+        return res.status(400).json({ 
+          error: `Vehicle number ${formattedBikeNum} is already registered in the system (Current Status: ${existing.status}).` 
+        });
+      }
     }
 
     const newRequest = new AccessRequest({
@@ -311,6 +315,11 @@ export const createRequest = async (req, res) => {
 
     res.status(201).json(newRequest);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        error: `Vehicle number ${formattedBikeNum || 'entered'} is already registered in the system.` 
+      });
+    }
     res.status(500).json({ error: error.message });
   }
 };
