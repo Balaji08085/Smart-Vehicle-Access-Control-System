@@ -121,11 +121,14 @@ import fs from 'fs';
 import path from 'path';
 
 const DATA_FILE = path.resolve(process.cwd(), 'requests_db.json');
+const BACKEND_DATA_FILE = path.resolve(process.cwd(), 'backend', 'requests_db.json');
 
 // Helper to save inMemoryRequests to disk permanently
 export const saveToDisk = () => {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(inMemoryRequests, null, 2), 'utf-8');
+    const jsonStr = JSON.stringify(inMemoryRequests, null, 2);
+    fs.writeFileSync(DATA_FILE, jsonStr, 'utf-8');
+    try { fs.writeFileSync(BACKEND_DATA_FILE, jsonStr, 'utf-8'); } catch (_) {}
   } catch (err) {
     console.error('Failed to save requests to disk:', err.message);
   }
@@ -134,14 +137,31 @@ export const saveToDisk = () => {
 // Helper to load inMemoryRequests from disk permanently on startup
 export const loadFromDisk = () => {
   try {
+    let loadedItems = [];
     if (fs.existsSync(DATA_FILE)) {
-      const data = fs.readFileSync(DATA_FILE, 'utf-8');
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        inMemoryRequests.length = 0;
-        inMemoryRequests.push(...parsed);
-        console.log(`✅ Permanently loaded ${parsed.length} vehicle requests from disk DB (${DATA_FILE})`);
-      }
+      try {
+        const data = fs.readFileSync(DATA_FILE, 'utf-8');
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) loadedItems.push(...parsed);
+      } catch (_) {}
+    }
+    if (fs.existsSync(BACKEND_DATA_FILE)) {
+      try {
+        const data = fs.readFileSync(BACKEND_DATA_FILE, 'utf-8');
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) loadedItems.push(...parsed);
+      } catch (_) {}
+    }
+
+    if (loadedItems.length > 0) {
+      const mergedMap = new Map();
+      loadedItems.forEach(item => {
+        const key = (item.bikeNumber || item.token || item._id || '').toString().trim().toUpperCase();
+        if (key) mergedMap.set(key, item);
+      });
+      inMemoryRequests.length = 0;
+      inMemoryRequests.push(...Array.from(mergedMap.values()));
+      console.log(`✅ Permanently loaded ${inMemoryRequests.length} vehicle requests from disk DB`);
     }
   } catch (err) {
     console.error('Failed to load requests from disk:', err.message);
