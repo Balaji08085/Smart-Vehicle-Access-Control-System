@@ -199,8 +199,10 @@ export const verifyToken = async (req, res) => {
           $or: [
             { token: normalizedToken },
             { token: new RegExp(`^${normalizedToken}$`, 'i') },
+            { token: new RegExp(cleanNoPrefixAlphaNum, 'i') },
             { bikeNumber: normalizedToken },
             { bikeNumber: new RegExp(normalizedToken.replace(/[\s\-]/g, ''), 'i') },
+            { bikeNumber: new RegExp(cleanNoPrefixAlphaNum, 'i') },
             { employeeId: normalizedToken }
           ]
         });

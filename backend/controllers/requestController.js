@@ -598,6 +598,18 @@ export const approveRequest = async (req, res) => {
         if (mongoose.Types.ObjectId.isValid(id)) {
           dbReq = await AccessRequest.findById(id);
         }
+        if (!dbReq) {
+          const cleanId = String(id).trim();
+          dbReq = await AccessRequest.findOne({
+            $or: [
+              { _id: mongoose.Types.ObjectId.isValid(cleanId) ? cleanId : null },
+              { bikeNumber: cleanId },
+              { bikeNumber: cleanId.replace(/\s+/g, '') },
+              { bikeNumber: new RegExp(cleanId.replace(/[\s\-]/g, ''), 'i') },
+              { token: cleanId }
+            ].filter(Boolean)
+          });
+        }
         if (!dbReq && request) {
           dbReq = await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
         }
