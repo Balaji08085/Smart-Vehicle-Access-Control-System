@@ -437,7 +437,7 @@ const ApprovalDashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl w-full max-w-7xl p-6 md:p-10 relative shadow-xl space-y-6 min-h-[88vh]"
+            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl w-full max-w-7xl p-6 md:p-10 pb-12 md:pb-16 relative shadow-xl space-y-6"
           >
             {/* Top Modal Bar */}
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-4">
@@ -508,14 +508,14 @@ const ApprovalDashboard = () => {
               </div>
             )}
 
-            {/* Action Bar inside Modal */}
-            <div className="flex flex-wrap gap-3 pt-2">
+            {/* Professional Action Bar with Border Separator */}
+            <div className="border-t border-slate-200 dark:border-[#5C121E] pt-6 mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
               <button
                 onClick={() => {
                   handleOpenEditModal(selectedRequest);
                   setSelectedRequest(null);
                 }}
-                className="flex-1 py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <Edit2 className="w-4 h-4" /> Edit Validity & Info
               </button>
@@ -524,13 +524,13 @@ const ApprovalDashboard = () => {
                 <>
                   <button
                     onClick={() => handleOpenRejectModal(selectedRequest)}
-                    className="flex-1 py-3.5 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-900 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
+                    className="w-full py-3.5 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-900 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
                   >
                     Reject Request
                   </button>
                   <button
                     onClick={() => handleApprove(selectedRequest._id)}
-                    className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-transform hover:scale-102"
+                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-transform hover:scale-102"
                   >
                     Approve & Generate QR
                   </button>
@@ -541,19 +541,19 @@ const ApprovalDashboard = () => {
                 <>
                   <button
                     onClick={() => setStickerRequest(selectedRequest)}
-                    className="flex-1 py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <Printer className="w-4 h-4" /> Print QR Sticker
                   </button>
                   <button
                     onClick={() => handleDisable(selectedRequest._id, selectedRequest.bikeNumber)}
-                    className="py-3.5 px-5 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-900 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
+                    className="w-full py-3.5 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-900 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
                   >
                     Disable
                   </button>
                   <button
                     onClick={() => handleDelete(selectedRequest._id, selectedRequest.bikeNumber)}
-                    className="py-3.5 px-5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-700 dark:hover:text-rose-300 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
+                    className="w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-700 dark:hover:text-rose-300 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
                   >
                     Delete
                   </button>
