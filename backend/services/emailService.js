@@ -178,14 +178,8 @@ const emailWrapper = (statusColor, content, footerExtra = '') => {
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" style="padding-top: 14px;">
-                    <table role="presentation" cellspacing="0" cellpadding="0">
-                      <tr>
-                        <td style="height: 1.5px; width: 50px; background-color: #FFFFFF;"></td>
-                        <td style="padding: 0 12px; font-size: 8.5px; font-weight: 800; color: #FFFFFF !important; letter-spacing: 2px; text-transform: uppercase;">Smart Vehicle Access Control System</td>
-                        <td style="height: 1.5px; width: 50px; background-color: #FFFFFF;"></td>
-                      </tr>
-                    </table>
+                  <td align="center" style="padding-top: 10px;">
+                    <p style="margin: 0; font-size: 8.5px; font-weight: 800; color: #FFFFFF !important; letter-spacing: 2px; text-transform: uppercase;">Smart Vehicle Access Control System</p>
                   </td>
                 </tr>
               </table>
