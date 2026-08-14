@@ -247,7 +247,10 @@ const Scanner = () => {
         {/* Header */}
         <div className="p-5 rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/dashboard')} className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#2A0A0F] dark:hover:bg-[#3D0A11] rounded-xl transition-colors border border-slate-200 dark:border-[#5C121E] text-slate-700 dark:text-slate-200 font-extrabold text-xs">
+            <button 
+              onClick={() => navigate('/dashboard')} 
+              className="px-4 py-2.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm hover:scale-102 active:scale-98"
+            >
               Back to Dashboard
             </button>
             <div>
