@@ -83,43 +83,43 @@ const createTransporter = async () => {
 // ██  PROFESSIONAL EMAIL TEMPLATES — PURE TEXT/CSS (NO EXTERNAL IMAGES)
 // ═══════════════════════════════════════════════════════════════════
 
-/** Professional email wrapper — works in ALL email clients */
+/** Professional email wrapper — MCC Maroon + White + High-Contrast Black Font */
 const emailWrapper = (statusColor, content, footerExtra = '') => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SVACS Official Pass</title>
+  <title>MCC - MRF Innovation Park Access</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 36px 12px;">
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 36px 12px;">
     <tr>
       <td align="center">
         <!-- MAIN CONTAINER CARD -->
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(15,23,42,0.12); border: 1px solid #E2E8F0;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(112,26,26,0.15); border: 1px solid #E2E8F0;">
           
-          <!-- ═══ EXECUTIVE HEADER ═══ -->
+          <!-- ═══ MCC MAROON EXECUTIVE HEADER ═══ -->
           <tr>
-            <td style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0F172A 100%); padding: 30px 36px; text-align: center; border-bottom: 4px solid ${statusColor};">
+            <td style="background: linear-gradient(135deg, #701A1A 0%, #5C121E 60%, #701A1A 100%); padding: 32px 36px; text-align: center; border-bottom: 4px solid ${statusColor === '#D97706' ? '#701A1A' : statusColor};">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center">
                     <table role="presentation" cellspacing="0" cellpadding="0">
                       <tr>
                         <td style="vertical-align: middle;">
-                          <svg width="44" height="48" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M 18 28 L 82 28 L 82 56 C 82 76, 68 90, 50 96 C 32 90, 18 76, 18 56 Z" fill="#7A1C1C" stroke="#D97706" stroke-width="3" />
-                            <circle cx="50" cy="38" r="3.5" stroke="#D97706" stroke-width="2" fill="none" />
+                          <svg width="48" height="52" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 18 28 L 82 28 L 82 56 C 82 76, 68 90, 50 96 C 32 90, 18 76, 18 56 Z" fill="#701A1A" stroke="#D4AF37" stroke-width="3.5" />
+                            <circle cx="50" cy="38" r="3.5" stroke="#D4AF37" stroke-width="2" fill="none" />
                             <rect x="48" y="41" width="4" height="36" fill="#FFFFFF" />
                             <rect x="36" y="47" width="28" height="4" fill="#FFFFFF" />
-                            <path d="M 30 70 C 34 84, 66 84, 70 70" stroke="#D97706" stroke-width="3" fill="none" />
-                            <path d="M 14 84 C 30 80, 70 80, 86 84" stroke="#D97706" stroke-width="3" fill="none" />
+                            <path d="M 30 70 C 34 84, 66 84, 70 70" stroke="#D4AF37" stroke-width="3" fill="none" />
+                            <path d="M 14 84 C 30 80, 70 80, 86 84" stroke="#D4AF37" stroke-width="3" fill="none" />
                           </svg>
                         </td>
-                        <td style="padding-left: 14px; text-align: left; vertical-align: middle;">
-                          <p style="margin: 0; font-size: 22px; font-weight: 900; color: #FFFFFF; letter-spacing: 2px; line-height: 1.1;">MCC - MRF</p>
-                          <p style="margin: 3px 0 0; font-size: 9px; font-weight: 700; color: #F59E0B; letter-spacing: 2px; text-transform: uppercase;">Innovation Park</p>
+                        <td style="padding-left: 16px; text-align: left; vertical-align: middle;">
+                          <p style="margin: 0; font-size: 24px; font-weight: 900; color: #FFFFFF; letter-spacing: 2px; line-height: 1.1;">MCC - MRF</p>
+                          <p style="margin: 3px 0 0; font-size: 10px; font-weight: 800; color: #FCE079; letter-spacing: 2px; text-transform: uppercase;">Innovation Park &bull; Madras Christian College</p>
                         </td>
                       </tr>
                     </table>
@@ -129,9 +129,9 @@ const emailWrapper = (statusColor, content, footerExtra = '') => `
                   <td align="center" style="padding-top: 14px;">
                     <table role="presentation" cellspacing="0" cellpadding="0">
                       <tr>
-                        <td style="height: 1px; width: 60px; background-color: #334155;"></td>
-                        <td style="padding: 0 10px; font-size: 8px; font-weight: 800; color: #94A3B8; letter-spacing: 2px; text-transform: uppercase;">Smart Vehicle Access Control System</td>
-                        <td style="height: 1px; width: 60px; background-color: #334155;"></td>
+                        <td style="height: 1.5px; width: 50px; background-color: #D4AF37;"></td>
+                        <td style="padding: 0 12px; font-size: 8.5px; font-weight: 800; color: #F8FAFC; letter-spacing: 2px; text-transform: uppercase;">Smart Vehicle Access Control System</td>
+                        <td style="height: 1.5px; width: 50px; background-color: #D4AF37;"></td>
                       </tr>
                     </table>
                   </td>
@@ -147,9 +147,9 @@ const emailWrapper = (statusColor, content, footerExtra = '') => `
           <tr>
             <td style="padding: 24px 36px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
               ${footerExtra}
-              <p style="margin: 0 0 4px; font-size: 11px; font-weight: 600; color: #64748B;">Official Automated Notification &bull; Smart Access Terminal</p>
-              <p style="margin: 0 0 12px; font-size: 10px; color: #94A3B8;">Do not reply to this email. Contact Campus Security Administration for support.</p>
-              <p style="margin: 0; font-size: 9px; font-weight: 700; color: #CBD5E1; letter-spacing: 1px;">&copy; ${new Date().getFullYear()} SVACS &bull; All Rights Reserved</p>
+              <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #701A1A;">Madras Christian College &bull; MCC - MRF Innovation Park</p>
+              <p style="margin: 0 0 12px; font-size: 10px; color: #64748B;">Official Automated Notification &bull; Smart Vehicle Access Control Terminal</p>
+              <p style="margin: 0; font-size: 9px; font-weight: 700; color: #94A3B8; letter-spacing: 1px;">&copy; ${new Date().getFullYear()} MCC - MRF Innovation Park &bull; All Rights Reserved</p>
             </td>
           </tr>
         </table>
@@ -828,7 +828,7 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
   const subject = `Action Required: Access Permit Approval for ${request.name} (${request.company})`;
   const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
-  const htmlBody = emailWrapper('#D97706', `
+  const htmlBody = emailWrapper('#701A1A', `
     <tr>
       <td style="padding: 32px 40px 28px;">
         <!-- ACTION REQUIRED BADGE -->
@@ -837,8 +837,8 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
             <td align="center">
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="background-color: #FEF3C7; border: 2px solid #D97706; padding: 12px 36px; border-radius: 50px; text-align: center;">
-                    <span style="color: #92400E; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;">TIER-1 COMPANY OWNER APPROVAL REQUIRED</span>
+                  <td style="background-color: #FFF5F5; border: 2px solid #701A1A; padding: 12px 36px; border-radius: 50px; text-align: center; box-shadow: 0 4px 14px rgba(112,26,26,0.12);">
+                    <span style="color: #701A1A; font-size: 15px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;">TIER-1 COMPANY OWNER APPROVAL REQUIRED</span>
                   </td>
                 </tr>
               </table>
@@ -846,33 +846,33 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
           </tr>
         </table>
 
-        <p style="font-size: 15px; color: #334155; margin: 16px 0 6px;">Dear <strong>${ownerName}</strong> (Owner / Head of ${request.company}),</p>
-        <p style="font-size: 14px; color: #64748B; margin: 0 0 24px; line-height: 1.7;">
+        <p style="font-size: 15px; color: #0F172A; margin: 16px 0 6px; font-weight: 700;">Dear <strong>${ownerName}</strong> (Owner / Head of ${request.company}),</p>
+        <p style="font-size: 14px; color: #475569; margin: 0 0 24px; line-height: 1.7; font-weight: 500;">
           An intern / employee registered under <strong>${request.company}</strong> has submitted a campus vehicle access pass request. Please review and verify their details to forward this request to Super Admin for final QR pass issuing.
         </p>
 
         <!-- APPLICANT DETAILS GRID -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FAFBFC; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; margin-bottom: 24px;">
           <tr>
-            <td colspan="2" style="padding: 14px 18px; background-color: #F1F5F9; border-bottom: 2px solid #E2E8F0;">
-              <strong style="color: #1E293B; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">INTERN / APPLICANT REGISTRATION PROFILE</strong>
+            <td colspan="2" style="padding: 14px 18px; background-color: #FFF5F5; border-bottom: 2px solid #701A1A;">
+              <strong style="color: #701A1A; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">INTERN / APPLICANT REGISTRATION PROFILE</strong>
             </td>
           </tr>
-          ${detailRow('', 'Applicant Name', request.name, '#475569')}
-          ${detailRow('', 'Email Address', request.email, '#475569')}
-          ${detailRow('', 'Mobile Number', request.mobile || 'N/A', '#475569')}
-          ${detailRow('', 'Vehicle Number', request.bikeNumber, '#475569', false, true)}
-          ${detailRow('', 'Department / Course', request.department || 'N/A', '#475569')}
-          ${detailRow('', 'Designation / Role', request.designation || 'Intern / Employee', '#475569')}
-          ${detailRow('', 'Company Name', request.company, '#475569')}
-          ${detailRow('', 'Submission Date', dateStr, '#475569')}
+          ${detailRow('', 'Applicant Name', request.name, '#0F172A', true)}
+          ${detailRow('', 'Email Address', request.email, '#0F172A')}
+          ${detailRow('', 'Mobile Number', request.mobile || 'N/A', '#0F172A')}
+          ${detailRow('', 'Vehicle Number', request.bikeNumber, '#0F172A', true, true)}
+          ${detailRow('', 'Department / Course', request.department || 'N/A', '#0F172A')}
+          ${detailRow('', 'Designation / Role', request.designation || 'Intern / Employee', '#0F172A')}
+          ${detailRow('', 'Company Name', request.company, '#0F172A')}
+          ${detailRow('', 'Submission Date', dateStr, '#0F172A')}
         </table>
 
         <!-- ACTION BUTTONS: APPROVE & REJECT -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
           <tr>
             <td align="center" style="padding-bottom: 12px;">
-              <a href="${baseUrl}/api/requests/${request._id}/owner-action?action=approve" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #059669, #10B981); color: #ffffff; padding: 16px 52px; border-radius: 50px; font-size: 15px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);">
+              <a href="${baseUrl}/api/requests/${request._id}/owner-action?action=approve" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #701A1A, #5C121E); color: #ffffff; padding: 16px 52px; border-radius: 50px; font-size: 15px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(112, 26, 26, 0.4);">
                 APPROVE — FORWARD TO SUPER ADMIN
               </a>
             </td>
