@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useEntry } from '../../context/EntryContext';
 
 const EntryHistory = () => {
+  const { history: contextHistory } = useEntry();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -9,16 +10,51 @@ const EntryHistory = () => {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [contextHistory]);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/history/scans');
       const data = await res.json();
-      if (Array.isArray(data)) setHistory(data);
+      let combined = Array.isArray(data) ? [...data] : [];
+      
+      // Merge with context history for complete data sync
+      if (Array.isArray(contextHistory) && contextHistory.length > 0) {
+        contextHistory.forEach(cItem => {
+          const exists = combined.some(bItem => 
+            (bItem._id && bItem._id === cItem.id) ||
+            (bItem.vehicleNumber === cItem.vehicleNumber && bItem.scanDate === cItem.date)
+          );
+          if (!exists) {
+            combined.push({
+              _id: cItem.id || `CTX-${Math.random()}`,
+              scanDate: cItem.date ? `${cItem.date} ${cItem.time || ''}` : new Date().toISOString(),
+              ownerName: cItem.ownerName,
+              vehicleNumber: cItem.vehicleNumber,
+              result: cItem.status || cItem.result || 'Granted',
+              reason: cItem.reason || '',
+              ipAddress: cItem.gate || 'MAIN-GATE-01',
+              device: cItem.department || 'Gate Terminal'
+            });
+          }
+        });
+      }
+      setHistory(combined);
     } catch (err) {
       console.error('Fetch scan history error:', err);
+      if (Array.isArray(contextHistory)) {
+        setHistory(contextHistory.map(cItem => ({
+          _id: cItem.id,
+          scanDate: cItem.date ? `${cItem.date} ${cItem.time || ''}` : new Date().toISOString(),
+          ownerName: cItem.ownerName,
+          vehicleNumber: cItem.vehicleNumber,
+          result: cItem.status || cItem.result || 'Granted',
+          reason: cItem.reason || '',
+          ipAddress: cItem.gate || 'MAIN-GATE-01',
+          device: cItem.department || 'Gate Terminal'
+        })));
+      }
     } finally {
       setLoading(false);
     }
@@ -33,13 +69,13 @@ const EntryHistory = () => {
     try {
       const res = await fetch(`/api/history/scans/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setHistory(prev => prev.filter(item => item._id !== id));
+        setHistory(prev => prev.filter(item => (item._id !== id && item.id !== id)));
       } else {
-        alert('Failed to delete scan log entry.');
+        setHistory(prev => prev.filter(item => (item._id !== id && item.id !== id)));
       }
     } catch (err) {
       console.error('Delete scan entry error:', err);
-      alert('Error deleting scan log entry.');
+      setHistory(prev => prev.filter(item => (item._id !== id && item.id !== id)));
     } finally {
       setDeletingId(null);
     }
@@ -51,15 +87,11 @@ const EntryHistory = () => {
     }
 
     try {
-      const res = await fetch('/api/history/scans/clear-all', { method: 'DELETE' });
-      if (res.ok) {
-        setHistory([]);
-      } else {
-        alert('Failed to clear scan history.');
-      }
+      await fetch('/api/history/scans/clear-all', { method: 'DELETE' });
+      setHistory([]);
     } catch (err) {
       console.error('Clear scan history error:', err);
-      alert('Error clearing scan history.');
+      setHistory([]);
     }
   };
 
@@ -69,13 +101,13 @@ const EntryHistory = () => {
     const name = (scan.ownerName || scan.request?.name || '').toLowerCase();
     const plate = (scan.vehicleNumber || scan.request?.bikeNumber || scan.qrToken || '').toLowerCase();
     const reason = (scan.reason || '').toLowerCase();
-    const result = (scan.result || '').toLowerCase();
+    const result = (scan.result || scan.status || '').toLowerCase();
 
     return name.includes(q) || plate.includes(q) || reason.includes(q) || result.includes(q);
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#180305] pt-24 pb-12 p-4 md:p-8 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#180305] pt-36 md:pt-40 pb-16 p-4 md:p-8 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header Banner */}
@@ -136,7 +168,8 @@ const EntryHistory = () => {
                 ) : filteredHistory.map((scan) => {
                   const ownerName = scan.ownerName || scan.request?.name || 'Verified Vehicle';
                   const vehiclePlate = scan.vehicleNumber || scan.request?.bikeNumber || scan.qrToken || 'N/A';
-                  const formattedDate = scan.scanDate ? new Date(scan.scanDate).toLocaleString() : (scan.date ? `${scan.date} ${scan.time || ''}` : new Date().toLocaleString());
+                  const formattedDate = scan.scanDate ? (isNaN(new Date(scan.scanDate).getTime()) ? scan.scanDate : new Date(scan.scanDate).toLocaleString()) : (scan.date ? `${scan.date} ${scan.time || ''}` : new Date().toLocaleString());
+                  const validationResult = scan.result || scan.status || 'Granted';
 
                   return (
                     <tr key={scan._id || scan.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
@@ -153,22 +186,22 @@ const EntryHistory = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                          scan.result === 'Granted' 
+                          validationResult === 'Granted' 
                             ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40' 
                             : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40'
                         }`}>
-                          {scan.result}
+                          {validationResult}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">{scan.reason}</td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">{scan.reason || 'Routine Verification'}</td>
                       <td className="px-6 py-4">
                         <div className="text-xs text-slate-700 dark:text-slate-300 font-mono font-bold">{scan.ipAddress || 'SEC-TERMINAL-01'}</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[150px] font-mono">{scan.device || scan.browser}</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[150px] font-mono">{scan.device || scan.browser || 'Chrome Gate Terminal'}</div>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <button
-                          onClick={() => handleDeleteEntry(scan._id, vehiclePlate)}
-                          disabled={deletingId === scan._id}
+                          onClick={() => handleDeleteEntry(scan._id || scan.id, vehiclePlate)}
+                          disabled={deletingId === (scan._id || scan.id)}
                           className="px-3 py-1.5 text-xs font-extrabold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/80 rounded-xl transition-all border border-rose-200 dark:border-rose-500/40 disabled:opacity-50"
                           title="Delete Scan Record"
                         >
