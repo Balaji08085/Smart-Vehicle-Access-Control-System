@@ -51,14 +51,14 @@ const Navbar = () => {
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
                     isActive
                       ? theme === 'dark'
-                        ? 'text-white bg-gradient-to-r from-red-900/60 to-orange-900/60 border border-orange-500/40 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                        : 'text-orange-600 bg-orange-50 border border-orange-200/80 shadow-sm'
+                        ? 'text-white bg-gradient-to-r from-[#701A1A]/80 to-[#8C1823]/80 border border-red-500/40 shadow-[0_0_15px_rgba(112,26,26,0.4)]'
+                        : 'text-[#701A1A] bg-[#701A1A]/10 border border-[#701A1A]/20 shadow-sm'
                       : theme === 'dark'
                         ? 'text-red-200/80 hover:text-white hover:bg-white/5'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-orange-400' : theme === 'dark' ? 'text-red-300/60' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? (theme === 'dark' ? 'text-red-400' : 'text-[#701A1A]') : theme === 'dark' ? 'text-red-300/60' : 'text-slate-400'}`} />
                   {link.name}
                 </Link>
               );

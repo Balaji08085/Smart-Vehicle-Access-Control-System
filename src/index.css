@@ -9,8 +9,8 @@
     @apply text-slate-900 font-sans antialiased overflow-x-hidden transition-colors duration-300;
     background-color: #F8FAFC;
     background-image: 
-      radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.05) 0%, transparent 60%),
-      radial-gradient(circle at 85% 30%, rgba(245, 158, 11, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 50% 0%, rgba(112, 26, 26, 0.08) 0%, transparent 60%),
+      radial-gradient(circle at 85% 30%, rgba(59, 78, 104, 0.06) 0%, transparent 50%),
       linear-gradient(to right, rgba(0,0,0,0.02) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(0,0,0,0.02) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
@@ -20,10 +20,10 @@
 
   body.dark {
     @apply text-slate-100;
-    background-color: #180305;
+    background-color: #120305;
     background-image: 
-      radial-gradient(circle at 50% 0%, rgba(112, 26, 26, 0.35) 0%, transparent 65%),
-      radial-gradient(circle at 85% 30%, rgba(185, 28, 28, 0.20) 0%, transparent 55%),
+      radial-gradient(circle at 50% 0%, rgba(112, 26, 26, 0.40) 0%, transparent 65%),
+      radial-gradient(circle at 85% 30%, rgba(59, 78, 104, 0.25) 0%, transparent 55%),
       linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
   }
@@ -31,11 +31,11 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white border border-slate-200/90 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)] transition-all duration-300;
+    @apply bg-white border border-slate-200/90 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(112,26,26,0.08)] transition-all duration-300;
   }
   
   .dark .glass-card {
-    @apply bg-[#240609]/90 backdrop-blur-2xl border border-[#5C121E] shadow-[0_10px_35px_rgba(0,0,0,0.7)];
+    @apply bg-[#1E0609]/90 backdrop-blur-2xl border border-[#5C121E] shadow-[0_10px_35px_rgba(0,0,0,0.7)];
   }
 
   .glass-panel {
@@ -43,11 +43,11 @@
   }
 
   .dark .glass-panel {
-    @apply bg-[#240609]/95 backdrop-blur-3xl border border-[#5C121E] shadow-[0_20px_60px_rgba(0,0,0,0.8)];
+    @apply bg-[#1E0609]/95 backdrop-blur-3xl border border-[#5C121E] shadow-[0_20px_60px_rgba(0,0,0,0.8)];
   }
 
   .btn-primary {
-    @apply relative overflow-hidden bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-extrabold py-3 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 active:scale-[0.98];
+    @apply relative overflow-hidden bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-extrabold py-3 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 active:scale-[0.98];
   }
   
   .btn-secondary {
@@ -55,15 +55,15 @@
   }
 
   .dark .btn-secondary {
-    @apply bg-[#2E080C] text-white border-[#5C121E] hover:bg-[#3D0A11] hover:border-red-500/40;
+    @apply bg-[#2A0A0F] text-white border-[#5C121E] hover:bg-[#3D0E16] hover:border-red-500/40;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#701A1A] via-[#8C1823] to-[#3B4E68];
   }
 
   .dark .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-red-200 to-slate-300;
   }
 }
 

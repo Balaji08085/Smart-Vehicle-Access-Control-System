@@ -156,17 +156,16 @@ const CreateRequest = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#180305] text-slate-900 dark:text-slate-100 p-4 md:p-8 pt-28 md:pt-32 transition-colors duration-300">
+  return <div className="min-h-screen bg-slate-50 dark:bg-[#120305] text-slate-900 dark:text-slate-100 p-4 md:p-8 pt-28 md:pt-32 transition-colors duration-300">
       <div className="max-w-4xl mx-auto space-y-6">
         
         {step === 1 ? (
           <>
             {/* Header Banner */}
-            <div className="p-6 md:p-8 rounded-3xl border border-orange-200/80 dark:border-[#701A1A]/60 bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-white dark:from-[#2E080C] dark:via-[#240609] dark:to-[#180305] shadow-sm flex items-center justify-between">
+            <div className="p-6 md:p-8 rounded-3xl border border-[#701A1A]/20 dark:border-[#701A1A]/60 bg-gradient-to-r from-[#701A1A]/10 via-[#3B4E68]/10 to-white dark:from-[#2A0A0F] dark:via-[#1E0609] dark:to-[#120305] shadow-sm flex items-center justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 dark:bg-red-950/60 text-orange-800 dark:text-amber-300 border border-orange-200 dark:border-[#701A1A] rounded-full text-xs font-black uppercase tracking-wider mb-2">
-                  <ShieldCheck className="w-4 h-4 text-orange-600 dark:text-orange-400" /> Admin Registration Portal
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-[#701A1A]/10 dark:bg-red-950/60 text-[#701A1A] dark:text-red-300 border border-[#701A1A]/20 dark:border-[#701A1A] rounded-full text-xs font-black uppercase tracking-wider mb-2">
+                  <ShieldCheck className="w-4 h-4 text-[#701A1A] dark:text-red-400" /> Admin Registration Portal
                 </div>
                 <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Register Bike & Car Access Pass</h1>
                 <p className="text-slate-600 dark:text-slate-300 text-xs md:text-sm mt-1">Submit new vehicle access details into the 2-Tier or Super Admin Approval Queue.</p>
@@ -176,12 +175,14 @@ const CreateRequest = () => {
             {/* Registration Category Cards (Admin vs Startup) */}
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <Building className="w-4 h-4 text-orange-600 dark:text-orange-400" /> Select Applicant Access Category *
+                <h2 className="text-xs font-black uppercase tracking-wider text-[#3B4E68] dark:text-slate-400 flex items-center gap-2">
+                  <Building className="w-4 h-4 text-[#701A1A] dark:text-red-400" /> Select Applicant Access Category *
                 </h2>
+                <span className="text-[11px] font-bold text-slate-400">Click a card to proceed</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
                 {/* Card 1: Admin */}
                 <div
                   onClick={() => {
@@ -194,9 +195,9 @@ const CreateRequest = () => {
                     }));
                     setStep(2); // Go to next page
                   }}
-                  className={`cursor-pointer p-5 rounded-3xl border-2 transition-all flex items-start gap-4 shadow-sm border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#240609] hover:border-orange-500 dark:hover:border-red-500/60 hover:bg-slate-50/80 dark:hover:bg-[#2E080C]`}
+                  className={`cursor-pointer p-5 rounded-3xl border-2 transition-all flex items-start gap-4 shadow-sm border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] hover:border-[#701A1A] dark:hover:border-red-500/60 hover:bg-[#701A1A]/5 dark:hover:bg-[#2A0A0F]`}
                 >
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 font-extrabold bg-slate-100 dark:bg-[#2E080C] text-slate-600 dark:text-slate-300 shadow-sm">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 font-extrabold bg-[#701A1A]/10 dark:bg-[#2A0A0F] text-[#701A1A] dark:text-red-300 shadow-sm">
                     🏛️
                   </div>
                   <div className="space-y-1.5 flex-1">
@@ -204,8 +205,8 @@ const CreateRequest = () => {
                     <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
                       For Madras Christian College faculty, department heads, institutional staff & college students.
                     </p>
-                    <div className="pt-1 flex items-center gap-1.5 text-[11px] font-extrabold text-slate-500 dark:text-slate-400">
-                      <ShieldCheck className="w-4 h-4 text-orange-600 dark:text-orange-400 shrink-0" /> Direct 1-Tier Super Admin Approval
+                    <div className="pt-1 flex items-center gap-1.5 text-[11px] font-extrabold text-[#701A1A] dark:text-red-300">
+                      <ShieldCheck className="w-4 h-4 text-[#701A1A] dark:text-red-400 shrink-0" /> Direct 1-Tier Super Admin Approval
                     </div>
                   </div>
                 </div>
@@ -223,9 +224,9 @@ const CreateRequest = () => {
                     }));
                     setStep(2); // Go to next page
                   }}
-                  className={`cursor-pointer p-5 rounded-3xl border-2 transition-all flex items-start gap-4 shadow-sm border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#240609] hover:border-orange-500 dark:hover:border-red-500/60 hover:bg-slate-50/80 dark:hover:bg-[#2E080C]`}
+                  className={`cursor-pointer p-5 rounded-3xl border-2 transition-all flex items-start gap-4 shadow-sm border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] hover:border-[#701A1A] dark:hover:border-red-500/60 hover:bg-[#701A1A]/5 dark:hover:bg-[#2A0A0F]`}
                 >
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 font-extrabold bg-slate-100 dark:bg-[#2E080C] text-slate-600 dark:text-slate-300 shadow-sm">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 font-extrabold bg-[#3B4E68]/10 dark:bg-[#2A0A0F] text-[#3B4E68] dark:text-slate-300 shadow-sm">
                     🚀
                   </div>
                   <div className="space-y-1.5 flex-1">
@@ -233,13 +234,13 @@ const CreateRequest = () => {
                     <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
                       For MCC MRF Innovation Park startups (GREEN ERA, LEXPOSH, DSRI, INNOVEITY, etc.) interns & employees.
                     </p>
-                    <div className="pt-1 flex items-center gap-1.5 text-[11px] font-extrabold text-orange-700 dark:text-amber-400">
-                      <UserCheck className="w-4 h-4 text-orange-600 dark:text-amber-400 shrink-0" /> 2-Tier Approval (Company Owner + Super Admin)
+                    <div className="pt-1 flex items-center gap-1.5 text-[11px] font-extrabold text-[#3B4E68] dark:text-slate-300">
+                      <UserCheck className="w-4 h-4 text-[#3B4E68] dark:text-slate-400 shrink-0" /> 2-Tier Approval (Company Owner + Super Admin)
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </div>    </div>
           </>
         ) : (
           <>
@@ -548,7 +549,7 @@ const CreateRequest = () => {
                       onClick={() => setFormData(prev => ({ ...prev, vehicleType: 'Bike' }))}
                       className={`flex-1 py-3 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all border ${
                         formData.vehicleType === 'Bike'
-                          ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
+                          ? 'bg-[#701A1A] text-white border-[#701A1A] shadow-sm'
                           : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -559,7 +560,7 @@ const CreateRequest = () => {
                       onClick={() => setFormData(prev => ({ ...prev, vehicleType: 'Car' }))}
                       className={`flex-1 py-3 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all border ${
                         formData.vehicleType === 'Car'
-                          ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
+                          ? 'bg-[#701A1A] text-white border-[#701A1A] shadow-sm'
                           : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -577,7 +578,7 @@ const CreateRequest = () => {
                     onChange={handleChange}
                     required
                     placeholder="TN 14 AE 8495"
-                    className="w-full bg-amber-50 border border-amber-300 rounded-xl py-3 px-4 text-amber-900 font-mono text-base font-black tracking-widest uppercase focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                    className="w-full bg-[#701A1A]/5 border border-[#701A1A]/30 rounded-xl py-3 px-4 text-[#701A1A] dark:text-red-300 font-mono text-base font-black tracking-widest uppercase focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -590,7 +591,7 @@ const CreateRequest = () => {
                       value={formData.accessStartDate}
                       onChange={handleChange}
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold"
                     />
                   </div>
                 </div>
@@ -604,7 +605,7 @@ const CreateRequest = () => {
                       value={formData.accessExpiryDate}
                       onChange={handleChange}
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold"
                     />
                   </div>
                 </div>
@@ -615,7 +616,7 @@ const CreateRequest = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-sm uppercase tracking-wider py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
+                className="w-full bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-black text-sm uppercase tracking-wider py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

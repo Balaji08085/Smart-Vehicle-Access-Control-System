@@ -7,8 +7,10 @@ import tvLogoDark from '../assets/tv_transparent_dark.png';
  * Logo Component featuring the official MCC Crest logo image
  */
 export const SvacsLogo = ({ size = 44, showText = true, dark = true, className = "" }) => {
-  const textPrimary  = dark ? '#701A1A' : '#FFFFFF';
-  const textSub      = dark ? '#475569' : '#CBD5E1';
+  const textPrimary  = dark ? '#701A1A' : '#F87171';
+  const textNavy     = dark ? '#3B4E68' : '#CBD5E1';
+  const textSub      = dark ? '#475569' : '#94A3B8';
+  const lineCol      = dark ? '#3B4E68' : '#64748B';
   const logoSrc      = dark ? tvLogoLight : tvLogoDark;
 
   return (
@@ -29,17 +31,17 @@ export const SvacsLogo = ({ size = 44, showText = true, dark = true, className =
         />
       </div>
 
-      {/* ── Wordmark ── */}
+      {/* ── Official Logo Typography ── */}
       {showText && (
         <div className="shrink-0 flex flex-col justify-center whitespace-nowrap">
 
-          {/* Main brand name */}
+          {/* Main brand name: MCC - MRF */}
           <span
             style={{
               fontFamily: "'Inter', 'Montserrat', 'Segoe UI', sans-serif",
               fontWeight: 900,
-              fontSize: size * 0.52,
-              letterSpacing: '0.04em',
+              fontSize: size * 0.48,
+              letterSpacing: '0.02em',
               lineHeight: 1.1,
               color: textPrimary,
             }}
@@ -47,25 +49,25 @@ export const SvacsLogo = ({ size = 44, showText = true, dark = true, className =
             MCC - MRF
           </span>
 
-          {/* Tagline */}
+          {/* Tagline: INNOVATION PARK */}
           <span
             style={{
               fontFamily: "'Inter', 'Segoe UI', sans-serif",
               fontWeight: 800,
               fontSize: size * 0.20,
-              letterSpacing: '0.06em',
-              color: textSub,
+              letterSpacing: '0.12em',
+              color: textNavy,
               marginTop: 1,
               textTransform: 'uppercase',
             }}
           >
-            Innovation Park
+            INNOVATION PARK
           </span>
 
           {/* Thin Horizontal Divider Line */}
-          <div style={{ height: '1.2px', backgroundColor: dark ? '#94A3B8' : '#475569', margin: '3px 0' }} />
+          <div style={{ height: '1.2px', backgroundColor: lineCol, margin: '2px 0' }} />
 
-          {/* Sub-tagline */}
+          {/* Sub-tagline: Madras Christian College */}
           <span
             style={{
               fontFamily: "'Inter', 'Segoe UI', sans-serif",
@@ -73,7 +75,6 @@ export const SvacsLogo = ({ size = 44, showText = true, dark = true, className =
               fontSize: size * 0.16,
               letterSpacing: '0.02em',
               color: textSub,
-              textTransform: 'capitalize',
             }}
           >
             Madras Christian College
