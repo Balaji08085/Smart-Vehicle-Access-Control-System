@@ -245,6 +245,47 @@ const ApprovalDashboard = () => {
           </div>
         </div>
 
+        {/* Role Portal Switcher Banner */}
+        <div className="bg-white dark:bg-[#1E0609] rounded-2xl p-4 border border-slate-200 dark:border-[#5C121E] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#701A1A]/10 dark:bg-[#2A0A0F] text-[#701A1A] dark:text-red-400 flex items-center justify-center font-black text-xs font-mono border border-[#701A1A]/20">
+              {portalRole === 'SuperAdmin' ? 'T2' : 'T1'}
+            </div>
+            <div>
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                Current Role Perspective: <span className="text-[#701A1A] dark:text-red-400">{portalRole === 'SuperAdmin' ? 'Super Admin Queue (Tier 2 / Final QR Pass)' : 'Startup Owner Portal (DSRI — Franklin)'}</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                {portalRole === 'SuperAdmin' 
+                  ? 'Finalizing QR Pass Generation & Gate Permits for approved requests.'
+                  : '1st Level Tier Approval for DSRI / Startup interns & employees.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => setPortalRole('SuperAdmin')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                portalRole === 'SuperAdmin'
+                  ? 'bg-slate-900 dark:bg-[#701A1A] text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-[#2E080C] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#3D0A11]'
+              }`}
+            >
+              Super Admin View
+            </button>
+            <button
+              onClick={() => setPortalRole('CompanyOwner')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                portalRole === 'CompanyOwner'
+                  ? 'bg-[#701A1A] text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-[#2E080C] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#3D0A11]'
+              }`}
+            >
+              Franklin View (DSRI)
+            </button>
+          </div>
+        </div>
+
         {/* Requests Grid */}
         {loading ? (
           <div className="text-center py-20 text-slate-500 dark:text-slate-400">
