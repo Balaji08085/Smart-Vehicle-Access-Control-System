@@ -271,11 +271,11 @@ const ApprovalDashboard = () => {
                   {/* Top Row: User & Badge + Edit Button */}
                   <div className="flex justify-between items-start gap-3 mb-4">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-2xl border-2 border-[#701A1A]/30 dark:border-red-500/40 p-0.5 bg-white dark:bg-[#120305] shadow-xs shrink-0 overflow-hidden">
+                      <div className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-2xl border-2 border-[#701A1A]/30 dark:border-red-500/40 p-0.5 bg-slate-100 dark:bg-[#120305] shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
                         <img
                           src={req.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80'}
                           alt={req.name}
-                          className="w-full h-full rounded-xl object-cover object-top"
+                          className="w-full h-full rounded-xl object-contain"
                         />
                       </div>
                       <div className="overflow-hidden">
@@ -311,11 +311,11 @@ const ApprovalDashboard = () => {
 
                   {/* Bike Plate Number Highlight */}
                   <div className="bg-slate-100 dark:bg-slate-100 border-2 border-slate-300/80 rounded-2xl py-2.5 px-3 text-center mb-4 shadow-2xs relative flex items-center justify-center">
-                    <div className="absolute left-3 flex flex-col items-center justify-center leading-none text-[8px] font-black text-blue-900 font-mono border-r border-slate-300 pr-1.5 select-none">
-                      <span className="text-[9px]">🇮🇳</span>
-                      <span>IND</span>
+                    <div className="absolute left-3 flex items-center gap-1 font-mono text-[9px] font-black text-blue-900 border-r border-slate-300 pr-2 select-none">
+                      <span className="text-[11px]">🇮🇳</span>
+                      <span className="tracking-tight">IND</span>
                     </div>
-                    <span className="font-mono text-lg md:text-xl font-black text-slate-900 dark:text-slate-900 tracking-[0.16em] uppercase pl-6">
+                    <span className="font-mono text-lg md:text-xl font-black text-slate-900 dark:text-slate-900 tracking-[0.16em] uppercase pl-12">
                       {req.bikeNumber}
                     </span>
                   </div>
