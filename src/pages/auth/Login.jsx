@@ -46,15 +46,10 @@ const Login = () => {
   const quickDemoLogin = async (role) => {
     const success = await login(role);
     if (success) {
-      if (role === 'admin') {
-        navigate('/superadmin/create');
-      } else if (role === 'superadmin') {
-        navigate('/admin/approval');
-      } else if (role === 'guard') {
-        navigate('/scanner');
-      } else {
-        navigate('/search');
-      }
+      if (role === 'admin') navigate('/superadmin/create');
+      else if (role === 'superadmin') navigate('/admin/approval');
+      else if (role === 'guard') navigate('/scanner');
+      else navigate('/search');
     }
   };
 
@@ -62,21 +57,20 @@ const Login = () => {
     <div className="min-h-screen pt-24 pb-12 px-4 flex items-center justify-center bg-slate-50 relative overflow-hidden">
       
       {/* Background ambient lighting */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-orange-500/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-80 h-80 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#701A1A]/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-80 h-80 bg-red-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full p-8 rounded-3xl border border-slate-200 shadow-xl bg-white relative z-10"
       >
-        {/* Header Official MCC Logo Emblem */}
         <div className="flex justify-center mb-6">
           <MccLogo showText={false} size={64} />
         </div>
 
         <div className="text-center mb-8">
-          <span className="text-[11px] font-black tracking-widest text-orange-600 uppercase font-mono block mb-1">
+          <span className="text-[11px] font-black tracking-widest text-[#701A1A] uppercase font-mono block mb-1">
             MCC MRF INNOVATION PARK SECURITY
           </span>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-1">
@@ -94,7 +88,7 @@ const Login = () => {
             onClick={() => setActiveTab('admin')}
             className={`py-2 rounded-xl text-[10px] font-bold transition-all flex flex-col items-center gap-1 ${
               activeTab === 'admin'
-                ? 'bg-amber-500 text-white shadow-sm border border-amber-600'
+                ? 'bg-[#701A1A] text-white shadow-sm border border-[#5C121E]'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -107,7 +101,7 @@ const Login = () => {
             onClick={() => setActiveTab('superadmin')}
             className={`py-2 rounded-xl text-[10px] font-bold transition-all flex flex-col items-center gap-1 ${
               activeTab === 'superadmin'
-                ? 'bg-orange-600 text-white shadow-sm border border-orange-700'
+                ? 'bg-[#701A1A] text-white shadow-sm border border-[#5C121E]'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -131,13 +125,13 @@ const Login = () => {
 
         {/* Access Notice Badge */}
         {activeTab === 'admin' ? (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl mb-5 text-[11px] text-amber-800 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+          <div className="p-3 bg-[#701A1A]/10 border border-[#701A1A]/20 rounded-2xl mb-5 text-[11px] text-[#701A1A] flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#701A1A] shrink-0" />
             <span><strong>Admin Portal</strong>: Register bike/car access passes for campus users. Restricted from Approvals Queue.</span>
           </div>
         ) : activeTab === 'superadmin' ? (
-          <div className="p-3 bg-orange-50 border border-orange-200 rounded-2xl mb-5 text-[11px] text-orange-800 flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-orange-600 shrink-0" />
+          <div className="p-3 bg-[#701A1A]/10 border border-[#701A1A]/20 rounded-2xl mb-5 text-[11px] text-[#701A1A] flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-[#701A1A] shrink-0" />
             <span><strong>Super Admin Portal</strong>: Exclusive authority to Review & Approve/Reject pending access requests.</span>
           </div>
         ) : (
@@ -148,102 +142,69 @@ const Login = () => {
         )}
 
         {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-5">
-          {activeTab === 'guard' && (
-            <>
-              <div>
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 block">
-                  Security Guard ID / Badge No
-                </label>
-                <div className="relative">
-                  <UserCheck className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={guardId}
-                    onChange={(e) => setGuardId(e.target.value)}
-                    required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 font-mono text-sm focus:outline-none focus:border-emerald-500 transition-colors"
-                    placeholder="e.g. SEC-GATE-01"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 block">
-                  Gate Security Passcode PIN
-                </label>
-                <div className="relative">
-                  <KeyRound className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={guardPin}
-                    onChange={(e) => setGuardPin(e.target.value)}
-                    required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 font-mono text-sm focus:outline-none focus:border-emerald-500 transition-colors"
-                    placeholder="••••"
-                  />
-                </div>
-              </div>
-            </>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-semibold">
+              {error}
+            </div>
           )}
 
           {activeTab === 'admin' && (
-            <>
-              <div>
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 block">
-                  Admin Email (Registration Officer)
-                </label>
-                <div className="relative">
-                  <UserCheck className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    value={adminEmail}
-                    onChange={(e) => setAdminEmail(e.target.value)}
-                    required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 text-sm focus:outline-none focus:border-amber-500 transition-colors"
-                    placeholder="admin@svacs.edu"
-                  />
-                </div>
+            <div>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 block">
+                Admin Access Passcode
+              </label>
+              <div className="relative">
+                <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 text-sm focus:outline-none focus:border-[#701A1A] transition-colors"
+                  placeholder="Enter Admin Passcode (admin123)"
+                />
               </div>
+            </div>
+          )}
 
-              <div>
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 block">
-                  Admin Password
-                </label>
-                <div className="relative">
-                  <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 text-sm focus:outline-none focus:border-amber-500 transition-colors"
-                    placeholder="••••••••"
-                  />
-                </div>
+          {activeTab === 'guard' && (
+            <div>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 block">
+                Gate Security Guard Passcode
+              </label>
+              <div className="relative">
+                <ShieldCheck className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  value={guardPassword}
+                  onChange={(e) => setGuardPassword(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                  placeholder="Enter Guard Passcode (guard123)"
+                />
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === 'superadmin' && (
             <>
               <div>
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 block">
-                  Super Admin Email (Approval Authority)
+                  Super Admin Email Address
                 </label>
                 <div className="relative">
-                  <ShieldAlert className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
                     value={superAdminEmail}
                     onChange={(e) => setSuperAdminEmail(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 text-sm focus:outline-none focus:border-orange-500 transition-colors"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 text-sm focus:outline-none focus:border-[#701A1A] transition-colors"
                     placeholder="superadmin@svacs.edu"
                   />
                 </div>
               </div>
-
               <div>
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 block">
                   Super Admin Password
@@ -255,7 +216,7 @@ const Login = () => {
                     value={superAdminPassword}
                     onChange={(e) => setSuperAdminPassword(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 text-sm focus:outline-none focus:border-orange-500 transition-colors"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 text-sm focus:outline-none focus:border-[#701A1A] transition-colors"
                     placeholder="••••••••"
                   />
                 </div>
@@ -265,7 +226,7 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full py-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-4 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span>Authenticate Security Access</span>
             <ArrowRight className="w-4 h-4" />
@@ -280,13 +241,13 @@ const Login = () => {
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => quickDemoLogin('admin')}
-              className="py-2.5 px-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-xl text-[10px] border border-amber-200 transition-all text-center"
+              className="py-2.5 px-1.5 bg-[#701A1A]/10 hover:bg-[#701A1A]/20 text-[#701A1A] font-bold rounded-xl text-[10px] border border-[#701A1A]/30 transition-all text-center"
             >
               Admin (Create)
             </button>
             <button
               onClick={() => quickDemoLogin('superadmin')}
-              className="py-2.5 px-1.5 bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold rounded-xl text-[10px] border border-orange-200 transition-all text-center"
+              className="py-2.5 px-1.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-bold rounded-xl text-[10px] shadow-sm transition-all text-center"
             >
               Super Admin
             </button>

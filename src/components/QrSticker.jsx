@@ -239,7 +239,7 @@ const QrSticker = ({ request, token, onClose }) => {
         <div className="flex gap-3 mt-6">
           <button
             onClick={handlePrint}
-            className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-lg transition-transform hover:scale-102 active:scale-98 flex items-center justify-center gap-2"
+            className="flex-1 py-3.5 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-lg transition-transform hover:scale-102 active:scale-98 flex items-center justify-center gap-2"
           >
             <Printer className="w-5 h-5" /> Print High-Res Sticker
           </button>

@@ -74,22 +74,22 @@ const Navbar = () => {
               title="Toggle Light / Dark Mode (Shortcut: Press Alt + T)"
               className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all border flex items-center gap-2 ${
                 theme === 'dark'
-                  ? 'bg-[#2E080C] text-amber-400 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:bg-[#3D0A11]'
+                  ? 'bg-[#2E080C] text-red-300 border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:bg-[#3D0A11]'
                   : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200/80 shadow-sm'
               }`}
             >
               {theme === 'dark' ? (
                 <>
-                  <Sun className="w-4 h-4 text-amber-400" />
+                  <Sun className="w-4 h-4 text-red-400" />
                   <span className="hidden xl:inline">Light Mode</span>
                 </>
               ) : (
                 <>
-                  <Moon className="w-4 h-4 text-indigo-600" />
+                  <Moon className="w-4 h-4 text-[#701A1A]" />
                   <span className="hidden xl:inline">Dark Mode</span>
                 </>
               )}
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-orange-500/10 text-orange-600 border border-orange-500/20 font-bold">
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#701A1A]/10 text-[#701A1A] border border-[#701A1A]/20 font-bold">
                 Alt+T
               </span>
             </button>
@@ -97,22 +97,22 @@ const Navbar = () => {
             <div className={`px-3.5 py-1.5 rounded-full border text-xs font-black uppercase tracking-wider flex items-center gap-2 ${
               theme === 'dark'
                 ? userRole === 'admin'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  ? 'bg-[#701A1A]/30 text-red-300 border-red-500/40'
                   : userRole === 'superadmin'
-                  ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                  ? 'bg-red-950/60 text-red-300 border-red-500/50'
                   : userRole === 'guard'
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                   : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
                 : userRole === 'admin'
-                  ? 'bg-amber-50 text-amber-700 border-amber-200 shadow-sm'
+                  ? 'bg-[#701A1A]/10 text-[#701A1A] border-[#701A1A]/30 shadow-sm'
                   : userRole === 'superadmin'
-                  ? 'bg-orange-50 text-orange-700 border-orange-200 shadow-sm'
+                  ? 'bg-[#701A1A]/10 text-[#701A1A] border-[#701A1A]/30 shadow-sm'
                   : userRole === 'guard'
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
                   : 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
             }`}>
               <span className={`w-2 h-2 rounded-full animate-ping ${
-                userRole === 'admin' ? 'bg-amber-500' : userRole === 'superadmin' ? 'bg-orange-500' : userRole === 'guard' ? 'bg-emerald-500' : 'bg-blue-500'
+                userRole === 'admin' ? 'bg-[#701A1A]' : userRole === 'superadmin' ? 'bg-[#701A1A]' : userRole === 'guard' ? 'bg-emerald-500' : 'bg-blue-500'
               }`} />
               {userRole === 'admin' ? 'Admin (Registration)' : userRole === 'superadmin' ? 'Super Admin (Approvals)' : 'Gate Security Guard'}
             </div>
@@ -174,11 +174,11 @@ const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold ${
                     isActive
-                      ? 'text-orange-600 bg-orange-50 border border-orange-200'
+                      ? 'text-[#701A1A] bg-[#701A1A]/10 border border-[#701A1A]/20'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-orange-600' : 'text-slate-400'}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-[#701A1A]' : 'text-slate-400'}`} />
                   {link.name}
                 </Link>
               );
@@ -191,7 +191,7 @@ const Navbar = () => {
               <Link
                 to="/login"
                 onClick={() => setIsOpen(false)}
-                className="w-full text-center py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold rounded-xl text-xs tracking-wider uppercase shadow-md"
+                className="w-full text-center py-2.5 bg-gradient-to-r from-[#701A1A] to-[#8C1823] text-white font-bold rounded-xl text-xs tracking-wider uppercase shadow-md"
               >
                 Change Role / Login
               </Link>

@@ -21,8 +21,8 @@ const Footer = () => {
         </div>
 
         <div className="flex items-center gap-6 text-slate-600 font-mono text-[11px]">
-          <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-orange-600" /> Innovation Park Security Gates</span>
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-orange-600" /> Authorized Entry System</span>
+          <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#701A1A]" /> Innovation Park Security Gates</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#701A1A]" /> Authorized Entry System</span>
         </div>
 
         <div className="text-slate-500 text-[11px]">

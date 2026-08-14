@@ -253,11 +253,11 @@ const CreateRequest = () => {
                   setStep(1);
                   setFormData(prev => ({ ...prev, applicantCategory: '' }));
                 }}
-                className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-amber-400 transition-colors"
+                className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-[#701A1A] dark:hover:text-red-400 transition-colors"
               >
-                <ArrowLeft className="w-4 h-4 text-orange-600 dark:text-amber-400" /> Back to Selection
+                <ArrowLeft className="w-4 h-4 text-[#701A1A] dark:text-red-400" /> Back to Selection
               </button>
-              <span className="text-xs font-black text-orange-700 dark:text-amber-300 bg-orange-100 dark:bg-red-950/60 border border-orange-200 dark:border-[#701A1A] px-3.5 py-1.5 rounded-full shadow-xs">
+              <span className="text-xs font-black text-[#701A1A] dark:text-red-300 bg-[#701A1A]/10 dark:bg-red-950/60 border border-[#701A1A]/20 dark:border-[#701A1A] px-3.5 py-1.5 rounded-full shadow-xs">
                 Selected: {formData.applicantCategory === 'Admin' ? '🏛️ Admin' : '🚀 Startup'}
               </span>
             </div>
@@ -265,7 +265,7 @@ const CreateRequest = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-[#240609] rounded-3xl border border-slate-200 dark:border-[#5C121E] shadow-sm p-6 md:p-8"
+              className="bg-white dark:bg-[#1E0609] rounded-3xl border border-slate-200 dark:border-[#5C121E] shadow-sm p-6 md:p-8"
             >
               {error && (
                 <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-2xl mb-6 flex items-center gap-3 text-sm font-semibold">
@@ -284,12 +284,12 @@ const CreateRequest = () => {
               <form onSubmit={handleSubmit} className="space-y-8">
             
             {/* Photo Upload Header Section */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 p-5 bg-orange-50/60 rounded-2xl border border-orange-200/80">
+            <div className="flex flex-col sm:flex-row items-center gap-6 p-5 bg-[#701A1A]/5 rounded-2xl border border-[#701A1A]/20">
               <div className="relative group">
                 <img
                   src={imagePreview}
                   alt="Applicant Preview"
-                  className="w-24 h-24 rounded-2xl object-cover border-2 border-orange-500/50 shadow-md"
+                  className="w-24 h-24 rounded-2xl object-cover border-2 border-[#701A1A]/50 shadow-md"
                 />
                 <label className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity text-white text-xs font-bold">
                   <Upload className="w-5 h-5 mb-1" />
@@ -297,9 +297,9 @@ const CreateRequest = () => {
                 </label>
               </div>
               <div className="text-center sm:text-left space-y-1">
-                <h3 className="text-base font-bold text-slate-900">Applicant Profile Photo</h3>
-                <p className="text-xs text-slate-600">Upload high quality portrait photo for gate verification screen.</p>
-                <label className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-orange-600 rounded-xl text-xs font-bold cursor-pointer transition-colors mt-2 border border-slate-200 shadow-sm">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Applicant Profile Photo</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300">Upload high quality portrait photo for gate verification screen.</p>
+                <label className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-[#701A1A] rounded-xl text-xs font-bold cursor-pointer transition-colors mt-2 border border-slate-200 shadow-sm">
                   <ImageIcon className="w-4 h-4" /> Upload Custom Photo
                   <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                 </label>
@@ -310,12 +310,12 @@ const CreateRequest = () => {
               
               {/* Personal Info */}
               <div className="space-y-4">
-                <h3 className="text-sm font-black text-orange-600 uppercase tracking-wider border-b border-slate-200 pb-2">
+                <h3 className="text-sm font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider border-b border-slate-200 dark:border-white/10 pb-2">
                   1. Personal & Contact Info
                 </h3>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Employee / Student Name *</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Employee / Student Name *</label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -325,13 +325,13 @@ const CreateRequest = () => {
                       onChange={handleChange}
                       placeholder="e.g. Dr. Balaji S"
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Email Address *</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Email Address *</label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -341,13 +341,13 @@ const CreateRequest = () => {
                       onChange={handleChange}
                       placeholder="balaji@mrf-innovationpark.edu"
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Mobile Number *</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Mobile Number *</label>
                   <div className="relative">
                     <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -357,7 +357,7 @@ const CreateRequest = () => {
                       onChange={handleChange}
                       placeholder="+91 98765 43210"
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold"
                     />
                   </div>
                 </div>
@@ -365,13 +365,13 @@ const CreateRequest = () => {
 
               {/* Work Info */}
               <div className="space-y-4">
-                <h3 className="text-sm font-black text-orange-600 uppercase tracking-wider border-b border-slate-200 pb-2">
+                <h3 className="text-sm font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider border-b border-slate-200 dark:border-white/10 pb-2">
                   2. Organization & Role
                 </h3>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Employee ID (Optional)</label>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Employee ID (Optional)</label>
                     <div className="relative">
                       <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input
@@ -380,12 +380,12 @@ const CreateRequest = () => {
                         value={formData.employeeId}
                         onChange={handleChange}
                         placeholder="EMP-9082"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Department *</label>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Department *</label>
                     <input
                       type="text"
                       name="department"
@@ -393,14 +393,14 @@ const CreateRequest = () => {
                       onChange={handleChange}
                       placeholder="Computer Science"
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold"
                     />
                   </div>
                 </div>
 
                 {formData.applicantCategory === 'Startup' ? (
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Company / Startup Name *</label>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Company / Startup Name *</label>
                     <div className="relative">
                       <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                       <select
@@ -418,7 +418,7 @@ const CreateRequest = () => {
                           }));
                         }}
                         required
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-10 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold appearance-none cursor-pointer"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-10 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold appearance-none cursor-pointer"
                       >
                         {MCC_COMPANIES.map((c) => (
                           <option key={c.name} value={c.name}>
@@ -434,13 +434,13 @@ const CreateRequest = () => {
                       <motion.div 
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mt-3 p-3.5 bg-orange-50/90 rounded-xl border-2 border-orange-300 space-y-1.5 shadow-sm"
+                        className="mt-3 p-3.5 bg-[#701A1A]/5 rounded-xl border-2 border-[#701A1A]/30 space-y-1.5 shadow-sm"
                       >
-                        <label className="block text-xs font-black text-orange-800 uppercase tracking-wider">
+                        <label className="block text-xs font-black text-[#701A1A] dark:text-red-300 uppercase tracking-wider">
                           Enter Custom Startup / Company Name *
                         </label>
                         <div className="relative">
-                          <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-500 pointer-events-none" />
+                          <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#701A1A] pointer-events-none" />
                           <input
                             type="text"
                             name="customCompany"
@@ -448,7 +448,7 @@ const CreateRequest = () => {
                             onChange={handleChange}
                             placeholder="e.g. INNOVEITY MEDIA"
                             required
-                            className="w-full bg-white border border-orange-300 rounded-lg py-2.5 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-extrabold shadow-inner"
+                            className="w-full bg-white dark:bg-slate-900 border border-[#701A1A]/30 rounded-lg py-2.5 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] outline-none text-sm font-extrabold shadow-inner"
                           />
                         </div>
                       </motion.div>
@@ -456,7 +456,7 @@ const CreateRequest = () => {
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Institution / Organization *</label>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Institution / Organization *</label>
                     <div className="relative">
                       <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                       <input
@@ -466,23 +466,23 @@ const CreateRequest = () => {
                         onChange={handleChange}
                         placeholder="Madras Christian College"
                         required
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] outline-none text-sm font-semibold"
                       />
                     </div>
                   </div>
                 )}
 
                 {formData.applicantCategory === 'Startup' && (
-                  <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200 space-y-3">
-                    <div className="flex items-center gap-2 text-orange-800 font-black text-xs uppercase tracking-wider">
-                      <UserCheck className="w-4 h-4 text-orange-600 flex-shrink-0" />
+                  <div className="p-4 bg-gradient-to-br from-[#701A1A]/10 via-[#701A1A]/5 to-slate-50 dark:from-[#2A0A0F] dark:via-[#1E0609] dark:to-[#120305] rounded-xl border-2 border-[#701A1A]/30 space-y-3">
+                    <div className="flex items-center gap-2 text-[#701A1A] dark:text-red-300 font-black text-xs uppercase tracking-wider">
+                      <UserCheck className="w-4 h-4 text-[#701A1A] dark:text-red-400 flex-shrink-0" />
                       1st Tier Approver — Startup Owner / Head
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Owner / Head Name *</label>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Owner / Head Name *</label>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-orange-400 pointer-events-none" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#701A1A] pointer-events-none" />
                           <input
                             type="text"
                             name="companyHead"
@@ -490,14 +490,14 @@ const CreateRequest = () => {
                             onChange={handleChange}
                             placeholder="e.g. Mr. Tittus"
                             required
-                            className="w-full bg-white border border-orange-200 rounded-lg py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                            className="w-full bg-white dark:bg-slate-900 border border-[#701A1A]/30 rounded-lg py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-[#701A1A] outline-none transition-all"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Owner Email Address *</label>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Owner Email Address *</label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-orange-400 pointer-events-none" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#701A1A] pointer-events-none" />
                           <input
                             type="email"
                             name="companyHeadEmail"
@@ -505,20 +505,20 @@ const CreateRequest = () => {
                             onChange={handleChange}
                             placeholder="e.g. tittus@innoveity.com"
                             required
-                            className="w-full bg-white border border-orange-200 rounded-lg py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                            className="w-full bg-white dark:bg-slate-900 border border-[#701A1A]/30 rounded-lg py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-[#701A1A] outline-none transition-all"
                           />
                         </div>
                       </div>
                     </div>
-                    <p className="text-[11px] text-orange-700 flex items-center gap-1.5 pt-1">
-                      <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                    <p className="text-[11px] text-[#701A1A] dark:text-red-300 flex items-center gap-1.5 pt-1">
+                      <span className="inline-block w-1.5 h-1.5 bg-[#701A1A] dark:bg-red-400 rounded-full animate-pulse" />
                       Approval will be routed to <strong>{formData.companyHead || 'Owner'}</strong> ({formData.companyHeadEmail || 'email'}) first, then forwarded to Super Admin.
                     </p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Designation / Role *</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Designation / Role *</label>
                   <div className="relative">
                     <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -528,7 +528,7 @@ const CreateRequest = () => {
                       onChange={handleChange}
                       placeholder="Senior Research Fellow"
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all text-sm font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all text-sm font-semibold"
                     />
                   </div>
                 </div>
@@ -536,8 +536,8 @@ const CreateRequest = () => {
             </div>
 
             {/* Vehicle & Access Details */}
-            <div className="space-y-4 pt-4 border-t border-slate-200">
-              <h3 className="text-sm font-black text-orange-600 uppercase tracking-wider border-b border-slate-200 pb-2">
+            <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-white/10">
+              <h3 className="text-sm font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider border-b border-slate-200 dark:border-white/10 pb-2">
                 3. Vehicle Details & Access Validity Period
               </h3>
               
