@@ -160,16 +160,16 @@ const emailWrapper = (statusColor, content, footerExtra = '') => {
           
           <!-- ═══ MCC MAROON EXECUTIVE HEADER ═══ -->
           <tr>
-            <td style="background: #701A1A; background-color: #701A1A; padding: 32px 36px; text-align: center; border-bottom: 4px solid ${statusColor === '#D97706' ? '#701A1A' : statusColor};">
+            <td style="background-color: #701A1A; padding: 28px 24px; text-align: center; border-bottom: 4px solid ${statusColor === '#D97706' ? '#701A1A' : statusColor};">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center">
                     <table role="presentation" cellspacing="0" cellpadding="0">
                       <tr>
-                        <td style="vertical-align: middle;">
-                          <img src="cid:mcc_header_logo" width="54" height="54" style="display: block; border-radius: 8px; border: 2px solid #D4AF37; background-color: #ffffff; padding: 2px; object-fit: contain;" alt="MCC Logo" onerror="this.src='${logoDataUri}';" />
+                        <td style="vertical-align: middle; padding-right: 14px;">
+                          <img src="cid:mcc_header_logo" width="54" height="54" style="display: block; border-radius: 8px; border: 2px solid #D4AF37; background-color: #ffffff; padding: 3px; object-fit: contain;" alt="MCC Logo" />
                         </td>
-                        <td style="padding-left: 16px; text-align: left; vertical-align: middle;">
+                        <td style="text-align: left; vertical-align: middle;">
                           <p style="margin: 0; font-size: 24px; font-weight: 900; color: #FFFFFF !important; letter-spacing: 2px; line-height: 1.1;">MCC - MRF</p>
                           <p style="margin: 3px 0 0; font-size: 10px; font-weight: 800; color: #FCE079 !important; letter-spacing: 2px; text-transform: uppercase;">Innovation Park &bull; Madras Christian College</p>
                         </td>
@@ -182,7 +182,7 @@ const emailWrapper = (statusColor, content, footerExtra = '') => {
                     <table role="presentation" cellspacing="0" cellpadding="0">
                       <tr>
                         <td style="height: 1.5px; width: 50px; background-color: #D4AF37;"></td>
-                        <td style="padding: 0 12px; font-size: 8.5px; font-weight: 800; color: #F8FAFC; letter-spacing: 2px; text-transform: uppercase;">Smart Vehicle Access Control System</td>
+                        <td style="padding: 0 12px; font-size: 8.5px; font-weight: 800; color: #FFFFFF !important; letter-spacing: 2px; text-transform: uppercase;">Smart Vehicle Access Control System</td>
                         <td style="height: 1.5px; width: 50px; background-color: #D4AF37;"></td>
                       </tr>
                     </table>
