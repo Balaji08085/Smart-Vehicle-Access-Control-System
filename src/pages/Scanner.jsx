@@ -288,7 +288,7 @@ const Scanner = () => {
           {/* ── Camera ── */}
           {mode === 'camera' && (
             <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-slate-950 overflow-hidden shadow-2xl relative"
+              className="rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] overflow-hidden shadow-2xl relative"
               style={{ aspectRatio: '4/3' }}
             >
               <canvas ref={canvasRef} className="hidden" />
@@ -319,40 +319,40 @@ const Scanner = () => {
 
               {/* Scanned success flash */}
               {scanned && (
-                <div className="absolute inset-0 bg-emerald-950/90 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
-                  <span className="px-4 py-2 bg-emerald-500 text-white text-sm font-black rounded-full uppercase tracking-wider shadow-lg">
+                <div className="absolute inset-0 bg-emerald-500/20 dark:bg-emerald-950/90 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
+                  <span className="px-4 py-2 bg-emerald-600 text-white text-sm font-black rounded-full uppercase tracking-wider shadow-lg">
                     SCAN SUCCESSFUL
                   </span>
-                  <p className="text-emerald-300 text-xs font-mono">Redirecting to Gate Verification...</p>
+                  <p className="text-emerald-800 dark:text-emerald-300 text-xs font-mono font-bold">Redirecting to Gate Verification...</p>
                 </div>
               )}
 
               {/* Loading spinner */}
               {isLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white dark:bg-[#1E0609]">
                   <div className="w-12 h-12 border-4 border-[#701A1A] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-white text-sm font-bold tracking-wide">Starting Camera Stream...</p>
-                  <p className="text-slate-400 text-xs">Please allow camera access if prompted</p>
+                  <p className="text-slate-900 dark:text-white text-sm font-bold tracking-wide">Starting Camera Stream...</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs">Please allow camera access if prompted</p>
                 </div>
               )}
 
               {/* Error state */}
               {hasErr && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950 dark:bg-[#180305] p-6 text-center overflow-y-auto">
-                  <div className="px-4 py-1.5 rounded-full bg-[#701A1A]/30 border border-red-500/40 text-red-400 text-[11px] font-black uppercase tracking-widest">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-[#1E0609] p-6 text-center overflow-y-auto">
+                  <div className="px-4 py-1.5 rounded-full bg-[#701A1A]/10 dark:bg-[#701A1A]/30 border border-[#701A1A]/30 dark:border-red-500/40 text-[#701A1A] dark:text-red-300 text-[11px] font-black uppercase tracking-widest">
                     Camera Access Blocked
                   </div>
-                  <p className="text-rose-200/90 text-xs font-medium leading-relaxed max-w-sm">
+                  <p className="text-slate-600 dark:text-slate-300 text-xs font-medium leading-relaxed max-w-sm">
                     {camErrMsg}
                   </p>
 
                   {/* Step-by-Step Permission Instruction Box */}
-                  <div className="w-full max-w-sm bg-slate-900 dark:bg-[#240609] border border-slate-800 dark:border-[#5C121E] p-4 rounded-2xl text-left space-y-2 text-xs">
-                    <p className="font-extrabold text-amber-400 uppercase tracking-wider text-[10px]">How to unblock camera in browser:</p>
-                    <ol className="list-decimal list-inside space-y-1 text-slate-300">
-                      <li>Tap the <span className="font-bold text-white">Lock / Site Settings</span> option in your browser address bar.</li>
-                      <li>Set <span className="font-bold text-emerald-400">Camera</span> permission to <span className="font-bold text-emerald-400">ALLOW</span>.</li>
-                      <li>Click <span className="font-bold text-red-400">Retry Camera</span> below to launch stream.</li>
+                  <div className="w-full max-w-sm bg-white dark:bg-[#2A0A0F] border border-slate-200 dark:border-[#5C121E] p-4 rounded-2xl text-left space-y-2 text-xs shadow-sm">
+                    <p className="font-extrabold text-[#701A1A] dark:text-amber-400 uppercase tracking-wider text-[10px]">How to unblock camera in browser:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-slate-600 dark:text-slate-300 font-medium">
+                      <li>Tap the <span className="font-bold text-slate-900 dark:text-white">Lock / Site Settings</span> option in your browser address bar.</li>
+                      <li>Set <span className="font-bold text-emerald-700 dark:text-emerald-400">Camera</span> permission to <span className="font-bold text-emerald-700 dark:text-emerald-400">ALLOW</span>.</li>
+                      <li>Click <span className="font-bold text-[#701A1A] dark:text-red-400">Retry Camera</span> below to launch stream.</li>
                     </ol>
                   </div>
 
@@ -365,13 +365,13 @@ const Scanner = () => {
                     </button>
                     <button 
                       onClick={() => startCamera(!facingUser)}
-                      className="px-4 py-2.5 bg-slate-800 dark:bg-[#2E080C] hover:bg-slate-700 dark:hover:bg-[#3D0A11] text-amber-300 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all border border-slate-700 dark:border-[#5C121E]"
+                      className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#2E080C] dark:hover:bg-[#3D0A11] text-slate-800 dark:text-slate-200 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all border border-slate-200 dark:border-[#5C121E]"
                     >
                       Switch Camera
                     </button>
                     <button 
                       onClick={() => setMode('upload')}
-                      className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all border border-slate-700"
+                      className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#2E080C] dark:hover:bg-[#3D0A11] text-slate-800 dark:text-slate-200 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all border border-slate-200 dark:border-[#5C121E]"
                     >
                       Upload QR
                     </button>
@@ -381,11 +381,11 @@ const Scanner = () => {
 
               {/* Idle / Stopped Camera state */}
               {camStatus === 'idle' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950 dark:bg-[#180305] p-6 text-center">
-                  <div className="px-4 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 text-[11px] font-black uppercase tracking-widest">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-[#180305] p-6 text-center">
+                  <div className="px-4 py-1.5 rounded-full bg-slate-100 dark:bg-[#2A0A0F] border border-slate-200 dark:border-[#5C121E] text-slate-600 dark:text-slate-400 text-[11px] font-black uppercase tracking-widest">
                     Camera Stream Paused
                   </div>
-                  <p className="text-slate-400 text-xs font-medium max-w-xs">
+                  <p className="text-slate-500 dark:text-slate-400 text-xs font-medium max-w-xs">
                     Live video stream is paused. Click below to start scanning again.
                   </p>
                   <button 
