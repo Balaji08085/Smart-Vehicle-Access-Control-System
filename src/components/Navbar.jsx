@@ -30,15 +30,15 @@ const Navbar = () => {
         : 'bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_2px_15px_rgba(0,0,0,0.03)]'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
+        <div className="flex items-center justify-between h-20 gap-2 xl:gap-4">
           
           {/* SVACS Logo & Brand */}
           <Link to="/dashboard" className="flex items-center gap-3 shrink-0 group">
-            <SvacsLogo showText={true} size={40} dark={theme !== 'dark'} />
+            <SvacsLogo showText={true} size={38} dark={theme !== 'dark'} />
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center space-x-1.5 ml-auto mr-4">
+          <div className="hidden xl:flex items-center space-x-1 ml-auto mr-2">
             {links.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.path;
@@ -48,17 +48,17 @@ const Navbar = () => {
                   to={link.path}
                   target={link.path === '/scanner' ? "_blank" : undefined}
                   rel={link.path === '/scanner' ? "noopener noreferrer" : undefined}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black tracking-wide transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all duration-200 ${
                     isActive
                       ? theme === 'dark'
-                        ? 'text-white bg-gradient-to-r from-[#701A1A] to-[#8C1823] border border-red-500/40 shadow-md shadow-[#701A1A]/40 scale-[1.02]'
-                        : 'text-white bg-[#701A1A] shadow-md shadow-[#701A1A]/20 scale-[1.02]'
+                        ? 'text-white bg-gradient-to-r from-[#701A1A] to-[#8C1823] border border-red-500/40 shadow-md shadow-[#701A1A]/40'
+                        : 'text-white bg-[#701A1A] shadow-md shadow-[#701A1A]/20'
                       : theme === 'dark'
                         ? 'text-slate-300 hover:text-white hover:bg-white/10'
                         : 'text-slate-700 hover:text-[#701A1A] hover:bg-slate-100/90'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 transition-colors ${
+                  <Icon className={`w-4 h-4 shrink-0 transition-colors ${
                     isActive 
                       ? 'text-white' 
                       : theme === 'dark' 
@@ -72,13 +72,13 @@ const Navbar = () => {
           </div>
 
           {/* Role Status & Auth Actions */}
-          <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+          <div className="hidden md:flex items-center gap-2 shrink-0 ml-auto xl:ml-0">
             
             {/* 🌙 Theme Toggle Button */}
             <button
               onClick={toggleTheme}
               title="Toggle Light / Dark Mode (Shortcut: Press Alt + T)"
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
+              className={`px-2.5 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 shrink-0 ${
                 theme === 'dark'
                   ? 'bg-[#1E0609] text-red-300 border-[#5C121E] hover:bg-[#2A0A0F]'
                   : 'bg-slate-100/90 text-slate-700 border-slate-200 hover:bg-slate-200/80 shadow-xs'
@@ -86,22 +86,22 @@ const Navbar = () => {
             >
               {theme === 'dark' ? (
                 <>
-                  <Sun className="w-4 h-4 text-red-400" />
-                  <span className="hidden xl:inline">Light</span>
+                  <Sun className="w-4 h-4 text-red-400 shrink-0" />
+                  <span className="hidden 2xl:inline">Light</span>
                 </>
               ) : (
                 <>
-                  <Moon className="w-4 h-4 text-[#701A1A]" />
-                  <span className="hidden xl:inline">Dark</span>
+                  <Moon className="w-4 h-4 text-[#701A1A] shrink-0" />
+                  <span className="hidden 2xl:inline">Dark</span>
                 </>
               )}
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#701A1A]/10 text-[#701A1A] dark:bg-red-950/60 dark:text-red-300 border border-[#701A1A]/20 dark:border-[#701A1A] font-bold">
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#701A1A]/10 text-[#701A1A] dark:bg-red-950/60 dark:text-red-300 border border-[#701A1A]/20 dark:border-[#701A1A] font-bold shrink-0">
                 Alt+T
               </span>
             </button>
 
             {/* Current Active Role Badge */}
-            <div className={`px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider flex items-center gap-2 ${
+            <div className={`px-3 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shrink-0 whitespace-nowrap ${
               theme === 'dark'
                 ? userRole === 'admin'
                   ? 'bg-[#701A1A]/30 text-red-300 border-red-500/40'
@@ -118,28 +118,28 @@ const Navbar = () => {
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs'
                   : 'bg-blue-50 text-blue-700 border-blue-200 shadow-xs'
             }`}>
-              <span className={`w-2 h-2 rounded-full animate-ping ${
+              <span className={`w-2 h-2 rounded-full animate-ping shrink-0 ${
                 userRole === 'admin' ? 'bg-[#701A1A]' : userRole === 'superadmin' ? 'bg-[#701A1A]' : userRole === 'guard' ? 'bg-emerald-500' : 'bg-blue-500'
               }`} />
-              {userRole === 'admin' ? 'Admin' : userRole === 'superadmin' ? 'Super Admin (Approvals)' : 'Gate Guard'}
+              {userRole === 'admin' ? 'Admin' : userRole === 'superadmin' ? 'Super Admin' : 'Gate Guard'}
             </div>
 
             {/* Switch Role Button */}
             <Link
               to="/login"
-              className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98] ${
+              className={`px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-1.5 shrink-0 whitespace-nowrap shadow-sm hover:scale-[1.02] active:scale-[0.98] ${
                 theme === 'dark'
                   ? 'bg-white/10 hover:bg-white/20 text-white border-white/15'
                   : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-900'
               }`}
             >
-              <LogIn className="w-3.5 h-3.5 text-slate-300" />
-              Switch Role
+              <LogIn className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+              <span>Switch Role</span>
             </Link>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="lg:hidden flex items-center gap-2">
+          {/* Mobile / Tablet menu button */}
+          <div className="xl:hidden flex items-center gap-2 shrink-0">
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-xl text-xs font-bold border ${
@@ -168,7 +168,7 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white/95 border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 backdrop-blur-xl shadow-lg"
+            className="xl:hidden bg-white/95 border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 backdrop-blur-xl shadow-lg"
           >
             {links.map((link) => {
               const Icon = link.icon;
