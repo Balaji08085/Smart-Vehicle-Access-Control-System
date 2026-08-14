@@ -75,7 +75,7 @@ const EntryHistory = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#180305] pt-32 md:pt-36 pb-16 p-4 md:p-8 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#180305] pt-24 pb-12 p-4 md:p-8 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header Banner */}
@@ -136,11 +136,12 @@ const EntryHistory = () => {
                 ) : filteredHistory.map((scan) => {
                   const ownerName = scan.ownerName || scan.request?.name || 'Verified Vehicle';
                   const vehiclePlate = scan.vehicleNumber || scan.request?.bikeNumber || scan.qrToken || 'N/A';
+                  const formattedDate = scan.scanDate ? new Date(scan.scanDate).toLocaleString() : (scan.date ? `${scan.date} ${scan.time || ''}` : new Date().toLocaleString());
 
                   return (
-                    <tr key={scan._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <tr key={scan._id || scan.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-6 py-4 text-slate-700 dark:text-slate-300 font-medium">
-                        {new Date(scan.scanDate).toLocaleString()}
+                        {formattedDate}
                       </td>
                       <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">
                         {ownerName}
