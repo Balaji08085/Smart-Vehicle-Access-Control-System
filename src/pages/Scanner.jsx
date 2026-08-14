@@ -122,25 +122,22 @@ const Scanner = () => {
           audio: false
         });
       } catch (err2) {
-        console.warn('Camera Tier 2 failed, trying Tier 3 (basic video constraint):', err2);
+        console.warn('Camera Tier 2 failed, trying Tier 3 (any video device):', err2);
         try {
-          // Tier 3: Basic video: true fallback
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
-          });
+          // Tier 3: Any video device
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         } catch (err3) {
-          console.error('All Camera Tiers failed:', err3);
+          console.error('All camera tiers failed:', err3);
           busyRef.current = false;
           if (!mountedRef.current) return;
-
-          const name = err3?.name || err2?.name || err1?.name || '';
-          const msg = (name === 'NotAllowedError' || name === 'PermissionDeniedError')
-            ? 'Camera permission was denied. Please tap the 🔒 lock / site settings icon in your browser address bar, set Camera to ALLOW, then click Request Permission.'
-            : (name === 'NotFoundError' || name === 'DevicesNotFoundError')
-              ? 'No camera hardware found on this system. You can use "Upload QR" or "Manual Token" instead.'
-              : `Camera initialization error (${name || 'Hardware Error'}). Try switching camera or using Upload QR.`;
-
+          let msg = 'Unable to access camera.';
+          if (err3.name === 'NotAllowedError' || err3.name === 'PermissionDeniedError') {
+            msg = 'Camera permission was denied. Please tap the 🔒 lock / site settings icon in your browser address bar, set Camera to ALLOW, then click Request Permission.';
+          } else if (err3.name === 'NotFoundError' || err3.name === 'DevicesNotFoundError') {
+            msg = 'No camera found on this device. Please use "Upload QR" or "Manual Token".';
+          } else if (err3.name === 'NotReadableError' || err3.name === 'TrackStartError') {
+            msg = 'Camera is in use by another application. Please close other camera apps and retry.';
+          }
           setCamErrMsg(msg);
           setCamStatus('error');
           return;
@@ -148,35 +145,35 @@ const Scanner = () => {
       }
     }
 
-    if (!mountedRef.current) { stream.getTracks().forEach(t => t.stop()); busyRef.current = false; return; }
-
-    streamRef.current = stream;
-    const video = videoRef.current;
-
-    if (!video) {
+    if (!mountedRef.current) {
       stream.getTracks().forEach(t => t.stop());
       busyRef.current = false;
       return;
     }
 
-    // Assign stream — wait for metadata before calling play()
+    streamRef.current = stream;
+    const video = videoRef.current;
+    if (!video) { busyRef.current = false; return; }
+
     video.srcObject = stream;
 
-    const onReady = async () => {
+    const onReady = () => {
       video.removeEventListener('loadedmetadata', onReady);
-      if (!mountedRef.current) { busyRef.current = false; return; }
-      try {
-        await video.play();
-        if (!mountedRef.current) { busyRef.current = false; return; }
-        setCamStatus('ready');
-        rafRef.current = requestAnimationFrame(scanLoop);
-      } catch (playErr) {
-        if (playErr.name !== 'AbortError' && mountedRef.current) {
-          setCamErrMsg(`Camera playback error: ${playErr.message}`);
-          setCamStatus('error');
-        }
-      }
-      busyRef.current = false;
+      video.play()
+        .then(() => {
+          if (!mountedRef.current) return;
+          setCamStatus('ready');
+          busyRef.current = false;
+          scanLoop();
+        })
+        .catch(err => {
+          console.error('video.play() failed:', err);
+          busyRef.current = false;
+          if (mountedRef.current) {
+            setCamErrMsg('Could not start video preview.');
+            setCamStatus('error');
+          }
+        });
     };
 
     video.addEventListener('loadedmetadata', onReady);
@@ -197,7 +194,6 @@ const Scanner = () => {
   facingUserRef.current = facingUser;
   useEffect(() => {
     if (mode === 'camera') {
-      // Small delay ensures DOM is ready and previous cleanup has finished
       const t = setTimeout(() => startCamera(facingUserRef.current), 100);
       return () => clearTimeout(t);
     } else {
@@ -246,24 +242,28 @@ const Scanner = () => {
   const hasErr    = camStatus === 'error';
 
   return (
-    <div className="min-h-screen pt-20 pb-12 px-4 bg-[#080C16] flex flex-col items-center justify-center">
-      <div className="max-w-xl w-full space-y-4">
+    <div className="min-h-screen pt-20 pb-12 px-4 bg-slate-50 dark:bg-[#180305] text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center transition-colors duration-300 relative overflow-hidden">
+      
+      {/* Background ambient lighting */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#701A1A]/10 rounded-full blur-[160px] pointer-events-none" />
+
+      <div className="max-w-xl w-full space-y-4 relative z-10">
 
         {/* Header */}
-        <div className="glass-card p-5 rounded-3xl border border-white/10 bg-slate-900/80 backdrop-blur-xl flex items-center justify-between">
+        <div className="p-5 rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/dashboard')} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-white/10 text-slate-300 hover:text-white">
+            <button onClick={() => navigate('/dashboard')} className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#2A0A0F] dark:hover:bg-[#3D0A11] rounded-xl transition-colors border border-slate-200 dark:border-[#5C121E] text-slate-700 dark:text-slate-200">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
-                <Camera className="w-5 h-5 text-amber-400" /> QR Scanner Terminal
+              <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Camera className="w-5 h-5 text-[#701A1A] dark:text-red-400" /> QR Scanner Terminal
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">Security Guard Real-Time Gate Check</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Security Guard Real-Time Gate Check</p>
             </div>
           </div>
-          <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <div className="px-3 py-1.5 rounded-full bg-[#701A1A]/10 border border-[#701A1A]/30 dark:bg-[#701A1A]/30 dark:border-red-500/40 text-[#701A1A] dark:text-red-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#701A1A] dark:bg-red-400 animate-ping" />
             LIVE
           </div>
         </div>
@@ -271,14 +271,16 @@ const Scanner = () => {
         {/* Mode tabs */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { id: 'camera', label: 'Live Camera', icon: Camera,   from: 'from-cyan-600',   to: 'to-blue-600',   border: 'border-cyan-500' },
-            { id: 'upload', label: 'Upload QR',   icon: ImagePlus, from: 'from-amber-600',  to: 'to-orange-600', border: 'border-amber-500' },
-            { id: 'manual', label: 'Manual Token',icon: Keyboard,  from: 'from-violet-600', to: 'to-purple-600', border: 'border-violet-500' },
-          ].map(({ id, label, icon: Icon, from, to, border }) => (
+            { id: 'camera', label: 'Live Camera', icon: Camera },
+            { id: 'upload', label: 'Upload QR',   icon: ImagePlus },
+            { id: 'manual', label: 'Manual Token',icon: Keyboard },
+          ].map(({ id, label, icon: Icon }) => (
             <button key={id}
               onClick={() => { setMode(id); setCamErrMsg(''); setUploadError(''); setUploadPreview(null); setScanned(false); }}
-              className={`py-3 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all border
-                ${mode === id ? `bg-gradient-to-r ${from} ${to} text-white ${border}` : 'bg-slate-900/60 text-slate-400 border-white/10 hover:text-white'}`}
+              className={`py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all border
+                ${mode === id 
+                  ? 'bg-gradient-to-r from-[#701A1A] to-[#8C1823] text-white border-[#5C121E] shadow-md' 
+                  : 'bg-white dark:bg-[#1E0609] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#5C121E] hover:bg-slate-100 dark:hover:bg-[#2A0A0F]'}`}
             >
               <Icon className="w-4 h-4" /> {label}
             </button>
@@ -291,7 +293,7 @@ const Scanner = () => {
           {/* ── Camera ── */}
           {mode === 'camera' && (
             <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="rounded-3xl border border-white/10 bg-slate-950 overflow-hidden shadow-2xl relative"
+              className="rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-slate-950 overflow-hidden shadow-2xl relative"
               style={{ aspectRatio: '4/3' }}
             >
               <canvas ref={canvasRef} className="hidden" />
@@ -330,49 +332,49 @@ const Scanner = () => {
               {/* Loading spinner */}
               {isLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950">
-                  <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-cyan-400 text-sm font-bold tracking-wide">Starting Camera...</p>
-                  <p className="text-slate-500 text-xs">Please allow camera access if prompted</p>
+                  <div className="w-12 h-12 border-4 border-[#701A1A] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-white text-sm font-bold tracking-wide">Starting Camera...</p>
+                  <p className="text-slate-400 text-xs">Please allow camera access if prompted</p>
                 </div>
               )}
 
               {/* Error state */}
               {hasErr && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#180305] p-6 text-center overflow-y-auto">
-                  <div className="w-16 h-16 rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-red-400">
-                    <AlertTriangle className="w-8 h-8" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950 dark:bg-[#180305] p-6 text-center overflow-y-auto">
+                  <div className="w-16 h-16 rounded-full bg-[#701A1A]/20 border border-[#701A1A]/40 flex items-center justify-center text-rose-400">
+                    <AlertTriangle className="w-8 h-8 text-[#701A1A] dark:text-red-400" />
                   </div>
                   <h3 className="text-lg font-bold text-white tracking-tight">Camera Access Blocked</h3>
-                  <p className="text-red-200/90 text-xs font-medium leading-relaxed max-w-sm">
+                  <p className="text-rose-200/90 text-xs font-medium leading-relaxed max-w-sm">
                     {camErrMsg}
                   </p>
 
                   {/* Step-by-Step Permission Instruction Box */}
-                  <div className="w-full max-w-sm bg-[#240609] border border-[#5C121E] p-3.5 rounded-2xl text-left space-y-2 text-xs">
+                  <div className="w-full max-w-sm bg-slate-900 dark:bg-[#240609] border border-slate-800 dark:border-[#5C121E] p-3.5 rounded-2xl text-left space-y-2 text-xs">
                     <p className="font-bold text-amber-400 uppercase tracking-wider text-[10px]">How to unblock camera in browser:</p>
                     <ol className="list-decimal list-inside space-y-1 text-slate-300">
                       <li>Tap the <span className="font-bold text-white">🔒 Lock / Site Settings</span> icon in address bar.</li>
                       <li>Set <span className="font-bold text-emerald-400">Camera</span> permission to <span className="font-bold text-emerald-400">ALLOW</span>.</li>
-                      <li>Click <span className="font-bold text-cyan-400">Retry Camera</span> below to launch stream.</li>
+                      <li>Click <span className="font-bold text-red-400">Retry Camera</span> below to launch stream.</li>
                     </ol>
                   </div>
 
                   <div className="flex flex-wrap gap-2 justify-center pt-1">
                     <button 
                       onClick={() => startCamera(facingUser)}
-                      className="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md active:scale-95"
+                      className="px-5 py-2.5 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md active:scale-95"
                     >
                       <RefreshCw className="w-4 h-4" /> Retry Camera
                     </button>
                     <button 
                       onClick={() => startCamera(!facingUser)}
-                      className="px-4 py-2.5 bg-[#2E080C] hover:bg-[#3D0A11] text-amber-300 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-[#5C121E]"
+                      className="px-4 py-2.5 bg-slate-800 dark:bg-[#2E080C] hover:bg-slate-700 dark:hover:bg-[#3D0A11] text-amber-300 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-slate-700 dark:border-[#5C121E]"
                     >
                       <Camera className="w-3.5 h-3.5" /> Switch Camera
                     </button>
                     <button 
                       onClick={() => setMode('upload')}
-                      className="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all"
+                      className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-slate-700"
                     >
                       <ImagePlus className="w-3.5 h-3.5" /> Upload QR
                     </button>
@@ -382,7 +384,7 @@ const Scanner = () => {
 
               {/* Idle / Stopped Camera state */}
               {camStatus === 'idle' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#180305] p-6 text-center">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950 dark:bg-[#180305] p-6 text-center">
                   <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400">
                     <VideoOff className="w-8 h-8" />
                   </div>
@@ -392,7 +394,7 @@ const Scanner = () => {
                   </p>
                   <button 
                     onClick={() => startCamera(facingUser)}
-                    className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-lg active:scale-95"
+                    className="px-6 py-3 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-lg active:scale-95"
                   >
                     <Video className="w-4 h-4" /> Start Camera
                   </button>
@@ -412,7 +414,7 @@ const Scanner = () => {
                     </button>
                     <button 
                       onClick={handleFlip}
-                      className="px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-cyan-300 font-bold text-xs flex items-center gap-1.5 border border-cyan-500/30 transition-all shadow-md active:scale-95"
+                      className="px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 transition-all shadow-md active:scale-95"
                     >
                       <FlipHorizontal className="w-3.5 h-3.5" /> Flip
                     </button>
@@ -429,20 +431,20 @@ const Scanner = () => {
           {/* ── Upload ── */}
           {mode === 'upload' && (
             <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="rounded-3xl border border-white/10 bg-slate-950 p-8 flex flex-col items-center gap-5">
+              className="rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] p-8 flex flex-col items-center gap-5 shadow-xl">
               {uploadPreview
-                ? <img src={uploadPreview} alt="Preview" className="w-52 h-52 object-contain bg-white rounded-2xl shadow-xl" />
-                : <div className="w-28 h-28 rounded-3xl bg-amber-500/10 border-2 border-dashed border-amber-500/40 flex items-center justify-center">
-                    <QrCode className="w-14 h-14 text-amber-400" />
+                ? <img src={uploadPreview} alt="Preview" className="w-52 h-52 object-contain bg-white rounded-2xl shadow-xl border border-slate-200" />
+                : <div className="w-28 h-28 rounded-3xl bg-[#701A1A]/10 border-2 border-dashed border-[#701A1A]/40 flex items-center justify-center">
+                    <QrCode className="w-14 h-14 text-[#701A1A] dark:text-red-400" />
                   </div>
               }
-              <p className="text-slate-400 text-sm text-center">Upload a photo of the QR sticker to verify access</p>
+              <p className="text-slate-600 dark:text-slate-300 text-sm text-center font-medium">Upload a photo of the QR sticker to verify access</p>
               {uploadError && (
-                <div className="flex items-center gap-2 text-red-400 text-sm bg-red-950/40 border border-red-500/30 px-4 py-2.5 rounded-2xl">
+                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 text-sm bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 px-4 py-2.5 rounded-2xl">
                   <AlertTriangle className="w-4 h-4 shrink-0" /> {uploadError}
                 </div>
               )}
-              <label className="cursor-pointer px-8 py-3.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-sm rounded-2xl shadow-xl transition-all hover:scale-105">
+              <label className="cursor-pointer px-8 py-3.5 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl transition-all hover:scale-105">
                 Choose QR Image
                 <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
               </label>
@@ -452,35 +454,35 @@ const Scanner = () => {
           {/* ── Manual ── */}
           {mode === 'manual' && (
             <motion.div key="manual" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="rounded-3xl border border-white/10 bg-slate-950 p-8 flex flex-col items-center gap-5">
-              <div className="w-20 h-20 rounded-3xl bg-violet-500/10 border-2 border-dashed border-violet-500/40 flex items-center justify-center">
-                <Keyboard className="w-10 h-10 text-violet-400" />
+              className="rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] p-8 flex flex-col items-center gap-5 shadow-xl">
+              <div className="w-20 h-20 rounded-3xl bg-[#701A1A]/10 border-2 border-dashed border-[#701A1A]/40 flex items-center justify-center">
+                <Keyboard className="w-10 h-10 text-[#701A1A] dark:text-red-400" />
               </div>
               <div className="text-center">
-                <h3 className="text-white font-black text-lg mb-1">Manual Token Entry</h3>
-                <p className="text-slate-400 text-sm">Type the QR token or vehicle plate to verify</p>
+                <h3 className="text-slate-900 dark:text-white font-black text-lg mb-1">Manual Token Entry</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Type the QR token or vehicle plate to verify</p>
               </div>
               <form onSubmit={handleManual} className="w-full space-y-3">
                 <input
                   type="text" value={manualToken} onChange={e => setManualToken(e.target.value)} autoFocus
                   placeholder="e.g. BIKE-2026-000001 or TN 14 AE 8495"
-                  className="w-full bg-slate-900 border border-white/10 rounded-2xl px-4 py-3.5 text-white font-mono text-sm placeholder:text-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-2xl px-4 py-3.5 text-slate-900 dark:text-white font-mono text-sm placeholder:text-slate-400 focus:outline-none focus:border-[#701A1A] transition-colors"
                 />
                 <button type="submit" disabled={!manualToken.trim()}
-                  className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-black text-sm uppercase tracking-wider rounded-2xl transition-all hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed">
+                  className="w-full py-3.5 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-black text-sm uppercase tracking-wider rounded-2xl transition-all hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed shadow-md">
                   Verify Access Token →
                 </button>
               </form>
-              <div className="w-full pt-3 border-t border-white/10 space-y-2">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold text-center">Quick Test</p>
+              <div className="w-full pt-3 border-t border-slate-200 dark:border-[#5C121E] space-y-2">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold text-center">Quick Test</p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: 'Valid QR',  token: 'TN-38-CC-5555',   color: 'text-emerald-400 border-emerald-500/30' },
-                    { label: 'Expired',   token: 'expired-token',   color: 'text-amber-400  border-amber-500/30' },
-                    { label: 'Disabled',  token: 'disabled-token',  color: 'text-red-400    border-red-500/30' },
+                    { label: 'Valid QR',  token: 'TN-38-CC-5555',   color: 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-500/30' },
+                    { label: 'Expired',   token: 'expired-token',   color: 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-500/30' },
+                    { label: 'Disabled',  token: 'disabled-token',  color: 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-500/30' },
                   ].map(({ label, token, color }) => (
                     <button key={token} onClick={() => navigate(`/verify/${token}`)}
-                      className={`py-2 px-2 bg-slate-900 rounded-xl text-[10px] font-bold border ${color} hover:bg-slate-800 transition-all`}>
+                      className={`py-2 px-2 rounded-xl text-[10px] font-bold border ${color} hover:opacity-80 transition-all`}>
                       {label}
                     </button>
                   ))}
@@ -490,7 +492,7 @@ const Scanner = () => {
           )}
         </AnimatePresence>
 
-        <p className="text-center text-[10px] text-slate-600 font-mono">
+        <p className="text-center text-[10px] text-slate-500 dark:text-slate-400 font-mono">
           MRF Innovation Park · Gate Security Verification System · All scans are logged
         </p>
       </div>
