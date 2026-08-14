@@ -38,9 +38,8 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden xl:flex items-center space-x-1 ml-auto mr-2">
+          <div className="hidden xl:flex items-center space-x-1.5 ml-auto mr-2">
             {links.map((link) => {
-              const Icon = link.icon;
               const isActive = location.pathname === link.path;
               return (
                 <Link
@@ -48,7 +47,7 @@ const Navbar = () => {
                   to={link.path}
                   target={link.path === '/scanner' ? "_blank" : undefined}
                   rel={link.path === '/scanner' ? "noopener noreferrer" : undefined}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-xl text-xs font-black tracking-wide whitespace-nowrap transition-all duration-200 ${
                     isActive
                       ? theme === 'dark'
                         ? 'text-white bg-gradient-to-r from-[#701A1A] to-[#8C1823] border border-red-500/40 shadow-md shadow-[#701A1A]/40'
@@ -58,13 +57,6 @@ const Navbar = () => {
                         : 'text-slate-700 hover:text-[#701A1A] hover:bg-slate-100/90'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 transition-colors ${
-                    isActive 
-                      ? 'text-white' 
-                      : theme === 'dark' 
-                        ? 'text-slate-400 group-hover:text-white' 
-                        : 'text-slate-400 group-hover:text-[#701A1A]'
-                  }`} />
                   {link.name}
                 </Link>
               );
@@ -180,13 +172,12 @@ const Navbar = () => {
                   target={link.path === '/scanner' ? "_blank" : undefined}
                   rel={link.path === '/scanner' ? "noopener noreferrer" : undefined}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold ${
+                  className={`block px-4 py-3 rounded-xl text-sm font-bold ${
                     isActive
                       ? 'text-[#701A1A] bg-[#701A1A]/10 border border-[#701A1A]/20'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-[#701A1A]' : 'text-slate-400'}`} />
                   {link.name}
                 </Link>
               );
