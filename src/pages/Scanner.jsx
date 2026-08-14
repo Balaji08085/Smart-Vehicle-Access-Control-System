@@ -1,11 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Camera, ImagePlus, ShieldCheck, ArrowLeft, QrCode,
-  RefreshCw, Keyboard, AlertTriangle, FlipHorizontal, CheckCircle2,
-  VideoOff, Video
-} from 'lucide-react';
 import jsQR from 'jsqr';
 
 const Scanner = () => {
@@ -132,7 +127,7 @@ const Scanner = () => {
           if (!mountedRef.current) return;
           let msg = 'Unable to access camera.';
           if (err3.name === 'NotAllowedError' || err3.name === 'PermissionDeniedError') {
-            msg = 'Camera permission was denied. Please tap the 🔒 lock / site settings icon in your browser address bar, set Camera to ALLOW, then click Request Permission.';
+            msg = 'Camera permission was denied. Please tap the Lock / Site Settings icon in your browser address bar, set Camera to ALLOW, then click Request Permission.';
           } else if (err3.name === 'NotFoundError' || err3.name === 'DevicesNotFoundError') {
             msg = 'No camera found on this device. Please use "Upload QR" or "Manual Token".';
           } else if (err3.name === 'NotReadableError' || err3.name === 'TrackStartError') {
@@ -252,12 +247,12 @@ const Scanner = () => {
         {/* Header */}
         <div className="p-5 rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/dashboard')} className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#2A0A0F] dark:hover:bg-[#3D0A11] rounded-xl transition-colors border border-slate-200 dark:border-[#5C121E] text-slate-700 dark:text-slate-200">
-              <ArrowLeft className="w-5 h-5" />
+            <button onClick={() => navigate('/dashboard')} className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#2A0A0F] dark:hover:bg-[#3D0A11] rounded-xl transition-colors border border-slate-200 dark:border-[#5C121E] text-slate-700 dark:text-slate-200 font-extrabold text-xs">
+              Back to Dashboard
             </button>
             <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Camera className="w-5 h-5 text-[#701A1A] dark:text-red-400" /> QR Scanner Terminal
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                QR Scanner Terminal
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Security Guard Real-Time Gate Check</p>
             </div>
@@ -271,18 +266,18 @@ const Scanner = () => {
         {/* Mode tabs */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { id: 'camera', label: 'Live Camera', icon: Camera },
-            { id: 'upload', label: 'Upload QR',   icon: ImagePlus },
-            { id: 'manual', label: 'Manual Token',icon: Keyboard },
-          ].map(({ id, label, icon: Icon }) => (
+            { id: 'camera', label: 'Live Camera' },
+            { id: 'upload', label: 'Upload QR' },
+            { id: 'manual', label: 'Manual Token' },
+          ].map(({ id, label }) => (
             <button key={id}
               onClick={() => { setMode(id); setCamErrMsg(''); setUploadError(''); setUploadPreview(null); setScanned(false); }}
-              className={`py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all border
+              className={`py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center transition-all border
                 ${mode === id 
                   ? 'bg-gradient-to-r from-[#701A1A] to-[#8C1823] text-white border-[#5C121E] shadow-md' 
                   : 'bg-white dark:bg-[#1E0609] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#5C121E] hover:bg-slate-100 dark:hover:bg-[#2A0A0F]'}`}
             >
-              <Icon className="w-4 h-4" /> {label}
+              {label}
             </button>
           ))}
         </div>
@@ -324,8 +319,11 @@ const Scanner = () => {
 
               {/* Scanned success flash */}
               {scanned && (
-                <div className="absolute inset-0 bg-emerald-500/25 backdrop-blur-sm flex items-center justify-center">
-                  <CheckCircle2 className="w-28 h-28 text-emerald-400 drop-shadow-2xl" />
+                <div className="absolute inset-0 bg-emerald-950/90 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
+                  <span className="px-4 py-2 bg-emerald-500 text-white text-sm font-black rounded-full uppercase tracking-wider shadow-lg">
+                    SCAN SUCCESSFUL
+                  </span>
+                  <p className="text-emerald-300 text-xs font-mono">Redirecting to Gate Verification...</p>
                 </div>
               )}
 
@@ -333,7 +331,7 @@ const Scanner = () => {
               {isLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950">
                   <div className="w-12 h-12 border-4 border-[#701A1A] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-white text-sm font-bold tracking-wide">Starting Camera...</p>
+                  <p className="text-white text-sm font-bold tracking-wide">Starting Camera Stream...</p>
                   <p className="text-slate-400 text-xs">Please allow camera access if prompted</p>
                 </div>
               )}
@@ -341,19 +339,18 @@ const Scanner = () => {
               {/* Error state */}
               {hasErr && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950 dark:bg-[#180305] p-6 text-center overflow-y-auto">
-                  <div className="w-16 h-16 rounded-full bg-[#701A1A]/20 border border-[#701A1A]/40 flex items-center justify-center text-rose-400">
-                    <AlertTriangle className="w-8 h-8 text-[#701A1A] dark:text-red-400" />
+                  <div className="px-4 py-1.5 rounded-full bg-[#701A1A]/30 border border-red-500/40 text-red-400 text-[11px] font-black uppercase tracking-widest">
+                    Camera Access Blocked
                   </div>
-                  <h3 className="text-lg font-bold text-white tracking-tight">Camera Access Blocked</h3>
                   <p className="text-rose-200/90 text-xs font-medium leading-relaxed max-w-sm">
                     {camErrMsg}
                   </p>
 
                   {/* Step-by-Step Permission Instruction Box */}
-                  <div className="w-full max-w-sm bg-slate-900 dark:bg-[#240609] border border-slate-800 dark:border-[#5C121E] p-3.5 rounded-2xl text-left space-y-2 text-xs">
-                    <p className="font-bold text-amber-400 uppercase tracking-wider text-[10px]">How to unblock camera in browser:</p>
+                  <div className="w-full max-w-sm bg-slate-900 dark:bg-[#240609] border border-slate-800 dark:border-[#5C121E] p-4 rounded-2xl text-left space-y-2 text-xs">
+                    <p className="font-extrabold text-amber-400 uppercase tracking-wider text-[10px]">How to unblock camera in browser:</p>
                     <ol className="list-decimal list-inside space-y-1 text-slate-300">
-                      <li>Tap the <span className="font-bold text-white">🔒 Lock / Site Settings</span> icon in address bar.</li>
+                      <li>Tap the <span className="font-bold text-white">Lock / Site Settings</span> option in your browser address bar.</li>
                       <li>Set <span className="font-bold text-emerald-400">Camera</span> permission to <span className="font-bold text-emerald-400">ALLOW</span>.</li>
                       <li>Click <span className="font-bold text-red-400">Retry Camera</span> below to launch stream.</li>
                     </ol>
@@ -362,21 +359,21 @@ const Scanner = () => {
                   <div className="flex flex-wrap gap-2 justify-center pt-1">
                     <button 
                       onClick={() => startCamera(facingUser)}
-                      className="px-5 py-2.5 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md active:scale-95"
+                      className="px-5 py-2.5 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
                     >
-                      <RefreshCw className="w-4 h-4" /> Retry Camera
+                      Retry Camera
                     </button>
                     <button 
                       onClick={() => startCamera(!facingUser)}
-                      className="px-4 py-2.5 bg-slate-800 dark:bg-[#2E080C] hover:bg-slate-700 dark:hover:bg-[#3D0A11] text-amber-300 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-slate-700 dark:border-[#5C121E]"
+                      className="px-4 py-2.5 bg-slate-800 dark:bg-[#2E080C] hover:bg-slate-700 dark:hover:bg-[#3D0A11] text-amber-300 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all border border-slate-700 dark:border-[#5C121E]"
                     >
-                      <Camera className="w-3.5 h-3.5" /> Switch Camera
+                      Switch Camera
                     </button>
                     <button 
                       onClick={() => setMode('upload')}
-                      className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-slate-700"
+                      className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all border border-slate-700"
                     >
-                      <ImagePlus className="w-3.5 h-3.5" /> Upload QR
+                      Upload QR
                     </button>
                   </div>
                 </div>
@@ -385,18 +382,17 @@ const Scanner = () => {
               {/* Idle / Stopped Camera state */}
               {camStatus === 'idle' && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950 dark:bg-[#180305] p-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400">
-                    <VideoOff className="w-8 h-8" />
+                  <div className="px-4 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 text-[11px] font-black uppercase tracking-widest">
+                    Camera Stream Paused
                   </div>
-                  <h3 className="text-lg font-bold text-white tracking-tight">Camera is Stopped</h3>
                   <p className="text-slate-400 text-xs font-medium max-w-xs">
                     Live video stream is paused. Click below to start scanning again.
                   </p>
                   <button 
                     onClick={() => startCamera(facingUser)}
-                    className="px-6 py-3 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-lg active:scale-95"
+                    className="px-6 py-3 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg active:scale-95"
                   >
-                    <Video className="w-4 h-4" /> Start Camera
+                    Start Camera
                   </button>
                 </div>
               )}
@@ -408,20 +404,20 @@ const Scanner = () => {
                     <button 
                       onClick={stopStream}
                       title="Stop Live Camera Stream"
-                      className="px-3.5 py-1.5 rounded-full bg-rose-950/90 hover:bg-rose-900 text-rose-300 font-bold text-xs flex items-center gap-1.5 border border-rose-500/40 transition-all shadow-md active:scale-95"
+                      className="px-3.5 py-1.5 rounded-full bg-rose-950/90 hover:bg-rose-900 text-rose-300 font-extrabold text-xs uppercase tracking-wider border border-rose-500/40 transition-all shadow-md active:scale-95"
                     >
-                      <VideoOff className="w-3.5 h-3.5" /> Stop Camera
+                      Stop Camera
                     </button>
                     <button 
                       onClick={handleFlip}
-                      className="px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 transition-all shadow-md active:scale-95"
+                      className="px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white font-extrabold text-xs uppercase tracking-wider border border-white/20 transition-all shadow-md active:scale-95"
                     >
-                      <FlipHorizontal className="w-3.5 h-3.5" /> Flip
+                      Flip Camera
                     </button>
                   </div>
                   <div className="absolute bottom-0 inset-x-0 bg-black/70 backdrop-blur px-4 py-2.5 flex justify-between items-center z-20">
                     <span className="text-xs font-mono text-slate-300">Point camera at the QR code...</span>
-                    <ShieldCheck className="w-4 h-4 text-emerald-400 animate-pulse" />
+                    <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-widest">ACTIVE</span>
                   </div>
                 </>
               )}
@@ -434,14 +430,14 @@ const Scanner = () => {
               className="rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] p-8 flex flex-col items-center gap-5 shadow-xl">
               {uploadPreview
                 ? <img src={uploadPreview} alt="Preview" className="w-52 h-52 object-contain bg-white rounded-2xl shadow-xl border border-slate-200" />
-                : <div className="w-28 h-28 rounded-3xl bg-[#701A1A]/10 border-2 border-dashed border-[#701A1A]/40 flex items-center justify-center">
-                    <QrCode className="w-14 h-14 text-[#701A1A] dark:text-red-400" />
+                : <div className="w-28 h-28 rounded-3xl bg-[#701A1A]/10 border-2 border-dashed border-[#701A1A]/40 flex flex-col items-center justify-center p-4 text-center">
+                    <span className="text-xs font-bold text-[#701A1A] dark:text-red-400 uppercase font-mono">Select Image</span>
                   </div>
               }
               <p className="text-slate-600 dark:text-slate-300 text-sm text-center font-medium">Upload a photo of the QR sticker to verify access</p>
               {uploadError && (
-                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 text-sm bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 px-4 py-2.5 rounded-2xl">
-                  <AlertTriangle className="w-4 h-4 shrink-0" /> {uploadError}
+                <div className="text-rose-700 dark:text-rose-300 text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 px-4 py-2.5 rounded-2xl">
+                  {uploadError}
                 </div>
               )}
               <label className="cursor-pointer px-8 py-3.5 bg-gradient-to-r from-[#701A1A] to-[#8C1823] hover:from-[#5C121E] hover:to-[#701A1A] text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl transition-all hover:scale-105">
@@ -456,7 +452,7 @@ const Scanner = () => {
             <motion.div key="manual" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="rounded-3xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#1E0609] p-8 flex flex-col items-center gap-5 shadow-xl">
               <div className="w-20 h-20 rounded-3xl bg-[#701A1A]/10 border-2 border-dashed border-[#701A1A]/40 flex items-center justify-center">
-                <Keyboard className="w-10 h-10 text-[#701A1A] dark:text-red-400" />
+                <span className="text-xs font-mono font-bold text-[#701A1A] dark:text-red-400 uppercase">TOKEN</span>
               </div>
               <div className="text-center">
                 <h3 className="text-slate-900 dark:text-white font-black text-lg mb-1">Manual Token Entry</h3>
