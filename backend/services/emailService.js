@@ -302,7 +302,7 @@ export const sendApprovalEmail = async (request, qrUrl) => {
     </tr>
   ` : getAvatarBadge(request.name);
 
-  const htmlBody = emailWrapper('#701A1A', `
+  const htmlBody = emailWrapper('#10B981', `
     <tr>
       <td style="padding: 32px 40px 28px;">
         <!-- STATUS BADGE -->
@@ -311,8 +311,8 @@ export const sendApprovalEmail = async (request, qrUrl) => {
             <td align="center">
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="background-color: #FFF5F5; border: 2px solid #701A1A; padding: 12px 36px; border-radius: 50px; text-align: center; box-shadow: 0 4px 14px rgba(112,26,26,0.12);">
-                    <span style="color: #701A1A; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;">APPROVED — ACCESS GRANTED</span>
+                  <td style="background-color: #ECFDF5; border: 2px solid #10B981; padding: 12px 36px; border-radius: 50px; text-align: center; box-shadow: 0 4px 14px rgba(16,185,129,0.15);">
+                    <span style="color: #059669; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;">APPROVED — ACCESS GRANTED</span>
                   </td>
                 </tr>
               </table>
@@ -327,7 +327,7 @@ export const sendApprovalEmail = async (request, qrUrl) => {
 
         <!-- GREETING -->
         <p style="font-size: 15px; color: #0F172A; margin: 16px 0 6px; line-height: 1.6; font-weight: 700;">Hello <strong>${request.name}</strong>,</p>
-        <p style="font-size: 14px; color: #475569; margin: 0 0 24px; line-height: 1.7; font-weight: 500;">Super Admin has <strong style="color: #701A1A;">APPROVED</strong> your vehicle access request! Your vehicle is now officially authorized for entry through MCC MRF Innovation Park gate security checkpoints.</p>
+        <p style="font-size: 14px; color: #475569; margin: 0 0 24px; line-height: 1.7; font-weight: 500;">Super Admin has <strong style="color: #059669;">APPROVED</strong> your vehicle access request! Your vehicle is now officially authorized for entry through MCC MRF Innovation Park gate security checkpoints.</p>
 
         <!-- LICENSE PLATE CARD -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
@@ -346,10 +346,10 @@ export const sendApprovalEmail = async (request, qrUrl) => {
         </table>
 
         <!-- OFFICIAL QR CODE ACCESS STICKER CARD -->
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FAFBFC; border-radius: 20px; border: 2px dashed #701A1A; padding: 26px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(112,26,26,0.08);">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FAFBFC; border-radius: 20px; border: 2px dashed #10B981; padding: 26px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(16,185,129,0.08);">
           <tr>
             <td align="center">
-              <p style="margin: 0 0 4px; font-size: 11px; font-weight: 900; color: #701A1A; letter-spacing: 2.5px; text-transform: uppercase;">Official Vehicle Access Pass QR Sticker</p>
+              <p style="margin: 0 0 4px; font-size: 11px; font-weight: 900; color: #059669; letter-spacing: 2.5px; text-transform: uppercase;">Official Vehicle Access Pass QR Sticker</p>
               <p style="margin: 0 0 16px; font-size: 18px; font-weight: 900; color: #0F172A; font-family: Consolas, monospace; letter-spacing: 1px;">${request.bikeNumber}</p>
               
               <!-- EMBEDDED QR CODE IMAGE -->
@@ -361,8 +361,8 @@ export const sendApprovalEmail = async (request, qrUrl) => {
                 </tr>
               </table>
 
-              <p style="margin: 0 0 4px; font-size: 12px; font-weight: 900; color: #0F172A;">QR PASS TOKEN: <span style="font-family: Consolas, monospace; color: #701A1A; background-color: #FFF5F5; border: 1px solid #701A1A; padding: 2px 8px; border-radius: 6px;">${request.token || 'N/A'}</span></p>
-              <p style="margin: 6px 0 0; font-size: 11px; color: #701A1A; font-weight: 800;">✓ Ready for Security Gate QR Scanner & Automated Barrier Release</p>
+              <p style="margin: 0 0 4px; font-size: 12px; font-weight: 900; color: #0F172A;">QR PASS TOKEN: <span style="font-family: Consolas, monospace; color: #047857; background-color: #ECFDF5; border: 1px solid #10B981; padding: 2px 8px; border-radius: 6px;">${request.token || 'N/A'}</span></p>
+              <p style="margin: 6px 0 0; font-size: 11px; color: #059669; font-weight: 800;">✓ Ready for Security Gate QR Scanner & Automated Barrier Release</p>
             </td>
           </tr>
         </table>
@@ -380,15 +380,15 @@ export const sendApprovalEmail = async (request, qrUrl) => {
           ${detailRow('', 'Department / Course', request.department || 'TEKQUORA • MCA', '#0F172A')}
           ${detailRow('', 'Designation / Role', request.designation || 'FULL STACK DEVELOPER', '#0F172A')}
           ${detailRow('', 'Company / Institution', request.company || 'TEKQUORA', '#0F172A')}
-          ${detailRow('📅', 'Valid Start Date', startDateStr, '#701A1A', true)}
-          ${detailRow('⏰', 'Valid Expiry Date', expiryDateStr, '#701A1A', true)}
+          ${detailRow('📅', 'Valid Start Date', startDateStr, '#059669', true)}
+          ${detailRow('⏰', 'Valid Expiry Date', expiryDateStr, '#059669', true)}
         </table>
 
         <!-- ONLINE DIGITAL PASS BUTTON -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
           <tr>
             <td align="center">
-              <a href="${qrUrl || '#'}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #701A1A, #5C121E); color: #ffffff; padding: 15px 46px; border-radius: 50px; font-size: 14px; font-weight: 900; text-decoration: none; letter-spacing: 1px; box-shadow: 0 6px 18px rgba(112, 26, 26, 0.35);">🔗 VIEW DIGITAL PASS & PRINT QR STICKER</a>
+              <a href="${qrUrl || '#'}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #059669, #10B981); color: #ffffff; padding: 15px 46px; border-radius: 50px; font-size: 14px; font-weight: 900; text-decoration: none; letter-spacing: 1px; box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);">🔗 VIEW DIGITAL PASS & PRINT QR STICKER</a>
             </td>
           </tr>
         </table>
