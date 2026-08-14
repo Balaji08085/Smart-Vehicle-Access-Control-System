@@ -14,7 +14,7 @@ const Footer = () => {
           {/* Brand & Overview Column (2 Span) */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <SvacsLogo showText={true} size={42} dark={false} />
+              <SvacsLogo showText={true} size={42} variant="footer" />
             </div>
             
             <p className="text-white/90 text-xs leading-relaxed max-w-md mt-2 font-medium">

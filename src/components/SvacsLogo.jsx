@@ -6,12 +6,13 @@ import tvLogoDark from '../assets/tv_transparent_dark.png';
  * SVACS - Smart Vehicle Access Control System
  * Logo Component featuring the official MCC Crest logo image
  */
-export const SvacsLogo = ({ size = 44, showText = true, dark = true, className = "" }) => {
-  const textPrimary  = dark ? '#701A1A' : '#F87171';
-  const textNavy     = dark ? '#3B4E68' : '#CBD5E1';
-  const textSub      = dark ? '#475569' : '#94A3B8';
-  const lineCol      = dark ? '#3B4E68' : '#64748B';
-  const logoSrc      = dark ? tvLogoLight : tvLogoDark;
+export const SvacsLogo = ({ size = 44, showText = true, dark = true, variant = "default", className = "" }) => {
+  const isFooter = variant === "footer";
+  const textPrimary  = isFooter ? '#FFFFFF' : (dark ? '#701A1A' : '#F87171');
+  const textNavy     = isFooter ? '#FFFFFF' : (dark ? '#3B4E68' : '#CBD5E1');
+  const textSub      = isFooter ? 'rgba(255, 255, 255, 0.85)' : (dark ? '#475569' : '#94A3B8');
+  const lineCol      = isFooter ? 'rgba(255, 255, 255, 0.35)' : (dark ? '#3B4E68' : '#64748B');
+  const logoSrc      = isFooter ? tvLogoDark : (dark ? tvLogoLight : tvLogoDark);
 
   return (
     <div className={`flex items-center gap-3 shrink-0 select-none ${className}`}>
