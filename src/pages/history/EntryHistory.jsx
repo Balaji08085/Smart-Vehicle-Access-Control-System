@@ -107,7 +107,7 @@ const EntryHistory = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#180305] pt-36 md:pt-40 pb-16 p-4 md:p-8 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#180305] pt-24 pb-12 p-4 md:p-8 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header Banner */}
