@@ -156,7 +156,8 @@ const CreateRequest = () => {
     }
   };
 
-  return <div className="min-h-screen bg-slate-50 dark:bg-[#120305] text-slate-900 dark:text-slate-100 p-4 md:p-8 pt-28 md:pt-32 transition-colors duration-300">
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-[#120305] text-slate-900 dark:text-slate-100 p-4 md:p-8 pt-28 md:pt-32 transition-colors duration-300">
       <div className="max-w-4xl mx-auto space-y-6">
         
         {step === 1 ? (
