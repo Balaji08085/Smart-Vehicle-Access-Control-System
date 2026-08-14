@@ -431,81 +431,91 @@ const ApprovalDashboard = () => {
         )}
       </div>
 
-      {/* Complete Details Modal */}
+      {/* Full-Screen Details Modal */}
       {selectedRequest && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-50/95 dark:bg-[#180305]/95 backdrop-blur-md z-50 overflow-y-auto p-4 md:p-8 flex flex-col items-center justify-start">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 md:p-8 relative shadow-2xl"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl w-full max-w-4xl p-6 md:p-10 relative shadow-2xl space-y-6 my-auto"
           >
-            <div className="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+            {/* Top Modal Bar */}
+            <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-4">
               <div>
-                <h2 className="text-2xl font-black text-white">Request Details</h2>
-                <p className="text-xs text-slate-400 font-mono">ID: {selectedRequest._id}</p>
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white">Request Details</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">ID: {selectedRequest._id}</p>
               </div>
-              <button onClick={() => setSelectedRequest(null)} className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800">
-                <X className="w-5 h-5" />
+              <button 
+                onClick={() => setSelectedRequest(null)} 
+                className="px-4 py-2 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <X className="w-4 h-4" /> Close
               </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-6 mb-8 bg-slate-950/80 p-5 rounded-2xl border border-slate-800">
-              <img
-                src={selectedRequest.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80'}
-                alt={selectedRequest.name}
-                className="w-24 h-24 rounded-2xl object-cover border-2 border-amber-500"
-              />
-              <div className="text-center sm:text-left space-y-1">
-                <h3 className="text-2xl font-extrabold text-white">{selectedRequest.name}</h3>
-                <div className="font-mono text-xl font-black text-slate-900 bg-slate-100 inline-block px-3 py-1 rounded-xl border border-slate-300 shadow-sm">
+            {/* Profile Highlight Card */}
+            <div className="flex flex-col sm:flex-row items-center gap-6 bg-slate-50 dark:bg-[#2A0A0F] p-6 rounded-2xl border border-slate-200 dark:border-[#5C121E]">
+              <div className="w-28 h-28 rounded-2xl border-2 border-[#701A1A] p-0.5 bg-white shrink-0 overflow-hidden shadow-xs">
+                <img
+                  src={selectedRequest.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80'}
+                  alt={selectedRequest.name}
+                  className="w-full h-full rounded-xl object-contain"
+                />
+              </div>
+              <div className="text-center sm:text-left space-y-2 flex-1">
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white">{selectedRequest.name}</h3>
+                <div className="font-mono text-xl font-black text-slate-900 dark:text-slate-900 bg-amber-100 dark:bg-amber-100 inline-block px-4 py-1 rounded-xl border border-amber-300 shadow-2xs">
                   {selectedRequest.bikeNumber}
                 </div>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{selectedRequest.designation} • {selectedRequest.company}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">
+                  {selectedRequest.designation} • {selectedRequest.company}
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs mb-8">
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Employee / Student ID</span>
-                <span className="font-bold text-white text-sm">{selectedRequest.employeeId || 'N/A'}</span>
+            {/* Field Details Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="bg-slate-50 dark:bg-[#2A0A0F] p-4 rounded-xl border border-slate-200 dark:border-[#5C121E]">
+                <span className="text-[11px] font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider block mb-1">Employee / Student ID</span>
+                <span className="font-extrabold text-slate-900 dark:text-white text-base">{selectedRequest.employeeId || 'N/A'}</span>
               </div>
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Department</span>
-                <span className="font-bold text-white text-sm">{selectedRequest.department}</span>
+              <div className="bg-slate-50 dark:bg-[#2A0A0F] p-4 rounded-xl border border-slate-200 dark:border-[#5C121E]">
+                <span className="text-[11px] font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider block mb-1">Department</span>
+                <span className="font-extrabold text-slate-900 dark:text-white text-base">{selectedRequest.department}</span>
               </div>
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Email Address</span>
-                <span className="font-bold text-white text-sm">{selectedRequest.email}</span>
+              <div className="bg-slate-50 dark:bg-[#2A0A0F] p-4 rounded-xl border border-slate-200 dark:border-[#5C121E]">
+                <span className="text-[11px] font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider block mb-1">Email Address</span>
+                <span className="font-extrabold text-slate-900 dark:text-white text-base">{selectedRequest.email}</span>
               </div>
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Mobile Phone</span>
-                <span className="font-bold text-white text-sm">{selectedRequest.mobile}</span>
+              <div className="bg-slate-50 dark:bg-[#2A0A0F] p-4 rounded-xl border border-slate-200 dark:border-[#5C121E]">
+                <span className="text-[11px] font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider block mb-1">Mobile Phone</span>
+                <span className="font-extrabold text-slate-900 dark:text-white text-base">{selectedRequest.mobile}</span>
               </div>
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Access Start Date</span>
-                <span className="font-bold text-white text-sm">{new Date(selectedRequest.accessStartDate).toLocaleDateString()}</span>
+              <div className="bg-slate-50 dark:bg-[#2A0A0F] p-4 rounded-xl border border-slate-200 dark:border-[#5C121E]">
+                <span className="text-[11px] font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider block mb-1">Access Start Date</span>
+                <span className="font-extrabold text-slate-900 dark:text-white text-base">{new Date(selectedRequest.accessStartDate).toLocaleDateString()}</span>
               </div>
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Access Expiry Date</span>
-                <span className="font-bold text-emerald-400 text-sm">{new Date(selectedRequest.accessExpiryDate).toLocaleDateString()}</span>
+              <div className="bg-slate-50 dark:bg-[#2A0A0F] p-4 rounded-xl border border-slate-200 dark:border-[#5C121E]">
+                <span className="text-[11px] font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider block mb-1">Access Expiry Date</span>
+                <span className="font-extrabold text-emerald-700 dark:text-emerald-400 text-base">{new Date(selectedRequest.accessExpiryDate).toLocaleDateString()}</span>
               </div>
             </div>
 
             {selectedRequest.actionReason && (
-              <div className="bg-red-500/10 border border-red-500/40 p-4 rounded-2xl mb-8">
-                <span className="text-[10px] font-black text-red-400 uppercase tracking-wider block mb-1">Rejection Reason</span>
-                <p className="text-sm font-semibold text-white">{selectedRequest.actionReason}</p>
+              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 p-4 rounded-2xl">
+                <span className="text-[11px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-wider block mb-1">Rejection Reason</span>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{selectedRequest.actionReason}</p>
               </div>
             )}
 
             {/* Action Bar inside Modal */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 pt-2">
               <button
                 onClick={() => {
                   handleOpenEditModal(selectedRequest);
                   setSelectedRequest(null);
                 }}
-                className="flex-1 py-3 bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500 hover:text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <Edit2 className="w-4 h-4" /> Edit Validity & Info
               </button>
@@ -514,13 +524,13 @@ const ApprovalDashboard = () => {
                 <>
                   <button
                     onClick={() => handleOpenRejectModal(selectedRequest)}
-                    className="flex-1 py-3 bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500 hover:text-white font-black text-xs uppercase tracking-wider rounded-xl transition-colors"
+                    className="flex-1 py-3.5 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-900 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
                   >
                     Reject Request
                   </button>
                   <button
                     onClick={() => handleApprove(selectedRequest._id)}
-                    className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-transform hover:scale-102"
+                    className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-transform hover:scale-102"
                   >
                     Approve & Generate QR
                   </button>
@@ -531,19 +541,19 @@ const ApprovalDashboard = () => {
                 <>
                   <button
                     onClick={() => setStickerRequest(selectedRequest)}
-                    className="flex-1 py-3 bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:bg-amber-400 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <Printer className="w-4 h-4" /> Print QR Sticker
                   </button>
                   <button
                     onClick={() => handleDisable(selectedRequest._id, selectedRequest.bikeNumber)}
-                    className="py-3 px-4 bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-600 hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
+                    className="py-3.5 px-5 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-900 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
                   >
                     Disable
                   </button>
                   <button
                     onClick={() => handleDelete(selectedRequest._id, selectedRequest.bikeNumber)}
-                    className="py-3 px-4 bg-slate-800 text-slate-400 hover:bg-red-950 hover:text-red-400 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
+                    className="py-3.5 px-5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-700 dark:hover:text-rose-300 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors"
                   >
                     Delete
                   </button>
