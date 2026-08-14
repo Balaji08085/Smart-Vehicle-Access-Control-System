@@ -284,7 +284,7 @@ export const sendApprovalEmail = async (request, qrUrl) => {
     </tr>
   ` : getAvatarBadge(request.name);
 
-  const htmlBody = emailWrapper('#10B981', `
+  const htmlBody = emailWrapper('#701A1A', `
     <tr>
       <td style="padding: 32px 40px 28px;">
         <!-- STATUS BADGE -->
@@ -293,8 +293,8 @@ export const sendApprovalEmail = async (request, qrUrl) => {
             <td align="center">
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="background-color: #ECFDF5; border: 2px solid #10B981; padding: 12px 36px; border-radius: 50px; text-align: center; box-shadow: 0 4px 14px rgba(16,185,129,0.15);">
-                    <span style="color: #059669; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;">APPROVED — ACCESS GRANTED</span>
+                  <td style="background-color: #FFF5F5; border: 2px solid #701A1A; padding: 12px 36px; border-radius: 50px; text-align: center; box-shadow: 0 4px 14px rgba(112,26,26,0.12);">
+                    <span style="color: #701A1A; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;">APPROVED — ACCESS GRANTED</span>
                   </td>
                 </tr>
               </table>
@@ -308,8 +308,8 @@ export const sendApprovalEmail = async (request, qrUrl) => {
         </table>
 
         <!-- GREETING -->
-        <p style="font-size: 15px; color: #334155; margin: 16px 0 6px; line-height: 1.6;">Hello <strong>${request.name}</strong>,</p>
-        <p style="font-size: 14px; color: #64748B; margin: 0 0 24px; line-height: 1.7;">Super Admin has <strong style="color: #059669;">APPROVED</strong> your vehicle access request! Your vehicle is now officially authorized for entry through MCC MRF Innovation Park gate security checkpoints.</p>
+        <p style="font-size: 15px; color: #0F172A; margin: 16px 0 6px; line-height: 1.6; font-weight: 700;">Hello <strong>${request.name}</strong>,</p>
+        <p style="font-size: 14px; color: #475569; margin: 0 0 24px; line-height: 1.7; font-weight: 500;">Super Admin has <strong style="color: #701A1A;">APPROVED</strong> your vehicle access request! Your vehicle is now officially authorized for entry through MCC MRF Innovation Park gate security checkpoints.</p>
 
         <!-- LICENSE PLATE CARD -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
@@ -317,9 +317,9 @@ export const sendApprovalEmail = async (request, qrUrl) => {
             <td align="center">
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="background-color: #FEF3C7; border: 2px solid #D97706; padding: 12px 32px; border-radius: 14px; text-align: center; box-shadow: 0 4px 14px rgba(217,119,6,0.15);">
-                    <span style="font-size: 9px; font-weight: 900; color: #92400E; letter-spacing: 2.5px; text-transform: uppercase; display: block; margin-bottom: 3px;">AUTHORIZED LICENSE PLATE</span>
-                    <span style="font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; font-weight: 900; color: #78350F; letter-spacing: 3px;">${request.bikeNumber}</span>
+                  <td style="background-color: #FEF3C7; border: 2px solid #F59E0B; padding: 12px 32px; border-radius: 14px; text-align: center; box-shadow: 0 4px 14px rgba(245,158,11,0.15);">
+                    <span style="font-size: 9px; font-weight: 900; color: #701A1A; letter-spacing: 2.5px; text-transform: uppercase; display: block; margin-bottom: 3px;">AUTHORIZED LICENSE PLATE</span>
+                    <span style="font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; font-weight: 900; color: #0F172A; letter-spacing: 3px;">${request.bikeNumber}</span>
                   </td>
                 </tr>
               </table>
@@ -328,11 +328,11 @@ export const sendApprovalEmail = async (request, qrUrl) => {
         </table>
 
         <!-- OFFICIAL QR CODE ACCESS STICKER CARD -->
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FAFBFC; border-radius: 20px; border: 2px dashed #10B981; padding: 26px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(16,185,129,0.08);">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FAFBFC; border-radius: 20px; border: 2px dashed #701A1A; padding: 26px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(112,26,26,0.08);">
           <tr>
             <td align="center">
-              <p style="margin: 0 0 4px; font-size: 11px; font-weight: 800; color: #059669; letter-spacing: 2.5px; text-transform: uppercase;">Official Vehicle Access Pass QR Sticker</p>
-              <p style="margin: 0 0 16px; font-size: 18px; font-weight: 900; color: #1E293B; font-family: Consolas, monospace; letter-spacing: 1px;">${request.bikeNumber}</p>
+              <p style="margin: 0 0 4px; font-size: 11px; font-weight: 900; color: #701A1A; letter-spacing: 2.5px; text-transform: uppercase;">Official Vehicle Access Pass QR Sticker</p>
+              <p style="margin: 0 0 16px; font-size: 18px; font-weight: 900; color: #0F172A; font-family: Consolas, monospace; letter-spacing: 1px;">${request.bikeNumber}</p>
               
               <!-- EMBEDDED QR CODE IMAGE -->
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 16px;">
@@ -343,8 +343,8 @@ export const sendApprovalEmail = async (request, qrUrl) => {
                 </tr>
               </table>
 
-              <p style="margin: 0 0 4px; font-size: 12px; font-weight: 800; color: #1E293B;">QR PASS TOKEN: <span style="font-family: Consolas, monospace; color: #6D28D9; background-color: #F3E8FF; padding: 2px 8px; border-radius: 6px;">${request.token || 'N/A'}</span></p>
-              <p style="margin: 6px 0 0; font-size: 11px; color: #059669; font-weight: 700;">✓ Ready for Security Gate QR Scanner & Automated Barrier Release</p>
+              <p style="margin: 0 0 4px; font-size: 12px; font-weight: 900; color: #0F172A;">QR PASS TOKEN: <span style="font-family: Consolas, monospace; color: #701A1A; background-color: #FFF5F5; border: 1px solid #701A1A; padding: 2px 8px; border-radius: 6px;">${request.token || 'N/A'}</span></p>
+              <p style="margin: 6px 0 0; font-size: 11px; color: #701A1A; font-weight: 800;">✓ Ready for Security Gate QR Scanner & Automated Barrier Release</p>
             </td>
           </tr>
         </table>
@@ -352,29 +352,29 @@ export const sendApprovalEmail = async (request, qrUrl) => {
         <!-- COMPLETE AUTHORIZED VEHICLE DETAILS GRID -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FAFBFC; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; margin-bottom: 24px;">
           <tr>
-            <td colspan="2" style="padding: 14px 18px; background-color: #F1F5F9; border-bottom: 2px solid #E2E8F0;">
-              <strong style="color: #1E293B; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">📋 AUTHORIZED ACCESS PERMIT DETAILS</strong>
+            <td colspan="2" style="padding: 14px 18px; background-color: #FFF5F5; border-bottom: 2px solid #701A1A;">
+              <strong style="color: #701A1A; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">📋 AUTHORIZED ACCESS PERMIT DETAILS</strong>
             </td>
           </tr>
-          ${detailRow('', 'Applicant Name', request.name, '#475569')}
-          ${detailRow('', 'Email Address', request.email, '#475569')}
-          ${detailRow('', 'Vehicle Plate No', request.bikeNumber, '#475569', false, true)}
-          ${detailRow('', 'Department / Course', request.department || 'TEKQUORA • MCA', '#475569')}
-          ${detailRow('', 'Designation / Role', request.designation || 'FULL STACK DEVELOPER', '#475569')}
-          ${detailRow('', 'Company / Institution', request.company || 'TEKQUORA', '#475569')}
-          ${detailRow('📅', 'Valid Start Date', startDateStr, '#059669', true)}
-          ${detailRow('⏰', 'Valid Expiry Date', expiryDateStr, '#059669', true)}
+          ${detailRow('', 'Applicant Name', request.name, '#0F172A', true)}
+          ${detailRow('', 'Email Address', request.email, '#0F172A')}
+          ${detailRow('', 'Vehicle Plate No', request.bikeNumber, '#0F172A', true, true)}
+          ${detailRow('', 'Department / Course', request.department || 'TEKQUORA • MCA', '#0F172A')}
+          ${detailRow('', 'Designation / Role', request.designation || 'FULL STACK DEVELOPER', '#0F172A')}
+          ${detailRow('', 'Company / Institution', request.company || 'TEKQUORA', '#0F172A')}
+          ${detailRow('📅', 'Valid Start Date', startDateStr, '#701A1A', true)}
+          ${detailRow('⏰', 'Valid Expiry Date', expiryDateStr, '#701A1A', true)}
         </table>
 
         <!-- ONLINE DIGITAL PASS BUTTON -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
           <tr>
             <td align="center">
-              <a href="${qrUrl || '#'}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #059669, #10B981); color: #ffffff; padding: 15px 46px; border-radius: 50px; font-size: 14px; font-weight: 900; text-decoration: none; letter-spacing: 1px; box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);">🔗 VIEW DIGITAL PASS & PRINT QR STICKER</a>
+              <a href="${qrUrl || '#'}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #701A1A, #5C121E); color: #ffffff; padding: 15px 46px; border-radius: 50px; font-size: 14px; font-weight: 900; text-decoration: none; letter-spacing: 1px; box-shadow: 0 6px 18px rgba(112, 26, 26, 0.35);">🔗 VIEW DIGITAL PASS & PRINT QR STICKER</a>
             </td>
           </tr>
         </table>
-        <p style="font-size: 11px; color: #94A3B8; text-align: center; margin: 0;">Save this email or present the QR code to security gate officers upon campus entry.</p>
+        <p style="font-size: 11px; color: #64748B; text-align: center; margin: 0; font-weight: 500;">Save this email or present the QR code to security gate officers upon campus entry.</p>
       </td>
     </tr>
   `);
