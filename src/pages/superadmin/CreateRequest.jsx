@@ -15,7 +15,7 @@ const MCC_COMPANIES = [
   { name: 'PENTAGON', head: 'Mathew', email: 'mathew@pentagon.io' },
   { name: 'FAB LAB', head: 'Prince', email: 'prince@fablab.org' },
   { name: 'INNOVEITY', head: 'Tittus', email: 'tittus@innoveity.com' },
-  { name: 'Other / Custom Startup', head: 'Custom Company Owner', email: '' }
+  { name: 'Other / Custom Startup', head: '', email: '' }
 ];
 
 const CreateRequest = () => {
@@ -70,6 +70,15 @@ const CreateRequest = () => {
     if (!formData.name.trim()) return 'Employee / Student Name is required.';
     if (!formData.department.trim()) return 'Department is required.';
     if (!formData.company.trim()) return 'Company / Startup Name is required.';
+    if (formData.applicantCategory === 'Startup' && formData.company === 'Other / Custom Startup' && !formData.customCompany.trim()) {
+      return 'Please enter the Custom Startup / Company Name.';
+    }
+    if (formData.applicantCategory === 'Startup') {
+      if (!formData.companyHead.trim()) return 'Startup Owner / Head Name is required for 1st Tier Approval.';
+      if (!formData.companyHeadEmail.trim()) return 'Startup Owner Email Address is required for 1st Tier Approval.';
+      const headEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!headEmailRegex.test(formData.companyHeadEmail.trim())) return 'Please enter a valid email address for the Startup Owner.';
+    }
     if (!formData.designation.trim()) return 'Designation / Role is required.';
     if (!formData.bikeNumber.trim()) return 'Bike Registration Number is required.';
     if (!formData.email.trim()) return 'Email Address is required.';
@@ -77,7 +86,7 @@ const CreateRequest = () => {
     if (!formData.accessStartDate || !formData.accessExpiryDate) return 'Access Start and Expiry Dates are required.';
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) return 'Please enter a valid email address.';
+    if (!emailRegex.test(formData.email.trim())) return 'Please enter a valid applicant email address.';
 
     const mobileRegex = /^[0-9+\s()\-#]{7,15}$/;
     if (!mobileRegex.test(formData.mobile.trim())) return 'Please enter a valid mobile number (7–15 digits).';
@@ -102,10 +111,21 @@ const CreateRequest = () => {
     setSuccessMsg(null);
 
     try {
+      const finalCompany = (formData.company === 'Other / Custom Startup' && formData.customCompany.trim())
+        ? formData.customCompany.trim()
+        : formData.company;
+
+      const payload = {
+        ...formData,
+        company: finalCompany,
+        companyHead: formData.companyHead.trim(),
+        companyHeadEmail: formData.companyHeadEmail.trim()
+      };
+
       const response = await fetch('/api/requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       // Guard: handle non-JSON error responses (e.g. HTML 502/404 pages)
@@ -390,8 +410,9 @@ const CreateRequest = () => {
                           setFormData(prev => ({
                             ...prev,
                             company: selectedVal,
-                            companyHead: match ? match.head : '',
-                            companyHeadEmail: match ? match.email : ''
+                            customCompany: selectedVal === 'Other / Custom Startup' ? prev.customCompany : '',
+                            companyHead: match && match.head ? match.head : (selectedVal === 'Other / Custom Startup' ? prev.companyHead : ''),
+                            companyHeadEmail: match && match.email ? match.email : (selectedVal === 'Other / Custom Startup' ? prev.companyHeadEmail : '')
                           }));
                         }}
                         required
@@ -405,6 +426,31 @@ const CreateRequest = () => {
                       </select>
                       <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     </div>
+
+                    {/* Custom Company Name Input Field when "Other / Custom Startup" is selected */}
+                    {formData.company === 'Other / Custom Startup' && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-3 p-3.5 bg-orange-50/90 rounded-xl border-2 border-orange-300 space-y-1.5 shadow-sm"
+                      >
+                        <label className="block text-xs font-black text-orange-800 uppercase tracking-wider">
+                          Enter Custom Startup / Company Name *
+                        </label>
+                        <div className="relative">
+                          <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-500 pointer-events-none" />
+                          <input
+                            type="text"
+                            name="customCompany"
+                            value={formData.customCompany}
+                            onChange={handleChange}
+                            placeholder="e.g. INNOVEITY MEDIA"
+                            required
+                            className="w-full bg-white border border-orange-300 rounded-lg py-2.5 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-extrabold shadow-inner"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 ) : (
                   <div>
@@ -440,7 +486,7 @@ const CreateRequest = () => {
                             name="companyHead"
                             value={formData.companyHead}
                             onChange={handleChange}
-                            placeholder="e.g. Mr. Franklin"
+                            placeholder="e.g. Mr. Tittus"
                             required
                             className="w-full bg-white border border-orange-200 rounded-lg py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
                           />
@@ -455,7 +501,7 @@ const CreateRequest = () => {
                             name="companyHeadEmail"
                             value={formData.companyHeadEmail}
                             onChange={handleChange}
-                            placeholder="e.g. frankin@techquora.com"
+                            placeholder="e.g. tittus@innoveity.com"
                             required
                             className="w-full bg-white border border-orange-200 rounded-lg py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
                           />
@@ -466,36 +512,6 @@ const CreateRequest = () => {
                       <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
                       Approval will be routed to <strong>{formData.companyHead || 'Owner'}</strong> ({formData.companyHeadEmail || 'email'}) first, then forwarded to Super Admin.
                     </p>
-                  </div>
-                )}
-
-
-                {formData.company === 'Other / Custom Startup' && (
-                  <div className="space-y-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Custom Company Name *</label>
-                      <input
-                        type="text"
-                        name="customCompany"
-                        value={formData.customCompany}
-                        onChange={handleChange}
-                        placeholder="e.g. Decora Innovations"
-                        required
-                        className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-orange-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Owner / Head Email Address *</label>
-                      <input
-                        type="email"
-                        name="companyHeadEmail"
-                        value={formData.companyHeadEmail}
-                        onChange={handleChange}
-                        placeholder="frankin@decora.com"
-                        required
-                        className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-orange-500 outline-none"
-                      />
-                    </div>
                   </div>
                 )}
 
