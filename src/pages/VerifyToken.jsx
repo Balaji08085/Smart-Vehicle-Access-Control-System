@@ -205,7 +205,7 @@ const VerifyToken = () => {
               <h2 className="text-3xl md:text-4xl font-black text-white tracking-wide mb-2">{request.name}</h2>
               
               <div className="flex flex-wrap items-center justify-center gap-2.5 mb-2">
-                <div className="font-mono text-xl md:text-2xl font-black text-amber-400 tracking-widest bg-slate-900 px-4 py-1.5 rounded-xl border border-amber-500/40 shadow-inner">
+                <div className="font-mono text-xl md:text-2xl font-black text-slate-900 tracking-widest bg-slate-100 px-4 py-1.5 rounded-xl border border-slate-300 shadow-sm">
                   {request.bikeNumber}
                 </div>
                 <span className="text-xs font-black uppercase tracking-wider px-3.5 py-2 bg-slate-800 text-cyan-400 rounded-xl border border-cyan-500/40 shadow-sm">

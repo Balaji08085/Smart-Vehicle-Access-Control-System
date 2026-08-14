@@ -579,7 +579,7 @@ const CreateRequest = () => {
                     onChange={handleChange}
                     required
                     placeholder="TN 14 AE 8495"
-                    className="w-full bg-[#701A1A]/5 border border-[#701A1A]/30 rounded-xl py-3 px-4 text-[#701A1A] dark:text-red-300 font-mono text-base font-black tracking-widest uppercase focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all"
+                    className="w-full bg-slate-100 dark:bg-slate-100 border border-slate-300 rounded-xl py-3 px-4 text-slate-900 dark:text-slate-900 font-mono text-base font-black tracking-widest uppercase focus:ring-2 focus:ring-[#701A1A] focus:border-transparent outline-none transition-all"
                   />
                 </div>
                 <div>

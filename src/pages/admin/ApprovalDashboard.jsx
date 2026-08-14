@@ -349,8 +349,8 @@ const ApprovalDashboard = () => {
                   </div>
 
                   {/* Bike Plate Number Highlight */}
-                  <div className="bg-[#701A1A]/5 dark:bg-[#701A1A]/20 border border-[#701A1A]/30 rounded-xl p-3 text-center mb-4">
-                    <span className="font-mono text-xl font-black text-[#701A1A] dark:text-red-300 tracking-widest uppercase">
+                  <div className="bg-slate-100 dark:bg-slate-100 border border-slate-300 rounded-xl p-3 text-center mb-4 shadow-2xs">
+                    <span className="font-mono text-xl font-black text-slate-900 dark:text-slate-900 tracking-widest uppercase">
                       {req.bikeNumber}
                     </span>
                   </div>
@@ -492,7 +492,7 @@ const ApprovalDashboard = () => {
               />
               <div className="text-center sm:text-left space-y-1">
                 <h3 className="text-2xl font-extrabold text-white">{selectedRequest.name}</h3>
-                <div className="font-mono text-xl font-black text-amber-400 tracking-widest bg-slate-900 inline-block px-3 py-1 rounded-xl border border-amber-500/40">
+                <div className="font-mono text-xl font-black text-slate-900 bg-slate-100 inline-block px-3 py-1 rounded-xl border border-slate-300 shadow-sm">
                   {selectedRequest.bikeNumber}
                 </div>
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{selectedRequest.designation} • {selectedRequest.company}</p>
