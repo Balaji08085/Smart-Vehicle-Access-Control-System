@@ -26,11 +26,11 @@ const Navbar = () => {
   return (
     <nav className={`fixed w-full z-50 top-0 transition-all duration-300 ${
       theme === 'dark' 
-        ? 'bg-[#180305]/95 backdrop-blur-2xl border-b border-[#5C121E]/60 shadow-[0_10px_35px_rgba(0,0,0,0.8)]' 
-        : 'bg-white/90 backdrop-blur-xl border-b border-slate-200/80 shadow-sm'
+        ? 'bg-[#120305]/95 backdrop-blur-xl border-b border-[#701A1A]/40 shadow-[0_4px_25px_rgba(0,0,0,0.8)]' 
+        : 'bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_2px_15px_rgba(0,0,0,0.03)]'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-20 gap-4">
           
           {/* SVACS Logo & Brand */}
           <Link to="/dashboard" className="flex items-center gap-3 shrink-0 group">
@@ -38,7 +38,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center space-x-1 xl:space-x-2 ml-auto mr-6">
+          <div className="hidden lg:flex items-center space-x-1.5 ml-auto mr-4">
             {links.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.path;
@@ -48,17 +48,23 @@ const Navbar = () => {
                   to={link.path}
                   target={link.path === '/scanner' ? "_blank" : undefined}
                   rel={link.path === '/scanner' ? "noopener noreferrer" : undefined}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black tracking-wide transition-all duration-200 ${
                     isActive
                       ? theme === 'dark'
-                        ? 'text-white bg-gradient-to-r from-[#701A1A]/80 to-[#8C1823]/80 border border-red-500/40 shadow-[0_0_15px_rgba(112,26,26,0.4)]'
-                        : 'text-[#701A1A] bg-[#701A1A]/10 border border-[#701A1A]/20 shadow-sm'
+                        ? 'text-white bg-gradient-to-r from-[#701A1A] to-[#8C1823] border border-red-500/40 shadow-md shadow-[#701A1A]/40 scale-[1.02]'
+                        : 'text-white bg-[#701A1A] shadow-md shadow-[#701A1A]/20 scale-[1.02]'
                       : theme === 'dark'
-                        ? 'text-red-200/80 hover:text-white hover:bg-white/5'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                        ? 'text-slate-300 hover:text-white hover:bg-white/10'
+                        : 'text-slate-700 hover:text-[#701A1A] hover:bg-slate-100/90'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? (theme === 'dark' ? 'text-red-400' : 'text-[#701A1A]') : theme === 'dark' ? 'text-red-300/60' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 transition-colors ${
+                    isActive 
+                      ? 'text-white' 
+                      : theme === 'dark' 
+                        ? 'text-slate-400 group-hover:text-white' 
+                        : 'text-slate-400 group-hover:text-[#701A1A]'
+                  }`} />
                   {link.name}
                 </Link>
               );
@@ -66,66 +72,68 @@ const Navbar = () => {
           </div>
 
           {/* Role Status & Auth Actions */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2.5 shrink-0">
             
-            {/* 🌙 Theme Toggle Button (Key Switcher) */}
+            {/* 🌙 Theme Toggle Button */}
             <button
               onClick={toggleTheme}
               title="Toggle Light / Dark Mode (Shortcut: Press Alt + T)"
-              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all border flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
                 theme === 'dark'
-                  ? 'bg-[#2E080C] text-red-300 border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:bg-[#3D0A11]'
-                  : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200/80 shadow-sm'
+                  ? 'bg-[#1E0609] text-red-300 border-[#5C121E] hover:bg-[#2A0A0F]'
+                  : 'bg-slate-100/90 text-slate-700 border-slate-200 hover:bg-slate-200/80 shadow-xs'
               }`}
             >
               {theme === 'dark' ? (
                 <>
                   <Sun className="w-4 h-4 text-red-400" />
-                  <span className="hidden xl:inline">Light Mode</span>
+                  <span className="hidden xl:inline">Light</span>
                 </>
               ) : (
                 <>
                   <Moon className="w-4 h-4 text-[#701A1A]" />
-                  <span className="hidden xl:inline">Dark Mode</span>
+                  <span className="hidden xl:inline">Dark</span>
                 </>
               )}
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#701A1A]/10 text-[#701A1A] border border-[#701A1A]/20 font-bold">
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#701A1A]/10 text-[#701A1A] dark:bg-red-950/60 dark:text-red-300 border border-[#701A1A]/20 dark:border-[#701A1A] font-bold">
                 Alt+T
               </span>
             </button>
 
-            <div className={`px-3.5 py-1.5 rounded-full border text-xs font-black uppercase tracking-wider flex items-center gap-2 ${
+            {/* Current Active Role Badge */}
+            <div className={`px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider flex items-center gap-2 ${
               theme === 'dark'
                 ? userRole === 'admin'
                   ? 'bg-[#701A1A]/30 text-red-300 border-red-500/40'
                   : userRole === 'superadmin'
-                  ? 'bg-red-950/60 text-red-300 border-red-500/50'
+                  ? 'bg-red-950/80 text-red-300 border-red-500/50'
                   : userRole === 'guard'
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                   : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
                 : userRole === 'admin'
-                  ? 'bg-[#701A1A]/10 text-[#701A1A] border-[#701A1A]/30 shadow-sm'
+                  ? 'bg-[#701A1A]/10 text-[#701A1A] border-[#701A1A]/25 shadow-xs'
                   : userRole === 'superadmin'
-                  ? 'bg-[#701A1A]/10 text-[#701A1A] border-[#701A1A]/30 shadow-sm'
+                  ? 'bg-[#701A1A]/10 text-[#701A1A] border-[#701A1A]/25 shadow-xs'
                   : userRole === 'guard'
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
-                  : 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs'
+                  : 'bg-blue-50 text-blue-700 border-blue-200 shadow-xs'
             }`}>
               <span className={`w-2 h-2 rounded-full animate-ping ${
                 userRole === 'admin' ? 'bg-[#701A1A]' : userRole === 'superadmin' ? 'bg-[#701A1A]' : userRole === 'guard' ? 'bg-emerald-500' : 'bg-blue-500'
               }`} />
-              {userRole === 'admin' ? 'Admin (Registration)' : userRole === 'superadmin' ? 'Super Admin (Approvals)' : 'Gate Security Guard'}
+              {userRole === 'admin' ? 'Admin' : userRole === 'superadmin' ? 'Super Admin (Approvals)' : 'Gate Guard'}
             </div>
 
+            {/* Switch Role Button */}
             <Link
               to="/login"
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 hover:scale-105 active:scale-95 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98] ${
                 theme === 'dark'
-                  ? 'bg-white/10 hover:bg-white/20 text-white border-white/10'
-                  : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 border-slate-200 shadow-sm'
+                  ? 'bg-white/10 hover:bg-white/20 text-white border-white/15'
+                  : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-900'
               }`}
             >
-              <LogIn className="w-3.5 h-3.5 text-slate-400" />
+              <LogIn className="w-3.5 h-3.5 text-slate-300" />
               Switch Role
             </Link>
           </div>
