@@ -271,7 +271,7 @@ const ApprovalDashboard = () => {
                   {/* Top Row: User & Badge + Edit Button */}
                   <div className="flex justify-between items-start gap-3 mb-4">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="w-13 h-13 rounded-2xl border-2 border-[#701A1A]/30 dark:border-red-500/40 p-0.5 bg-white dark:bg-[#120305] shadow-xs shrink-0 overflow-hidden">
+                      <div className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-2xl border-2 border-[#701A1A]/30 dark:border-red-500/40 p-0.5 bg-white dark:bg-[#120305] shadow-xs shrink-0 overflow-hidden">
                         <img
                           src={req.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80'}
                           alt={req.name}
