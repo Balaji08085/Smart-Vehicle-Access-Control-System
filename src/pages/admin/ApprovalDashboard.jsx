@@ -248,8 +248,8 @@ const ApprovalDashboard = () => {
         {/* Role Portal Switcher Banner */}
         <div className="bg-white dark:bg-[#1E0609] rounded-2xl p-4 border border-slate-200 dark:border-[#5C121E] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#701A1A]/10 dark:bg-[#2A0A0F] text-[#701A1A] dark:text-red-400 flex items-center justify-center font-bold text-lg">
-              {portalRole === 'SuperAdmin' ? '👑' : '🏢'}
+            <div className="w-10 h-10 rounded-xl bg-[#701A1A]/10 dark:bg-[#2A0A0F] text-[#701A1A] dark:text-red-400 flex items-center justify-center font-black text-xs font-mono border border-[#701A1A]/20">
+              {portalRole === 'SuperAdmin' ? 'T2' : 'T1'}
             </div>
             <div>
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
@@ -271,7 +271,7 @@ const ApprovalDashboard = () => {
                   : 'bg-slate-100 dark:bg-[#2E080C] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#3D0A11]'
               }`}
             >
-              👑 Super Admin View
+              Super Admin View
             </button>
             <button
               onClick={() => setPortalRole('CompanyOwner')}
@@ -281,7 +281,7 @@ const ApprovalDashboard = () => {
                   : 'bg-slate-100 dark:bg-[#2E080C] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#3D0A11]'
               }`}
             >
-              🏢 Franklin View (DSRI)
+              Franklin View (DSRI)
             </button>
           </div>
         </div>
@@ -332,8 +332,8 @@ const ApprovalDashboard = () => {
                         req.status === 'Rejected' ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/40' :
                         'bg-slate-100 dark:bg-[#2E080C] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#5C121E]'
                       }`}>
-                        {req.status === 'Pending Company Approval' ? '🏢 Tier 1 Pending' :
-                         req.status === 'Pending Super Admin Approval' ? '👑 Tier 2 Pending' :
+                        {req.status === 'Pending Company Approval' ? 'Tier 1 Pending' :
+                         req.status === 'Pending Super Admin Approval' ? 'Tier 2 Pending' :
                          req.status}
                       </span>
 
