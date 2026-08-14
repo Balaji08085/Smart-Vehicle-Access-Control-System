@@ -167,11 +167,11 @@ const emailWrapper = (statusColor, content, footerExtra = '') => {
                     <table role="presentation" cellspacing="0" cellpadding="0">
                       <tr>
                         <td style="vertical-align: middle; padding-right: 14px;">
-                          <img src="cid:mcc_header_logo" width="54" height="54" style="display: block; border-radius: 8px; border: 2px solid #D4AF37; background-color: #ffffff; padding: 3px; object-fit: contain;" alt="MCC Logo" />
+                          <img src="cid:mcc_header_logo" width="54" height="54" style="display: block; border-radius: 8px; border: 2px solid #FFFFFF; background-color: #ffffff; padding: 3px; object-fit: contain;" alt="MCC Logo" />
                         </td>
                         <td style="text-align: left; vertical-align: middle;">
                           <p style="margin: 0; font-size: 24px; font-weight: 900; color: #FFFFFF !important; letter-spacing: 2px; line-height: 1.1;">MCC - MRF</p>
-                          <p style="margin: 3px 0 0; font-size: 10px; font-weight: 800; color: #FCE079 !important; letter-spacing: 2px; text-transform: uppercase;">Innovation Park &bull; Madras Christian College</p>
+                          <p style="margin: 3px 0 0; font-size: 10px; font-weight: 800; color: #FFFFFF !important; letter-spacing: 2px; text-transform: uppercase;">Innovation Park &bull; Madras Christian College</p>
                         </td>
                       </tr>
                     </table>
@@ -181,9 +181,9 @@ const emailWrapper = (statusColor, content, footerExtra = '') => {
                   <td align="center" style="padding-top: 14px;">
                     <table role="presentation" cellspacing="0" cellpadding="0">
                       <tr>
-                        <td style="height: 1.5px; width: 50px; background-color: #D4AF37;"></td>
+                        <td style="height: 1.5px; width: 50px; background-color: #FFFFFF;"></td>
                         <td style="padding: 0 12px; font-size: 8.5px; font-weight: 800; color: #FFFFFF !important; letter-spacing: 2px; text-transform: uppercase;">Smart Vehicle Access Control System</td>
-                        <td style="height: 1.5px; width: 50px; background-color: #D4AF37;"></td>
+                        <td style="height: 1.5px; width: 50px; background-color: #FFFFFF;"></td>
                       </tr>
                     </table>
                   </td>
@@ -341,7 +341,7 @@ export const sendApprovalEmail = async (request, qrUrl) => {
             <td align="center">
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="background-color: #FEF3C7; border: 2px solid #F59E0B; padding: 12px 32px; border-radius: 14px; text-align: center; box-shadow: 0 4px 14px rgba(245,158,11,0.15);">
+                  <td style="background-color: #FFF5F5; border: 2px solid #701A1A; padding: 12px 32px; border-radius: 14px; text-align: center; box-shadow: 0 4px 14px rgba(112,26,26,0.12);">
                     <span style="font-size: 9px; font-weight: 900; color: #701A1A; letter-spacing: 2.5px; text-transform: uppercase; display: block; margin-bottom: 3px;">AUTHORIZED LICENSE PLATE</span>
                     <span style="font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; font-weight: 900; color: #0F172A; letter-spacing: 3px;">${request.bikeNumber}</span>
                   </td>
