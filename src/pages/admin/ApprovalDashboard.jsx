@@ -431,13 +431,13 @@ const ApprovalDashboard = () => {
         )}
       </div>
 
-      {/* Full-Screen Details Modal */}
+      {/* Full-Page Details View */}
       {selectedRequest && (
-        <div className="fixed inset-0 bg-slate-50/95 dark:bg-[#180305]/95 backdrop-blur-md z-50 overflow-y-auto p-4 pt-24 md:pt-28 pb-12 flex flex-col items-center justify-start">
+        <div className="fixed inset-0 bg-slate-50 dark:bg-[#180305] z-50 overflow-y-auto p-4 md:p-8 pt-20 md:pt-24 pb-12 flex flex-col items-center justify-start">
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl w-full max-w-4xl p-6 md:p-10 relative shadow-2xl space-y-6"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl w-full max-w-7xl p-6 md:p-10 relative shadow-xl space-y-6 min-h-[88vh]"
           >
             {/* Top Modal Bar */}
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-4">
