@@ -571,7 +571,7 @@ const ApprovalDashboard = () => {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl space-y-5 text-slate-900 dark:text-slate-100"
+            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-2xl p-6 md:p-8 max-w-3xl w-full shadow-2xl space-y-5 text-slate-900 dark:text-slate-100"
           >
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-3">
               <h3 className="text-xl font-black text-slate-900 dark:text-white">
