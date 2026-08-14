@@ -241,8 +241,7 @@ const CreateRequest = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </>
+          </>
         ) : (
           <>
             {/* Step 2 Back & Selected Badge Header */}
