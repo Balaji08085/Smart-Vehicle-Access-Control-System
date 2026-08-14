@@ -3,6 +3,30 @@ import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
 import dns from 'dns';
 
+import fs from 'fs';
+import path from 'path';
+
+// Helper to get base64 MCC Logo image for HTML emails
+const getMccLogoBase64 = () => {
+  try {
+    const pathsToTry = [
+      path.join(process.cwd(), 'public', 'favicon.png'),
+      path.join(process.cwd(), 'public', 'mcc_logo.jpg'),
+      path.join(process.cwd(), 'src', 'assets', 'favicon.png'),
+      'C:\\Users\\hp\\Downloads\\3c98d685-d7b2-4201-ac74-0e8ebeb14ce5.png'
+    ];
+    for (const p of pathsToTry) {
+      if (fs.existsSync(p)) {
+        const fileData = fs.readFileSync(p);
+        return `data:image/png;base64,${fileData.toString('base64')}`;
+      }
+    }
+  } catch (err) {
+    console.error('Error loading MCC logo image for email:', err.message);
+  }
+  return '';
+};
+
 // Force IPv4 lookup for Gmail SMTP to prevent IPv6 ENETUNREACH errors on Windows
 try {
   dns.setDefaultResultOrder('ipv4first');
@@ -80,11 +104,14 @@ const createTransporter = async () => {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// ██  PROFESSIONAL EMAIL TEMPLATES — PURE TEXT/CSS (NO EXTERNAL IMAGES)
+// ██  PROFESSIONAL EMAIL TEMPLATES — PURE TEXT/CSS & BASE64 LOGO
 // ═══════════════════════════════════════════════════════════════════
 
 /** Professional email wrapper — MCC Maroon + White + High-Contrast Black Font */
-const emailWrapper = (statusColor, content, footerExtra = '') => `
+const emailWrapper = (statusColor, content, footerExtra = '') => {
+  const logoDataUri = getMccLogoBase64();
+
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -108,14 +135,18 @@ const emailWrapper = (statusColor, content, footerExtra = '') => `
                     <table role="presentation" cellspacing="0" cellpadding="0">
                       <tr>
                         <td style="vertical-align: middle;">
-                          <svg width="48" height="52" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M 18 28 L 82 28 L 82 56 C 82 76, 68 90, 50 96 C 32 90, 18 76, 18 56 Z" fill="#701A1A" stroke="#D4AF37" stroke-width="3.5" />
-                            <circle cx="50" cy="38" r="3.5" stroke="#D4AF37" stroke-width="2" fill="none" />
-                            <rect x="48" y="41" width="4" height="36" fill="#FFFFFF" />
-                            <rect x="36" y="47" width="28" height="4" fill="#FFFFFF" />
-                            <path d="M 30 70 C 34 84, 66 84, 70 70" stroke="#D4AF37" stroke-width="3" fill="none" />
-                            <path d="M 14 84 C 30 80, 70 80, 86 84" stroke="#D4AF37" stroke-width="3" fill="none" />
-                          </svg>
+                          ${logoDataUri ? `
+                            <img src="${logoDataUri}" width="54" height="54" style="display: block; border-radius: 8px; border: 2px solid #D4AF37; background-color: #ffffff; padding: 2px; object-fit: contain;" alt="MCC Logo" />
+                          ` : `
+                            <svg width="48" height="52" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M 18 28 L 82 28 L 82 56 C 82 76, 68 90, 50 96 C 32 90, 18 76, 18 56 Z" fill="#701A1A" stroke="#D4AF37" stroke-width="3.5" />
+                              <circle cx="50" cy="38" r="3.5" stroke="#D4AF37" stroke-width="2" fill="none" />
+                              <rect x="48" y="41" width="4" height="36" fill="#FFFFFF" />
+                              <rect x="36" y="47" width="28" height="4" fill="#FFFFFF" />
+                              <path d="M 30 70 C 34 84, 66 84, 70 70" stroke="#D4AF37" stroke-width="3" fill="none" />
+                              <path d="M 14 84 C 30 80, 70 80, 86 84" stroke="#D4AF37" stroke-width="3" fill="none" />
+                            </svg>
+                          `}
                         </td>
                         <td style="padding-left: 16px; text-align: left; vertical-align: middle;">
                           <p style="margin: 0; font-size: 24px; font-weight: 900; color: #FFFFFF; letter-spacing: 2px; line-height: 1.1;">MCC - MRF</p>
