@@ -240,7 +240,7 @@ const CreateRequest = () => {
                   </div>
                 </div>
               </div>
-            </div>    </div>
+            </div>
           </>
         ) : (
           <>
