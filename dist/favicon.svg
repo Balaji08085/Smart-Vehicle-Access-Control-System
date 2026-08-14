@@ -1,46 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="72" viewBox="0 0 100 112" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
   <defs>
-    <linearGradient id="shield" x1="0" y1="0" x2="100" y2="112" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#1E3A5F"/>
-      <stop offset="60%" stop-color="#1B3A6B"/>
-      <stop offset="100%" stop-color="#0F2240"/>
+    <!-- Primary MCC Maroon Gradient -->
+    <linearGradient id="mccMaroon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8C1C2B"/>
+      <stop offset="50%" stop-color="#701A1A"/>
+      <stop offset="100%" stop-color="#4A0C13"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#3B82F6"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
+
+    <!-- Gold Accent Gradient -->
+    <linearGradient id="mccGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCE079"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#997A15"/>
     </linearGradient>
-    <linearGradient id="rim" x1="0" y1="0" x2="100" y2="112" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#60A5FA"/>
-      <stop offset="50%" stop-color="#22D3EE"/>
-      <stop offset="100%" stop-color="#3B82F6"/>
-    </linearGradient>
+
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
   </defs>
-  <!-- Shield body -->
-  <path d="M 50 2 L 90 16 L 90 60 C 90 84, 72 100, 50 110 C 28 100, 10 84, 10 60 L 10 16 Z"
-        fill="url(#shield)" stroke="url(#rim)" stroke-width="2"/>
-  <!-- Top-left QR finder -->
-  <rect x="23" y="28" width="18" height="18" rx="2" fill="none" stroke="url(#accent)" stroke-width="2"/>
-  <rect x="27" y="32" width="10" height="10" rx="1" fill="url(#accent)"/>
-  <!-- Top-right QR finder -->
-  <rect x="59" y="28" width="18" height="18" rx="2" fill="none" stroke="url(#accent)" stroke-width="2"/>
-  <rect x="63" y="32" width="10" height="10" rx="1" fill="url(#accent)"/>
-  <!-- Bottom-left QR finder -->
-  <rect x="23" y="55" width="18" height="18" rx="2" fill="none" stroke="url(#accent)" stroke-width="2"/>
-  <rect x="27" y="59" width="10" height="10" rx="1" fill="url(#accent)"/>
-  <!-- Data dots -->
-  <rect x="59" y="55" width="5" height="5" rx="1" fill="#22D3EE"/>
-  <rect x="67" y="55" width="5" height="5" rx="1" fill="#22D3EE"/>
-  <rect x="59" y="62" width="5" height="5" rx="1" fill="url(#accent)"/>
-  <rect x="64" y="68" width="9" height="5" rx="1" fill="#22D3EE"/>
-  <!-- Car silhouette -->
-  <g transform="translate(50,88)">
-    <path d="M -18 0 L -16 -8 L -8 -12 L 8 -12 L 16 -8 L 18 0 Z" fill="url(#accent)" opacity="0.95"/>
-    <path d="M -10 -8 L -7 -14 L 7 -14 L 10 -8 Z" fill="#22D3EE" opacity="0.9"/>
-    <circle cx="-11" cy="1" r="4" fill="#0F2240" stroke="url(#rim)" stroke-width="1.5"/>
-    <circle cx="11"  cy="1" r="4" fill="#0F2240" stroke="url(#rim)" stroke-width="1.5"/>
-    <circle cx="-11" cy="1" r="1.5" fill="url(#accent)"/>
-    <circle cx="11"  cy="1" r="1.5" fill="url(#accent)"/>
+
+  <!-- Outer Golden Border -->
+  <path d="M 64 6 L 118 24 C 118 84 94 114 64 124 C 34 114 10 84 10 24 Z" 
+        fill="url(#mccMaroon)" stroke="url(#mccGold)" stroke-width="4.5" filter="url(#shadow)"/>
+
+  <!-- Inner Gold Inset Line -->
+  <path d="M 64 12 L 112 28 C 112 80 90 108 64 117 C 38 108 16 80 16 28 Z" 
+        fill="none" stroke="url(#mccGold)" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.8"/>
+
+  <!-- Central MCC Christian Cross in Pure Gold -->
+  <g transform="translate(64, 52)">
+    <!-- Vertical Beam -->
+    <rect x="-5" y="-28" width="10" height="52" rx="2" fill="url(#mccGold)"/>
+    <!-- Horizontal Crossbar -->
+    <rect x="-20" y="-18" width="40" height="10" rx="2" fill="url(#mccGold)"/>
+    <!-- Cross Inner Highlights -->
+    <rect x="-3" y="-26" width="6" height="48" rx="1" fill="#FFF4C0" opacity="0.6"/>
+    <rect x="-18" y="-16" width="36" height="6" rx="1" fill="#FFF4C0" opacity="0.6"/>
   </g>
-  <!-- Top accent bar -->
-  <rect x="30" y="14" width="40" height="2.5" rx="1.25" fill="url(#accent)" opacity="0.5"/>
+
+  <!-- Open Book of Learning at Base of Cross -->
+  <g transform="translate(64, 76)">
+    <!-- Left Page -->
+    <path d="M -22 0 Q -11 -4 0 2 L 0 16 Q -11 10 -22 14 Z" fill="#FFFFFF" stroke="url(#mccGold)" stroke-width="1.5"/>
+    <!-- Right Page -->
+    <path d="M 22 0 Q 11 -4 0 2 L 0 16 Q 11 10 22 14 Z" fill="#FFFFFF" stroke="url(#mccGold)" stroke-width="1.5"/>
+    <!-- Book Spine -->
+    <line x1="0" y1="2" x2="0" y2="16" stroke="#701A1A" stroke-width="2"/>
+  </g>
+
+  <!-- Top "MCC" Gold Banner Header -->
+  <rect x="36" y="16" width="56" height="15" rx="7.5" fill="url(#mccGold)" stroke="#701A1A" stroke-width="1"/>
+  <text x="64" y="27.5" font-family="'Arial Black', sans-serif" font-size="10" font-weight="900" 
+        fill="#5C121E" text-anchor="middle" letter-spacing="1.5">MCC</text>
+
+  <!-- Bottom SVACS Security Badge Accent -->
+  <circle cx="64" cy="102" r="7" fill="url(#mccGold)" stroke="#4A0C13" stroke-width="1.5"/>
+  <path d="M 61 102 L 63.5 104.5 L 67.5 99.5" fill="none" stroke="#5C121E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
