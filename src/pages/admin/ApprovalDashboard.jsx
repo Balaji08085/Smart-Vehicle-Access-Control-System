@@ -433,11 +433,11 @@ const ApprovalDashboard = () => {
 
       {/* Full-Screen Details Modal */}
       {selectedRequest && (
-        <div className="fixed inset-0 bg-slate-50/95 dark:bg-[#180305]/95 backdrop-blur-md z-50 overflow-y-auto p-4 md:p-8 flex flex-col items-center justify-start">
+        <div className="fixed inset-0 bg-slate-50/95 dark:bg-[#180305]/95 backdrop-blur-md z-50 overflow-y-auto p-4 pt-24 md:pt-28 pb-12 flex flex-col items-center justify-start">
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl w-full max-w-4xl p-6 md:p-10 relative shadow-2xl space-y-6 my-auto"
+            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl w-full max-w-4xl p-6 md:p-10 relative shadow-2xl space-y-6"
           >
             {/* Top Modal Bar */}
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-4">
@@ -566,12 +566,12 @@ const ApprovalDashboard = () => {
 
       {/* EDIT VALIDITY & REQUEST DETAILS MODAL */}
       {editModalRequest && (
-        <div className="fixed inset-0 bg-slate-50/90 dark:bg-[#180305]/90 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-50/90 dark:bg-[#180305]/90 backdrop-blur-md flex flex-col items-center justify-start z-50 p-4 pt-24 md:pt-28 pb-12 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl space-y-5 my-auto text-slate-900 dark:text-slate-100"
+            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl space-y-5 text-slate-900 dark:text-slate-100"
           >
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-3">
               <h3 className="text-xl font-black text-slate-900 dark:text-white">
