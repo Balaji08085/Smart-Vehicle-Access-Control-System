@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Car, ShieldCheck, CheckCircle2, AlertTriangle, Scan, History, 
@@ -11,14 +11,65 @@ import { useEntry, getValidityStatus } from '../../context/EntryContext';
 const SecurityDashboard = () => {
   const { vehicles, history, userRole, theme } = useEntry();
 
-  const vehicleList = Object.values(vehicles);
+  const [dbStats, setDbStats] = useState(null);
+  const [dbRequests, setDbRequests] = useState([]);
+  const [dbScans, setDbScans] = useState([]);
 
-  // Dynamic Metrics Calculation
-  const totalRegistered = vehicleList.length;
-  const activeStickers = vehicleList.filter(v => getValidityStatus(v) === 'Active').length;
-  const expiredStickers = vehicleList.filter(v => getValidityStatus(v) === 'Expired').length;
-  const todayEntries = history.filter(h => h.status === 'Granted').length;
-  const invalidScanAttempts = history.filter(h => h.status === 'Denied').length;
+  useEffect(() => {
+    const fetchLiveDatabaseMetrics = async () => {
+      try {
+        const [dashRes, reqRes, scanRes] = await Promise.all([
+          fetch('/api/dashboard'),
+          fetch('/api/requests'),
+          fetch('/api/history/scans')
+        ]);
+        if (dashRes.ok) {
+          const dashData = await dashRes.json();
+          setDbStats(dashData);
+        }
+        if (reqRes.ok) {
+          const reqData = await reqRes.json();
+          setDbRequests(Array.isArray(reqData) ? reqData : (reqData.requests || []));
+        }
+        if (scanRes.ok) {
+          const scanData = await scanRes.json();
+          setDbScans(Array.isArray(scanData) ? scanData : (scanData.logs || scanData.scans || []));
+        }
+      } catch (err) {
+        console.warn('Backend metrics offline, using context fallbacks:', err);
+      }
+    };
+
+    fetchLiveDatabaseMetrics();
+  }, []);
+
+  const vehicleList = Object.values(vehicles);
+  const allVehicleRecords = dbRequests.length > 0 ? dbRequests : vehicleList;
+  const allScanLogs = dbScans.length > 0 ? dbScans : history;
+
+  // Dynamic Metrics Calculation from Database
+  const totalRegistered = dbStats?.totalUsers ?? allVehicleRecords.length;
+
+  const activeStickers = dbStats?.activeUsers ?? allVehicleRecords.filter(r => {
+    if (r.status === 'Approved') {
+      if (!r.accessExpiryDate && !r.expiryDate) return true;
+      const exp = new Date(r.accessExpiryDate || r.expiryDate);
+      return exp >= new Date();
+    }
+    return getValidityStatus(r) === 'Active';
+  }).length;
+
+  const expiredStickers = dbStats?.expiredUsers ?? allVehicleRecords.filter(r => {
+    if (r.status === 'Approved' || r.status === 'Expired') {
+      if (!r.accessExpiryDate && !r.expiryDate) return false;
+      const exp = new Date(r.accessExpiryDate || r.expiryDate);
+      return exp < new Date();
+    }
+    return getValidityStatus(r) === 'Expired';
+  }).length;
+
+  const todayEntries = dbStats?.todaysAllowed ?? allScanLogs.filter(h => h.status === 'Granted' || h.result === 'Granted').length;
+  const invalidScanAttempts = dbStats?.todaysDenied ?? allScanLogs.filter(h => h.status === 'Denied' || h.result === 'Denied').length;
 
   const twoWheelers = vehicleList.filter(v => v.vehicleType?.toLowerCase().includes('bike') || v.vehicleType?.toLowerCase().includes('two')).length;
   const fourWheelers = vehicleList.filter(v => v.vehicleType?.toLowerCase().includes('car') || v.vehicleType?.toLowerCase().includes('four')).length;
