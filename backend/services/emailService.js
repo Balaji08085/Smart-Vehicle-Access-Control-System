@@ -211,6 +211,7 @@ const emailWrapper = (statusColor, content, footerExtra = '') => {
 </body>
 </html>
 `;
+};
 
 /** Detail row — executive clean table row style */
 const detailRow = (icon, label, value, valueColor = '#475569', isBold = false, isMono = false) => `
