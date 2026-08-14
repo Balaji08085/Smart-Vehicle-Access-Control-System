@@ -27,6 +27,30 @@ const getMccLogoBase64 = () => {
   return '';
 };
 
+// Helper to get MCC Logo CID attachment for Nodemailer
+const getMccLogoAttachment = () => {
+  try {
+    const pathsToTry = [
+      path.join(process.cwd(), 'public', 'favicon.png'),
+      path.join(process.cwd(), 'public', 'mcc_logo.jpg'),
+      path.join(process.cwd(), 'src', 'assets', 'favicon.png'),
+      'C:\\Users\\hp\\Downloads\\3c98d685-d7b2-4201-ac74-0e8ebeb14ce5.png'
+    ];
+    for (const p of pathsToTry) {
+      if (fs.existsSync(p)) {
+        return {
+          filename: 'mcc_logo.png',
+          path: p,
+          cid: 'mcc_header_logo'
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Error finding MCC logo attachment:', err.message);
+  }
+  return null;
+};
+
 // Force IPv4 lookup for Gmail SMTP to prevent IPv6 ENETUNREACH errors on Windows
 try {
   dns.setDefaultResultOrder('ipv4first');
@@ -104,7 +128,7 @@ const createTransporter = async () => {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// ██  PROFESSIONAL EMAIL TEMPLATES — PURE TEXT/CSS & BASE64 LOGO
+// ██  PROFESSIONAL EMAIL TEMPLATES — MCC MAROON + WHITE + BLACK TEXT
 // ═══════════════════════════════════════════════════════════════════
 
 /** Professional email wrapper — MCC Maroon + White + High-Contrast Black Font */
@@ -117,40 +141,37 @@ const emailWrapper = (statusColor, content, footerExtra = '') => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
   <title>MCC - MRF Innovation Park Access</title>
+  <style>
+    :root { color-scheme: light; }
+    body { background-color: #f8fafc !important; color: #0F172A !important; }
+    .email-card { background-color: #ffffff !important; color: #0F172A !important; }
+    .black-text { color: #0F172A !important; }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 36px 12px;">
     <tr>
       <td align="center">
         <!-- MAIN CONTAINER CARD -->
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(112,26,26,0.15); border: 1px solid #E2E8F0;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" class="email-card" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(112,26,26,0.15); border: 1px solid #E2E8F0;">
           
           <!-- ═══ MCC MAROON EXECUTIVE HEADER ═══ -->
           <tr>
-            <td style="background: linear-gradient(135deg, #701A1A 0%, #5C121E 60%, #701A1A 100%); padding: 32px 36px; text-align: center; border-bottom: 4px solid ${statusColor === '#D97706' ? '#701A1A' : statusColor};">
+            <td style="background: #701A1A; background-color: #701A1A; padding: 32px 36px; text-align: center; border-bottom: 4px solid ${statusColor === '#D97706' ? '#701A1A' : statusColor};">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center">
                     <table role="presentation" cellspacing="0" cellpadding="0">
                       <tr>
                         <td style="vertical-align: middle;">
-                          ${logoDataUri ? `
-                            <img src="${logoDataUri}" width="54" height="54" style="display: block; border-radius: 8px; border: 2px solid #D4AF37; background-color: #ffffff; padding: 2px; object-fit: contain;" alt="MCC Logo" />
-                          ` : `
-                            <svg width="48" height="52" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M 18 28 L 82 28 L 82 56 C 82 76, 68 90, 50 96 C 32 90, 18 76, 18 56 Z" fill="#701A1A" stroke="#D4AF37" stroke-width="3.5" />
-                              <circle cx="50" cy="38" r="3.5" stroke="#D4AF37" stroke-width="2" fill="none" />
-                              <rect x="48" y="41" width="4" height="36" fill="#FFFFFF" />
-                              <rect x="36" y="47" width="28" height="4" fill="#FFFFFF" />
-                              <path d="M 30 70 C 34 84, 66 84, 70 70" stroke="#D4AF37" stroke-width="3" fill="none" />
-                              <path d="M 14 84 C 30 80, 70 80, 86 84" stroke="#D4AF37" stroke-width="3" fill="none" />
-                            </svg>
-                          `}
+                          <img src="cid:mcc_header_logo" width="54" height="54" style="display: block; border-radius: 8px; border: 2px solid #D4AF37; background-color: #ffffff; padding: 2px; object-fit: contain;" alt="MCC Logo" onerror="this.src='${logoDataUri}';" />
                         </td>
                         <td style="padding-left: 16px; text-align: left; vertical-align: middle;">
-                          <p style="margin: 0; font-size: 24px; font-weight: 900; color: #FFFFFF; letter-spacing: 2px; line-height: 1.1;">MCC - MRF</p>
-                          <p style="margin: 3px 0 0; font-size: 10px; font-weight: 800; color: #FCE079; letter-spacing: 2px; text-transform: uppercase;">Innovation Park &bull; Madras Christian College</p>
+                          <p style="margin: 0; font-size: 24px; font-weight: 900; color: #FFFFFF !important; letter-spacing: 2px; line-height: 1.1;">MCC - MRF</p>
+                          <p style="margin: 3px 0 0; font-size: 10px; font-weight: 800; color: #FCE079 !important; letter-spacing: 2px; text-transform: uppercase;">Innovation Park &bull; Madras Christian College</p>
                         </td>
                       </tr>
                     </table>
@@ -248,6 +269,8 @@ export const sendApprovalEmail = async (request, qrUrl) => {
   const expiryDateStr = request.accessExpiryDate ? new Date(request.accessExpiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '10/31/2026';
 
   let attachments = [];
+  const mccLogoAtt = getMccLogoAttachment();
+  if (mccLogoAtt) attachments.push(mccLogoAtt);
   let imageSource = '';
 
   if (request.photoUrl && request.photoUrl.startsWith('data:image')) {
@@ -415,6 +438,8 @@ export const sendRejectionEmail = async (request, reason) => {
   const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
   let attachments = [];
+  const mccLogoAtt = getMccLogoAttachment();
+  if (mccLogoAtt) attachments.push(mccLogoAtt);
   let imageSource = '';
 
   if (request.photoUrl && request.photoUrl.startsWith('data:image')) {
@@ -825,6 +850,10 @@ export const sendScanAlertEmail = async (request, reason = 'ACCESS DENIED', qrTo
   const transportObj = await createTransporter();
   let previewUrl = null;
 
+  let attachments = [];
+  const mccLogoAtt = getMccLogoAttachment();
+  if (mccLogoAtt) attachments.push(mccLogoAtt);
+
   if (transportObj && transportObj.transporter) {
     try {
       const info = await transportObj.transporter.sendMail({
@@ -832,7 +861,8 @@ export const sendScanAlertEmail = async (request, reason = 'ACCESS DENIED', qrTo
         to: targetEmail,
         subject,
         text: textBody,
-        html: htmlBody
+        html: htmlBody,
+        attachments
       });
       if (!transportObj.isRealSmtp) {
         previewUrl = nodemailer.getTestMessageUrl(info);
@@ -932,6 +962,10 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
     recipients = `${targetEmail}, ${notifyAdmin}`;
   }
 
+  let attachments = [];
+  const mccLogoAtt = getMccLogoAttachment();
+  if (mccLogoAtt) attachments.push(mccLogoAtt);
+
   if (transporter) {
     try {
       await transporter.sendMail({
@@ -939,7 +973,8 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
         to: recipients,
         subject,
         text: textBody,
-        html: htmlBody
+        html: htmlBody,
+        attachments
       });
       console.log(`✅ Tier-1 Company Owner approval email dispatched to ${recipients} (${ownerName}) via ${baseUrl}`);
     } catch (e) {
