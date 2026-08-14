@@ -566,84 +566,87 @@ const ApprovalDashboard = () => {
 
       {/* EDIT VALIDITY & REQUEST DETAILS MODAL */}
       {editModalRequest && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-50/90 dark:bg-[#180305]/90 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-slate-900 border border-amber-500/40 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl space-y-5 my-auto"
+            exit={{ opacity: 0, scale: 0.96 }}
+            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl space-y-5 my-auto text-slate-900 dark:text-slate-100"
           >
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Edit2 className="w-5 h-5 text-amber-400" /> Edit Permit Validity Dates
+            <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-3">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                Edit Permit Validity Dates
               </h3>
-              <button onClick={() => setEditModalRequest(null)} className="text-slate-400 hover:text-white p-1">
-                <X className="w-5 h-5" />
+              <button 
+                onClick={() => setEditModalRequest(null)} 
+                className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-xl bg-slate-100 dark:bg-[#2A0A0F]"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSaveEditValidity} className="space-y-4 text-xs">
               
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                <p className="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1">Vehicle License Plate</p>
+              <div className="bg-slate-50 dark:bg-[#2A0A0F] p-4 rounded-2xl border border-slate-200 dark:border-[#5C121E]">
+                <p className="text-[11px] font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider mb-1.5">Vehicle License Plate</p>
                 <input
                   type="text"
                   required
                   value={editForm.bikeNumber}
                   onChange={(e) => setEditForm({ ...editForm, bikeNumber: e.target.value })}
                   placeholder="e.g. TN 07 AF 6432"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-mono text-sm font-bold uppercase"
+                  className="w-full bg-white dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-mono text-sm font-black uppercase shadow-2xs"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 font-bold mb-1">Owner Name</label>
+                  <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Owner Name</label>
                   <input
                     type="text"
                     required
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-semibold"
+                    className="w-full bg-slate-50 dark:bg-[#2A0A0F] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-extrabold text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 font-bold mb-1">Department</label>
+                  <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Department</label>
                   <input
                     type="text"
                     value={editForm.department}
                     onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-semibold"
+                    className="w-full bg-slate-50 dark:bg-[#2A0A0F] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white font-extrabold text-xs"
                   />
                 </div>
               </div>
 
               {/* DATE PICKERS SECTION FOR VALIDITY */}
-              <div className="bg-slate-950/80 p-4 rounded-2xl border border-amber-500/30 space-y-3">
-                <span className="text-[11px] font-black text-amber-400 uppercase tracking-wider block flex items-center gap-1.5">
-                  <CalendarRange className="w-4 h-4 text-amber-400" /> Sticker Validity Period (Start — Expiry)
+              <div className="bg-slate-50 dark:bg-[#2A0A0F] p-4 rounded-2xl border border-slate-200 dark:border-[#5C121E] space-y-3">
+                <span className="text-[11px] font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider block">
+                  Sticker Validity Period (Start — Expiry)
                 </span>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Start Date *</label>
+                    <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 mb-1">Start Date *</label>
                     <input
                       type="date"
                       required
                       value={editForm.accessStartDate}
                       onChange={(e) => setEditForm({ ...editForm, accessStartDate: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-mono font-bold"
+                      className="w-full bg-white dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-mono font-bold text-xs shadow-2xs"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Expiry Date *</label>
+                    <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 mb-1">Expiry Date *</label>
                     <input
                       type="date"
                       required
                       value={editForm.accessExpiryDate}
                       onChange={(e) => setEditForm({ ...editForm, accessExpiryDate: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-mono font-bold text-emerald-400"
+                      className="w-full bg-white dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3 py-2.5 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-xs shadow-2xs"
                     />
                   </div>
                 </div>
@@ -653,15 +656,15 @@ const ApprovalDashboard = () => {
                 <button
                   type="button"
                   onClick={() => setEditModalRequest(null)}
-                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold uppercase tracking-wider rounded-xl transition-colors"
+                  className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase tracking-wider rounded-xl shadow-lg transition-transform hover:scale-102 flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-transform hover:scale-102"
                 >
-                  <Save className="w-4 h-4" /> Save Changes
+                  Save Changes
                 </button>
               </div>
 
@@ -672,23 +675,23 @@ const ApprovalDashboard = () => {
 
       {/* Rejection Reason Modal */}
       {rejectModalRequest && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-red-500/40 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-black text-white flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-red-500" /> Confirm Rejection
+        <div className="fixed inset-0 bg-slate-50/90 dark:bg-[#180305]/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-[#1E0609] border border-rose-200 dark:border-rose-500/40 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl text-slate-900 dark:text-slate-100 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-3">
+              <h3 className="text-xl font-black text-rose-700 dark:text-rose-400">
+                Confirm Rejection
               </h3>
-              <button onClick={() => setRejectModalRequest(null)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+              <button onClick={() => setRejectModalRequest(null)} className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-xl bg-slate-100 dark:bg-[#2A0A0F]">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-300 mb-4 leading-relaxed">
-              Rejecting access for <strong className="text-white font-mono">{rejectModalRequest.bikeNumber}</strong> ({rejectModalRequest.name}). A formal rejection email will be dispatched automatically.
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+              Rejecting access for <strong className="text-slate-900 dark:text-white font-mono">{rejectModalRequest.bikeNumber}</strong> ({rejectModalRequest.name}). A formal rejection email will be dispatched automatically.
             </p>
 
-            <div className="mb-6">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <div>
+              <label className="block text-xs font-black text-[#701A1A] dark:text-red-400 uppercase tracking-wider mb-2">
                 Reason for Rejection (Required) *
               </label>
               <textarea
@@ -696,20 +699,20 @@ const ApprovalDashboard = () => {
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="e.g. Invalid insurance documents provided / Duplicate vehicle record..."
                 rows="4"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-xs outline-none focus:border-red-500 transition-colors"
+                className="w-full bg-slate-50 dark:bg-[#2A0A0F] border border-slate-200 dark:border-[#5C121E] rounded-xl p-3 text-slate-900 dark:text-white text-xs font-medium outline-none focus:border-[#701A1A] transition-colors"
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setRejectModalRequest(null)}
-                className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl"
+                className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmReject}
-                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-transform hover:scale-102"
+                className="flex-1 py-3.5 bg-rose-700 hover:bg-rose-800 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-transform hover:scale-102"
               >
                 Confirm & Send Email
               </button>
