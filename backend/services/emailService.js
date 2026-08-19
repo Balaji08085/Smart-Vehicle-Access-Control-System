@@ -898,6 +898,8 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
   const tokenToUse = request.approvalToken || String(request._id || request.bikeNumber || '');
   const approveUrl = `${baseUrl}/owner/approve?token=${encodeURIComponent(tokenToUse)}&action=approve`;
   const rejectUrl = `${baseUrl}/owner/approve?token=${encodeURIComponent(tokenToUse)}&action=reject`;
+  const subject = `Action Required: Access Permit Approval for ${request.name} (${request.company})`;
+  const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
   const htmlBody = emailWrapper('#701A1A', `
     <tr>

@@ -341,11 +341,7 @@ export const createRequest = async (req, res) => {
     });
 
     if (initialStatus === 'Pending Company Approval' || initialStatus === 'Pending') {
-      try {
-        await sendStartupOwnerApprovalEmail(reqObj);
-      } catch (e) {
-        console.error('⚠️ Startup Owner Email Dispatch Error:', e.message);
-      }
+      sendStartupOwnerApprovalEmail(reqObj).catch(e => console.error('⚠️ Startup Owner Email Dispatch Error:', e.message));
     }
 
     res.status(201).json(newRequest);
