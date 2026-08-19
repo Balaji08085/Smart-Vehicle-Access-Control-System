@@ -5,6 +5,8 @@ import {
   getPendingRequests, 
   companyApproveRequest,
   ownerEmailAction,
+  getOwnerApprovalRequest,
+  submitOwnerApproval,
   approveRequest, 
   rejectRequest,
   disableRequest,
@@ -31,6 +33,8 @@ router.post('/auth/login', (req, res) => {
 router.post('/requests', createRequest);
 router.get('/requests', getRequests);
 router.get('/requests/pending', getPendingRequests);
+router.get('/owner/approval-request', getOwnerApprovalRequest);
+router.post('/owner/approve', submitOwnerApproval);
 router.get('/requests/:id/owner-action', ownerEmailAction);  // Email Approve/Reject click
 router.put('/requests/:id/company-approve', companyApproveRequest);
 router.put('/requests/:id/approve', approveRequest);

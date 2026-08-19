@@ -18,14 +18,22 @@ const accessRequestSchema = new mongoose.Schema({
   accessExpiryDate: { type: Date, required: true },
   
   token: { type: String },
+  approvalToken: { type: String, index: true },
+  approvalTokenExpiry: { type: Date },
   status: { 
     type: String, 
-    enum: ['Pending', 'Pending Company Approval', 'Pending Super Admin Approval', 'Approved', 'Rejected', 'Disabled', 'Deleted'], 
-    default: 'Pending' 
+    enum: ['Pending', 'Pending Company Approval', 'Pending Super Admin Approval', 'OWNER_APPROVED', 'OWNER_REJECTED', 'Approved', 'Rejected', 'Disabled', 'Deleted'], 
+    default: 'Pending Company Approval' 
   },
   
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Super Admin
   
+  // Tier-1 Company Owner Approval Meta
+  companyApproved: { type: Boolean, default: false },
+  companyApprovedAt: { type: Date },
+  ownerApprovedAt: { type: Date },
+  ownerApprovedEmail: { type: String },
+
   // Rejection/Approval meta
   actionedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   actionDate: { type: Date },

@@ -887,8 +887,9 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
   const ownerName = request.companyHead || 'Mr. Franklin';
   const transportObj = await createTransporter();
   const transporter = transportObj ? transportObj.transporter : null;
-  const subject = `Action Required: Access Permit Approval for ${request.name} (${request.company})`;
-  const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const tokenToUse = request.approvalToken || String(request._id || request.bikeNumber || '');
+  const approveUrl = `${baseUrl}/owner/approve?token=${encodeURIComponent(tokenToUse)}&action=approve`;
+  const rejectUrl = `${baseUrl}/owner/approve?token=${encodeURIComponent(tokenToUse)}&action=reject`;
 
   const htmlBody = emailWrapper('#701A1A', `
     <tr>
@@ -934,14 +935,14 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
           <tr>
             <td align="center" style="padding-bottom: 12px;">
-              <a href="${baseUrl}/api/requests/${encodeURIComponent(String(request._id || request.bikeNumber || ''))}/owner-action?action=approve&bike=${encodeURIComponent(request.bikeNumber || '')}&email=${encodeURIComponent(request.email || '')}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #701A1A, #5C121E); color: #ffffff; padding: 16px 52px; border-radius: 50px; font-size: 15px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(112, 26, 26, 0.4);">
-                APPROVE — FORWARD TO SUPER ADMIN
+              <a href="${approveUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #701A1A, #5C121E); color: #ffffff; padding: 16px 52px; border-radius: 50px; font-size: 15px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(112, 26, 26, 0.4);">
+                APPROVE ACCESS REQUEST
               </a>
             </td>
           </tr>
           <tr>
             <td align="center">
-              <a href="${baseUrl}/api/requests/${encodeURIComponent(String(request._id || request.bikeNumber || ''))}/owner-action?action=reject&bike=${encodeURIComponent(request.bikeNumber || '')}&email=${encodeURIComponent(request.email || '')}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #DC2626, #EF4444); color: #ffffff; padding: 14px 52px; border-radius: 50px; font-size: 14px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(220, 38, 38, 0.35);">
+              <a href="${rejectUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #DC2626, #EF4444); color: #ffffff; padding: 14px 52px; border-radius: 50px; font-size: 14px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(220, 38, 38, 0.35);">
                 REJECT REQUEST
               </a>
             </td>

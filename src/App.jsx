@@ -11,6 +11,7 @@ import ReportsPage from './pages/reports/ReportsPage';
 import CreateRequest from './pages/superadmin/CreateRequest';
 import ApprovalDashboard from './pages/admin/ApprovalDashboard';
 import VerifyToken from './pages/VerifyToken';
+import OwnerApprovalPage from './pages/owner/OwnerApprovalPage';
 import { EntryProvider, useEntry } from './context/EntryContext';
 import { ShieldAlert, LogIn, Lock } from 'lucide-react';
 
@@ -89,6 +90,8 @@ const AppLayout = () => {
               <ApprovalDashboard />
             </ProtectedRoute>
           } />
+
+          <Route path="/owner/approve" element={<OwnerApprovalPage />} />
 
           <Route path="/verify/:token" element={
             <ProtectedRoute allowedRoles={['guard', 'admin', 'superadmin']}>

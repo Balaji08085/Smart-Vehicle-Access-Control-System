@@ -4,11 +4,13 @@ import AuditLog from '../models/AuditLog.js';
 import { generateSecureToken, getQRImageUrl } from '../services/qrService.js';
 import { sendApprovalEmail, sendRejectionEmail, sendStartupOwnerApprovalEmail, sendSuperAdminApprovalNotice } from '../services/emailService.js';
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 // In-memory store fallback when MongoDB Atlas is not connected
 export const inMemoryRequests = [
   {
     _id: 'REQ-1001',
+    approvalToken: 'sat_1001_balaji_mrf_lab',
     name: 'Balaji S',
     photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
     employeeId: '23BCS045',
@@ -241,6 +243,7 @@ export const createRequest = async (req, res) => {
     const formattedVehicleType = (vehicleType && ['Bike', 'Car'].includes(vehicleType)) ? vehicleType : 'Bike';
     const finalCompany = (company === 'Other / Custom Startup' && customCompany) ? customCompany.trim() : company.trim();
     const initialStatus = (applicantCategory === 'Startup') ? 'Pending Company Approval' : 'Pending Super Admin Approval';
+    const generatedApprovalToken = `sat_${Date.now()}_${crypto.randomBytes(12).toString('hex')}`;
 
     // Standalone fallback if MongoDB Atlas is offline
     if (!isDbConnected()) {
@@ -251,6 +254,7 @@ export const createRequest = async (req, res) => {
 
       const newReq = {
         _id: `REQ-${Date.now()}`,
+        approvalToken: generatedApprovalToken,
         applicantCategory: applicantCategory || 'Startup',
         name: name.trim(),
         photoUrl: photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
@@ -273,7 +277,7 @@ export const createRequest = async (req, res) => {
       inMemoryRequests.unshift(newReq);
       saveToDisk();
 
-      if (initialStatus === 'Pending Company Approval') {
+      if (initialStatus === 'Pending Company Approval' || initialStatus === 'Pending') {
         try {
           await sendStartupOwnerApprovalEmail(newReq);
         } catch (e) {
@@ -312,6 +316,7 @@ export const createRequest = async (req, res) => {
       mobile: mobile.trim(),
       accessStartDate: new Date(accessStartDate),
       accessExpiryDate: new Date(accessExpiryDate),
+      approvalToken: generatedApprovalToken,
       status: initialStatus,
       createdBy: req.user?._id
     });
@@ -394,6 +399,201 @@ export const companyApproveRequest = async (req, res) => {
       message: `Tier 1 Approval Granted by Startup Owner (${request.companyHead || 'Owner'})! Forwarded to Super Admin.`, 
       request 
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET /api/owner/approval-request?token=...
+export const getOwnerApprovalRequest = async (req, res) => {
+  try {
+    const token = (req.query.token || req.query.id || req.query.req || '').trim();
+    const queryBike = (req.query.bike || '').trim();
+    const queryEmail = (req.query.email || '').trim();
+
+    if (!token && !queryBike && !queryEmail) {
+      return res.status(400).json({ error: 'No approval token provided' });
+    }
+
+    try { loadFromDisk(); } catch (_) {}
+
+    const cleanToken = token.trim();
+    const cleanBike = queryBike.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const cleanEmail = queryEmail.toLowerCase().trim();
+
+    const matches = (r) => {
+      if (!r) return false;
+      const rId = String(r._id || '').trim();
+      const rBike = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rEmail = (r.email || '').toLowerCase().trim();
+      const rAppToken = String(r.approvalToken || '').trim();
+
+      return (
+        (cleanToken && (rAppToken === cleanToken || rId === cleanToken || r.approvalToken === cleanToken || r._id === cleanToken)) ||
+        (cleanBike && rBike && (rBike === cleanBike || rBike.includes(cleanBike))) ||
+        (cleanEmail && rEmail && (rEmail === cleanEmail || rEmail.includes(cleanEmail)))
+      );
+    };
+
+    let request = inMemoryRequests.find(matches);
+
+    if (isDbConnected()) {
+      try {
+        let dbReq = null;
+        if (cleanToken) {
+          dbReq = await AccessRequest.findOne({ $or: [{ approvalToken: cleanToken }, { _id: mongoose.Types.ObjectId.isValid(cleanToken) ? cleanToken : null }] });
+        }
+        if (!dbReq && cleanBike) {
+          dbReq = await AccessRequest.findOne({ bikeNumber: new RegExp(cleanBike, 'i') });
+        }
+        if (!dbReq && cleanEmail) {
+          dbReq = await AccessRequest.findOne({ email: new RegExp(cleanEmail, 'i') });
+        }
+        if (!dbReq) {
+          const allDb = await AccessRequest.find({});
+          dbReq = allDb.find(matches);
+        }
+        if (dbReq) {
+          request = dbReq.toObject ? dbReq.toObject() : dbReq;
+        }
+      } catch (err) {
+        console.error('Mongo lookup error in getOwnerApprovalRequest:', err.message);
+      }
+    }
+
+    if (!request) {
+      return res.status(404).json({ error: 'This vehicle access request could not be found or has expired.' });
+    }
+
+    if (!request.approvalToken) {
+      request.approvalToken = cleanToken || `sat_${Date.now()}_${request.bikeNumber.replace(/\s+/g, '')}`;
+    }
+
+    return res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// POST /api/owner/approve
+export const submitOwnerApproval = async (req, res) => {
+  try {
+    const { token, action = 'approve', reason } = req.body;
+    const cleanToken = (token || '').trim();
+    const actionType = action.toLowerCase();
+
+    if (!cleanToken) {
+      return res.status(400).json({ error: 'Approval token is required' });
+    }
+
+    try { loadFromDisk(); } catch (_) {}
+
+    const matches = (r) => {
+      if (!r) return false;
+      const rId = String(r._id || '').trim();
+      const rBike = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rAppToken = String(r.approvalToken || '').trim();
+      return (
+        rAppToken === cleanToken || 
+        rId === cleanToken || 
+        (rBike && cleanToken.toUpperCase().includes(rBike))
+      );
+    };
+
+    let request = inMemoryRequests.find(matches);
+
+    if (isDbConnected()) {
+      try {
+        let dbReq = null;
+        if (cleanToken) {
+          dbReq = await AccessRequest.findOne({ $or: [{ approvalToken: cleanToken }, { _id: mongoose.Types.ObjectId.isValid(cleanToken) ? cleanToken : null }] });
+        }
+        if (!dbReq) {
+          const cleanBike = cleanToken.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          if (cleanBike.length >= 4) {
+            dbReq = await AccessRequest.findOne({ bikeNumber: new RegExp(cleanBike, 'i') });
+          }
+        }
+        if (dbReq) {
+          request = dbReq;
+        }
+      } catch (err) {
+        console.error('Mongo lookup error in submitOwnerApproval:', err.message);
+      }
+    }
+
+    if (!request) {
+      return res.status(404).json({ error: 'This vehicle access request could not be found or has expired.' });
+    }
+
+    if (actionType === 'approve') {
+      request.status = 'Pending Super Admin Approval';
+      request.companyApproved = true;
+      request.companyApprovedAt = new Date();
+      request.ownerApprovedAt = new Date();
+      request.ownerApprovedEmail = request.companyHeadEmail || 'owner@startup.com';
+
+      const memIndex = inMemoryRequests.findIndex(r => String(r._id) === String(request._id) || r.bikeNumber === request.bikeNumber);
+      if (memIndex !== -1) {
+        inMemoryRequests[memIndex].status = 'Pending Super Admin Approval';
+        inMemoryRequests[memIndex].companyApproved = true;
+        inMemoryRequests[memIndex].companyApprovedAt = new Date();
+        inMemoryRequests[memIndex].ownerApprovedAt = new Date();
+      }
+      saveToDisk();
+
+      if (isDbConnected()) {
+        try {
+          let dbReq = mongoose.Types.ObjectId.isValid(String(request._id)) ? await AccessRequest.findById(request._id) : await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
+          if (dbReq) {
+            dbReq.status = 'Pending Super Admin Approval';
+            dbReq.companyApproved = true;
+            dbReq.companyApprovedAt = new Date();
+            dbReq.ownerApprovedAt = new Date();
+            dbReq.ownerApprovedEmail = request.companyHeadEmail;
+            await dbReq.save();
+          }
+        } catch (_) {}
+      }
+
+      sendSuperAdminApprovalNotice(request).catch(e => console.log('Super Admin notification error:', e.message));
+
+      return res.json({
+        message: 'Access request approved successfully and forwarded to Super Admin!',
+        request
+      });
+    } else {
+      request.status = 'OWNER_REJECTED';
+      request.actionDate = new Date();
+      request.actionReason = reason || 'Rejected by Startup Company Owner';
+
+      const memIndex = inMemoryRequests.findIndex(r => String(r._id) === String(request._id) || r.bikeNumber === request.bikeNumber);
+      if (memIndex !== -1) {
+        inMemoryRequests[memIndex].status = 'OWNER_REJECTED';
+        inMemoryRequests[memIndex].actionDate = new Date();
+        inMemoryRequests[memIndex].actionReason = reason || 'Rejected by Startup Company Owner';
+      }
+      saveToDisk();
+
+      if (isDbConnected()) {
+        try {
+          let dbReq = mongoose.Types.ObjectId.isValid(String(request._id)) ? await AccessRequest.findById(request._id) : await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
+          if (dbReq) {
+            dbReq.status = 'OWNER_REJECTED';
+            dbReq.actionDate = new Date();
+            dbReq.actionReason = reason || 'Rejected by Startup Company Owner';
+            await dbReq.save();
+          }
+        } catch (_) {}
+      }
+
+      sendRejectionEmail(request, reason || 'Rejected by Startup Company Owner').catch(e => console.log('Rejection email error:', e.message));
+
+      return res.json({
+        message: 'Access request rejected by Startup Owner',
+        request
+      });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -625,7 +825,7 @@ export const getRequests = async (req, res) => {
         let query = {};
         if (status && status !== 'All') {
           if (status === 'Pending') {
-            query.status = { $in: ['Pending', 'Pending Company Approval', 'Pending Super Admin Approval'] };
+            query.status = { $in: ['Pending', 'Pending Company Approval', 'Pending Super Admin Approval', 'OWNER_APPROVED'] };
           } else {
             query.status = status;
           }
@@ -648,7 +848,8 @@ export const getRequests = async (req, res) => {
         allRequests = allRequests.filter(r => 
           r.status === 'Pending' || 
           r.status === 'Pending Company Approval' || 
-          r.status === 'Pending Super Admin Approval'
+          r.status === 'Pending Super Admin Approval' ||
+          r.status === 'OWNER_APPROVED'
         );
       } else {
         allRequests = allRequests.filter(r => r.status === status);
@@ -667,13 +868,14 @@ export const getPendingRequests = async (req, res) => {
     let pending = inMemoryRequests.filter(r => 
       r.status === 'Pending' || 
       r.status === 'Pending Company Approval' || 
-      r.status === 'Pending Super Admin Approval'
+      r.status === 'Pending Super Admin Approval' ||
+      r.status === 'OWNER_APPROVED'
     );
 
     if (isDbConnected()) {
       try {
         const mongoPending = await AccessRequest.find({ 
-          status: { $in: ['Pending', 'Pending Company Approval', 'Pending Super Admin Approval'] } 
+          status: { $in: ['Pending', 'Pending Company Approval', 'Pending Super Admin Approval', 'OWNER_APPROVED'] } 
         }).sort({ createdAt: -1 });
         if (mongoPending && mongoPending.length > 0) {
           const mongoBikeNumbers = new Set(mongoPending.map(r => r.bikeNumber));
