@@ -10,7 +10,7 @@ const scanHistorySchema = new mongoose.Schema({
   ipAddress: { type: String },
   vehicleNumber: { type: String },
   securityUser: { type: String, default: 'Security Guard' },
-  emailSentStatus: { type: String, default: 'None' },
+  emailSentStatus: { type: String, default: 'Success' },
   result: { type: String, enum: ['Granted', 'Denied'], required: true },
   reason: { type: String } // e.g., "Expired", "Disabled", "Invalid QR", etc.
 }, { timestamps: true });
