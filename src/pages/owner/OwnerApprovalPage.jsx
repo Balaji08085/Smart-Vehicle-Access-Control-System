@@ -22,7 +22,8 @@ const OwnerApprovalPage = () => {
   const [searchParams] = useSearchParams();
   const routeParams = useParams();
   const navigate = useNavigate();
-  const pathToken = (window.location.pathname.match(/\/(?:requests|api\/requests)\/([^\/]+)\/owner-action/) || [])[1] || '';
+  const pathMatches = window.location.pathname.match(/\/(?:requests|api\/requests|owner\/approve|owner)\/([^\/]+)/) || [];
+  const pathToken = (pathMatches[1] && pathMatches[1] !== 'approve' && pathMatches[1] !== 'owner-action') ? pathMatches[1] : '';
   const token = searchParams.get('token') || searchParams.get('id') || searchParams.get('req') || routeParams.id || pathToken || '';
   const actionParam = searchParams.get('action') || (window.location.search.includes('action=approve') ? 'approve' : '');
   const statusParam = searchParams.get('status') || '';

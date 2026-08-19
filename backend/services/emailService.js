@@ -895,9 +895,9 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
   const ownerName = request.companyHead || 'Mr. Franklin';
   const transportObj = await createTransporter();
   const transporter = transportObj ? transportObj.transporter : null;
-  const tokenToUse = request.approvalToken || String(request._id || request.bikeNumber || '');
-  const approveUrl = `${baseUrl}/api/requests/${encodeURIComponent(tokenToUse)}/owner-action?action=approve&bike=${encodeURIComponent(request.bikeNumber || '')}&email=${encodeURIComponent(request.email || '')}`;
-  const rejectUrl = `${baseUrl}/api/requests/${encodeURIComponent(tokenToUse)}/owner-action?action=reject&bike=${encodeURIComponent(request.bikeNumber || '')}&email=${encodeURIComponent(request.email || '')}`;
+  const tokenToUse = request.approvalToken || String(request._id || '').trim() || (request.bikeNumber ? request.bikeNumber.replace(/\s+/g, '') : '') || `REQ-${Date.now()}`;
+  const approveUrl = `${baseUrl}/owner/approve?token=${encodeURIComponent(tokenToUse)}&action=approve&name=${encodeURIComponent(request.name || '')}&bike=${encodeURIComponent(request.bikeNumber || '')}&company=${encodeURIComponent(request.company || '')}`;
+  const rejectUrl = `${baseUrl}/owner/approve?token=${encodeURIComponent(tokenToUse)}&action=reject&name=${encodeURIComponent(request.name || '')}&bike=${encodeURIComponent(request.bikeNumber || '')}&company=${encodeURIComponent(request.company || '')}`;
   const subject = `Action Required: Access Permit Approval for ${request.name} (${request.company})`;
   const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
