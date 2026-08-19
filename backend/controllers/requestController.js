@@ -707,7 +707,7 @@ export const ownerEmailAction = async (req, res) => {
     const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
 
     if (!request) {
-      return res.redirect(`${portalUrl}/admin/approval?approved=true`);
+      return res.redirect(`${portalUrl}/owner/approve?status=success`);
     }
 
     if (action === 'approve') {
@@ -750,8 +750,8 @@ export const ownerEmailAction = async (req, res) => {
       // Notify Super Admin via Email
       sendSuperAdminApprovalNotice(request).catch(e => console.log('Super Admin notification email error:', e.message));
 
-      // Direct HTTP redirect straight to Super Admin Approval Dashboard (/admin/approval)
-      return res.redirect(`${portalUrl}/admin/approval?approved=true&req=${encodeURIComponent(request.bikeNumber || request.name || 'Vehicle')}`);
+      // Redirect to public owner approval confirmation page (no login required)
+      return res.redirect(`${portalUrl}/owner/approve?token=${encodeURIComponent(request.approvalToken || rawId)}&status=success&action=approved&name=${encodeURIComponent(request.name || '')}&bike=${encodeURIComponent(request.bikeNumber || '')}&company=${encodeURIComponent(request.company || '')}`);
 
     } else {
       request.status = 'Rejected';
@@ -787,7 +787,7 @@ export const ownerEmailAction = async (req, res) => {
 
       sendRejectionEmail(request, 'Rejected by Startup Company Owner').catch(e => console.log('Rejection email error:', e.message));
 
-      return res.redirect(`${portalUrl}/admin/approval?rejected=true&req=${encodeURIComponent(request.bikeNumber || request.name || 'Vehicle')}`);
+      return res.redirect(`${portalUrl}/owner/approve?token=${encodeURIComponent(request.approvalToken || rawId)}&status=rejected&name=${encodeURIComponent(request.name || '')}&bike=${encodeURIComponent(request.bikeNumber || '')}`);
     }
   } catch (error) {
     const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';

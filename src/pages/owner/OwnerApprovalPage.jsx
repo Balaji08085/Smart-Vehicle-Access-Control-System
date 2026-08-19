@@ -23,19 +23,28 @@ const OwnerApprovalPage = () => {
   const navigate = useNavigate();
   const token = searchParams.get('token') || searchParams.get('id') || searchParams.get('req') || '';
   const actionParam = searchParams.get('action') || '';
+  const statusParam = searchParams.get('status') || '';
+  const queryName = searchParams.get('name') || '';
+  const queryBike = searchParams.get('bike') || '';
+  const queryCompany = searchParams.get('company') || '';
 
   const [loading, setLoading] = useState(true);
   const [request, setRequest] = useState(null);
   const [error, setError] = useState(null);
-  const [errorType, setErrorType] = useState(null); // 'NOT_FOUND' | 'SERVER_ERROR' | 'EXPIRED'
+  const [errorType, setErrorType] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [actionStatus, setActionStatus] = useState('IDLE'); // 'IDLE' | 'APPROVED' | 'REJECTED'
+  const [actionStatus, setActionStatus] = useState(statusParam === 'success' || statusParam === 'approved' ? 'APPROVED' : 'IDLE');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
 
   useEffect(() => {
+    if (statusParam === 'success' || statusParam === 'approved') {
+      setLoading(false);
+      setActionStatus('APPROVED');
+      return;
+    }
     fetchRequestDetails();
-  }, [token]);
+  }, [token, statusParam]);
 
   const fetchRequestDetails = async () => {
     setLoading(true);
@@ -44,7 +53,9 @@ const OwnerApprovalPage = () => {
 
     if (!token) {
       setLoading(false);
-      navigate('/admin/approval?approved=true');
+      if (statusParam === 'success' || statusParam === 'approved') {
+        setActionStatus('APPROVED');
+      }
       return;
     }
 
@@ -179,44 +190,55 @@ const OwnerApprovalPage = () => {
           </div>
         )}
 
-        {/* SUCCESSFUL LOAD — DISPLAY ACCESS REQUEST DETAILS */}
-        {!loading && !errorType && request && (
-          <div className="bg-slate-900/95 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl">
-            
-            {/* Top Status Banner */}
-            {actionStatus === 'APPROVED' ? (
-              <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 p-6 border-b border-emerald-500/30 text-center space-y-2">
-                <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 shadow-md">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-black text-emerald-300 uppercase tracking-tight">
-                  ✓ Tier-1 Approval Granted
-                </h3>
-                <p className="text-xs text-emerald-200 font-medium max-w-md mx-auto">
-                  Access request for <strong className="text-white">{request.name}</strong> ({request.bikeNumber}) has been verified and forwarded to Super Admin for final QR Gate Pass issuance.
-                </p>
+        {/* SUCCESSFUL LOAD — APPROVED CONFIRMATION SCREEN */}
+        {!loading && (actionStatus === 'APPROVED' || statusParam === 'success' || statusParam === 'approved') && (
+          <div className="bg-slate-900/95 border border-emerald-500/40 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl">
+            <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 p-8 border-b border-emerald-500/30 text-center space-y-4">
+              <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 shadow-xl shadow-emerald-950/50">
+                <ShieldCheck className="w-12 h-12 animate-pulse" />
               </div>
-            ) : actionStatus === 'REJECTED' ? (
-              <div className="bg-gradient-to-r from-red-950 via-red-900 to-rose-950 p-6 border-b border-red-500/30 text-center space-y-2">
-                <div className="w-14 h-14 mx-auto rounded-full bg-red-500/20 border border-red-400/50 flex items-center justify-center text-red-400 shadow-md">
-                  <XCircle className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-black text-red-300 uppercase tracking-tight">
-                  ✕ Access Request Rejected
-                </h3>
-                <p className="text-xs text-red-200 font-medium max-w-md mx-auto">
-                  The access request for <strong className="text-white">{request.name}</strong> ({request.bikeNumber}) was denied by Startup Management.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-amber-950/80 via-red-950/80 to-amber-950/80 p-4 border-b border-amber-500/30 text-center flex items-center justify-center gap-2">
-                <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
-                <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
-                  Review & Approve Person Access Below
+              <div className="space-y-1">
+                <span className="px-3.5 py-1 bg-emerald-900/80 border border-emerald-400/50 text-emerald-300 font-black text-[11px] uppercase tracking-widest rounded-full">
+                  TIER-1 APPROVAL GRANTED
                 </span>
+                <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight pt-2">
+                  Approval Forwarded to Super Admin!
+                </h2>
+                <p className="text-xs sm:text-sm text-emerald-200 font-medium max-w-md mx-auto leading-relaxed pt-1">
+                  Thank you! Your Tier-1 Startup Owner approval for <strong className="text-white font-bold">{request?.name || queryName || 'the applicant'}</strong> ({request?.bikeNumber || queryBike || 'Vehicle Permit'}) has been recorded and forwarded to the Super Admin.
+                </p>
               </div>
-            )}
 
+              <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-5 text-left space-y-2.5 text-xs max-w-md mx-auto">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                  <span className="text-slate-400">Applicant Name:</span>
+                  <span className="font-bold text-white text-sm">{request?.name || queryName || 'Startup Member'}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                  <span className="text-slate-400">Startup / Company:</span>
+                  <span className="font-bold text-amber-300">{request?.company || queryCompany || 'MCC-MRF Startup'}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                  <span className="text-slate-400">Vehicle Registration:</span>
+                  <span className="font-mono font-bold text-emerald-400">{request?.bikeNumber || queryBike || 'VEHICLE PERMIT'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Current Status:</span>
+                  <span className="font-extrabold text-sky-400 uppercase">Pending Super Admin QR Pass Issuance</span>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-center gap-2 text-xs text-slate-300 font-medium">
+                <Clock className="w-4 h-4 text-emerald-400" />
+                <span>Super Admin will review and issue the official digital QR code pass shortly.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PENDING APPROVAL - DISPLAY REQUEST DETAILS & ACTION BUTTONS */}
+        {!loading && actionStatus === 'IDLE' && request && (
+          <div className="bg-slate-900/95 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl">
             {/* Profile Grid */}
             <div className="p-6 sm:p-8 space-y-6">
               
