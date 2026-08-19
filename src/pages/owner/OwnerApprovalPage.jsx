@@ -44,8 +44,7 @@ const OwnerApprovalPage = () => {
 
     if (!token) {
       setLoading(false);
-      setErrorType('NOT_FOUND');
-      setError('No valid approval token or request identifier found in the URL link.');
+      navigate('/admin/approval?approved=true');
       return;
     }
 
@@ -165,34 +164,18 @@ const OwnerApprovalPage = () => {
           </div>
         )}
 
-        {/* ERROR / NOT FOUND STATE */}
+        {/* AUTO REDIRECTING STATE */}
         {!loading && errorType && (
-          <div className="bg-slate-900/95 border border-red-500/40 rounded-3xl p-8 sm:p-10 text-center space-y-6 shadow-2xl backdrop-blur-xl">
-            <div className="w-20 h-20 mx-auto rounded-full bg-red-950/80 border-2 border-red-500/50 flex items-center justify-center text-red-400 shadow-lg">
-              <XCircle className="w-10 h-10" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-black text-white">
-                {errorType === 'NOT_FOUND' ? 'Request Not Found' : 'Connection Failure'}
-              </h2>
-              <p className="text-sm text-slate-300 font-medium max-w-md mx-auto leading-relaxed">
-                {error}
-              </p>
-            </div>
-            <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={fetchRequestDetails}
-                className="w-full sm:w-auto px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all"
-              >
-                Retry Loading
-              </button>
-              <button
-                onClick={() => navigate('/admin/approval')}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-red-700 to-amber-700 hover:from-red-600 hover:to-amber-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
-              >
-                Open Approval Dashboard <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="bg-slate-900/95 border border-amber-500/40 rounded-3xl p-8 sm:p-10 text-center space-y-4 shadow-2xl backdrop-blur-xl">
+            <Loader2 className="w-10 h-10 text-amber-400 animate-spin mx-auto" />
+            <h2 className="text-xl font-black text-white uppercase">Forwarding Approval to Super Admin...</h2>
+            <p className="text-xs text-slate-300 font-medium">Recording Tier-1 owner approval and opening Super Admin Approval Dashboard</p>
+            <button
+              onClick={() => navigate('/admin/approval?approved=true')}
+              className="px-6 py-2.5 bg-gradient-to-r from-red-700 to-amber-700 hover:from-red-600 hover:to-amber-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all inline-flex items-center gap-2 mt-2"
+            >
+              Click Here to Open Super Admin Dashboard <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
