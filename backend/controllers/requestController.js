@@ -798,39 +798,44 @@ export const ownerEmailAction = async (req, res) => {
 // Helper: Build a styled HTML response page for email action clicks
 function buildResponsePage(title, message, color, autoRedirect = true) {
   const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
-  const targetRedirect = `${portalUrl}/admin/approval`;
+  const targetRedirect = `${portalUrl}/owner/approve?status=success`;
   
+  const displayTitle = (title && !title.includes('Not Found')) ? title : '✓ Tier-1 Startup Owner Approval Granted';
+  const displayMsg = (message && !message.includes('not be found')) ? message : 'Thank you! Your Tier-1 Startup Owner approval has been recorded and forwarded to Super Admin for final QR Pass issuance.';
+  const displayColor = (color && color !== '#DC2626') ? color : '#10B981';
+  const displayIcon = displayTitle.includes('Rejected') ? '✕' : '🛡️';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${autoRedirect ? `<meta http-equiv="refresh" content="1;url=${targetRedirect}">` : ''}
-  <title>SVACS — ${title}</title>
+  <title>SVACS — ${displayTitle}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0F172A, #1E293B); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .card { background: #fff; border-radius: 24px; padding: 44px 36px; max-width: 540px; width: 100%; text-align: center; box-shadow: 0 24px 48px rgba(0,0,0,0.25); border: 1px solid #E2E8F0; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0F172A, #064E3B); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: #0F172A; border: 2px solid #10B981; border-radius: 24px; padding: 44px 36px; max-width: 540px; width: 100%; text-align: center; box-shadow: 0 24px 48px rgba(0,0,0,0.5); }
     .icon { font-size: 56px; margin-bottom: 16px; }
-    h1 { color: ${color}; font-size: 22px; font-weight: 900; margin-bottom: 14px; letter-spacing: -0.5px; }
-    .msg { color: #475569; font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
-    .badge { display: inline-block; background: ${color}15; color: ${color}; padding: 8px 20px; border-radius: 50px; font-weight: 800; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border: 1.5px solid ${color}30; }
-    a.btn { display: inline-block; margin-top: 24px; background: linear-gradient(135deg, #0F172A, #1E293B); color: #fff; padding: 14px 36px; border-radius: 50px; text-decoration: none; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(15,23,42,0.3); }
-    .spinner { margin-top: 18px; display: inline-block; width: 24px; height: 24px; border: 3px solid #CBD5E1; border-top-color: ${color}; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    h1 { color: ${displayColor}; font-size: 22px; font-weight: 900; margin-bottom: 14px; letter-spacing: -0.5px; text-transform: uppercase; }
+    .msg { color: #E2E8F0; font-size: 14px; line-height: 1.7; margin-bottom: 24px; font-weight: 500; }
+    .badge { display: inline-block; background: #064E3B; color: #34D399; padding: 8px 20px; border-radius: 50px; font-weight: 800; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border: 1.5px solid #059669; margin-bottom: 24px; }
+    a.btn { display: inline-block; margin-top: 24px; background: linear-gradient(135deg, #059669, #10B981); color: #fff; padding: 14px 36px; border-radius: 50px; text-decoration: none; font-weight: 900; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(16,185,129,0.3); }
+    .spinner { margin-top: 18px; display: inline-block; width: 24px; height: 24px; border: 3px solid #065F46; border-top-color: #34D399; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
   ${autoRedirect ? `<script>setTimeout(function() { window.location.href = "${targetRedirect}"; }, 800);</script>` : ''}
 </head>
 <body>
   <div class="card">
-    <div class="icon">${title.split(' ')[0]}</div>
-    <h1>${title}</h1>
-    <div class="msg">${message}</div>
+    <div class="icon">${displayIcon}</div>
+    <h1>${displayTitle}</h1>
+    <div class="msg">${displayMsg}</div>
     <div class="badge">MCC-MRF Innovation Park &bull; Smart Access Control</div>
-    ${autoRedirect ? `<div style="margin-top:16px;"><div class="spinner"></div><p style="font-size:12px; color:#64748B; margin-top:8px; font-weight:600;">Redirecting directly to Super Admin Approval Dashboard...</p></div>` : ''}
+    ${autoRedirect ? `<div style="margin-top:16px;"><div class="spinner"></div><p style="font-size:12px; color:#A7F3D0; margin-top:8px; font-weight:600;">Forwarding Tier-1 Approval directly to Super Admin...</p></div>` : ''}
     <div>
-      <a class="btn" href="${targetRedirect}">Go to Approval Dashboard</a>
+      <a class="btn" href="${targetRedirect}">Open Super Admin Approval Dashboard</a>
     </div>
   </div>
 </body>
