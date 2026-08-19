@@ -32,27 +32,41 @@ class ApiClient {
         : 'http://10.100.10.27:5000';
 
     final urlsToTry = [primaryBase, secondaryBase];
+    final headers = await _getHeaders();
 
-    for (int i = 0; i < urlsToTry.length; i++) {
-      final baseUrl = urlsToTry[i];
+    final completer = Completer<ApiResponse<T>>();
+    int failureCount = 0;
+    ApiResponse<T>? lastResult;
+
+    for (final baseUrl in urlsToTry) {
       final uri = Uri.parse('$baseUrl$endpoint');
-      debugPrint('📡 GET Request (Attempt ${i + 1}): $uri');
+      debugPrint('⚡ Fast GET Request: $uri');
 
-      try {
-        final headers = await _getHeaders();
-        final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 8));
+      http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 3))
+          .then((response) async {
         final result = await _processResponse<T>(response, parser, method: 'GET');
-        if (result.success || i == urlsToTry.length - 1) {
-          return result;
+        if (result.success && !completer.isCompleted) {
+          AppConfig.setBaseUrl(baseUrl);
+          completer.complete(result);
+        } else {
+          failureCount++;
+          lastResult = result;
+          if (failureCount == urlsToTry.length && !completer.isCompleted) {
+            completer.complete(lastResult ?? ApiResponse.error('GET Request Failed'));
+          }
         }
-      } catch (e) {
-        debugPrint('⚠️ Attempt ${i + 1} GET failed for $uri: $e');
-        if (i == urlsToTry.length - 1) {
-          return ApiResponse.error('Network Error: $e');
+      }).catchError((e) {
+        failureCount++;
+        debugPrint('⚠️ Fast GET error for $uri: $e');
+        if (failureCount == urlsToTry.length && !completer.isCompleted) {
+          completer.complete(ApiResponse.error('GET Request Failed: $e'));
         }
-      }
+      });
     }
-    return ApiResponse.error('GET Request Failed');
+
+    return completer.future;
   }
 
   static Future<ApiResponse<T>> post<T>(
@@ -66,39 +80,41 @@ class ApiClient {
         : 'http://10.100.10.27:5000';
 
     final urlsToTry = [primaryBase, secondaryBase];
+    final headers = await _getHeaders();
 
-    for (int i = 0; i < urlsToTry.length; i++) {
-      final baseUrl = urlsToTry[i];
+    final completer = Completer<ApiResponse<T>>();
+    int failureCount = 0;
+    ApiResponse<T>? lastResult;
+
+    for (final baseUrl in urlsToTry) {
       final uri = Uri.parse('$baseUrl$endpoint');
-      debugPrint('📡 POST Request (Attempt ${i + 1}): $uri');
+      debugPrint('⚡ Fast POST Request: $uri');
 
-      try {
-        final headers = await _getHeaders();
-        final response = await http
-            .post(uri, headers: headers, body: jsonEncode(body ?? {}))
-            .timeout(const Duration(seconds: 8));
+      http
+          .post(uri, headers: headers, body: jsonEncode(body ?? {}))
+          .timeout(const Duration(seconds: 3))
+          .then((response) async {
         final result = await _processResponse<T>(response, parser, method: 'POST', body: body);
-        if (result.success || i == urlsToTry.length - 1) {
-          return result;
+        if (result.success && !completer.isCompleted) {
+          AppConfig.setBaseUrl(baseUrl);
+          completer.complete(result);
+        } else {
+          failureCount++;
+          lastResult = result;
+          if (failureCount == urlsToTry.length && !completer.isCompleted) {
+            completer.complete(lastResult ?? ApiResponse.error('Verification failed'));
+          }
         }
-      } on SocketException catch (e) {
-        debugPrint('❌ Attempt ${i + 1} SocketException: $e');
-        if (i == urlsToTry.length - 1) {
-          return ApiResponse.error('Unable to connect to server ($baseUrl). Check Wi-Fi & IP settings.');
+      }).catchError((e) {
+        failureCount++;
+        debugPrint('⚠️ Fast POST error for $uri: $e');
+        if (failureCount == urlsToTry.length && !completer.isCompleted) {
+          completer.complete(ApiResponse.error('Unable to connect to backend server. Check Wi-Fi & IP settings.'));
         }
-      } on TimeoutException catch (e) {
-        debugPrint('⏱️ Attempt ${i + 1} TimeoutException: $e');
-        if (i == urlsToTry.length - 1) {
-          return ApiResponse.error('Server request timed out. Ensure backend server is running.');
-        }
-      } catch (e) {
-        debugPrint('❌ Attempt ${i + 1} Error: $e');
-        if (i == urlsToTry.length - 1) {
-          return ApiResponse.error('Network Error: $e');
-        }
-      }
+      });
     }
-    return ApiResponse.error('Verification failed');
+
+    return completer.future;
   }
 
   static Future<ApiResponse<T>> put<T>(
