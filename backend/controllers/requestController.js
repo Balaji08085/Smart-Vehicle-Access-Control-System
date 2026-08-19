@@ -318,6 +318,16 @@ export const createRequest = async (req, res) => {
 
     await newRequest.save();
 
+    // Ensure in-memory store and disk DB are immediately synced!
+    const reqObj = newRequest.toObject ? newRequest.toObject() : newRequest;
+    const existingIndex = inMemoryRequests.findIndex(r => r.bikeNumber === formattedBikeNum || String(r._id) === String(newRequest._id));
+    if (existingIndex !== -1) {
+      inMemoryRequests[existingIndex] = reqObj;
+    } else {
+      inMemoryRequests.unshift(reqObj);
+    }
+    saveToDisk();
+
     await AuditLog.create({
       action: 'CREATED',
       request: newRequest._id,
@@ -325,9 +335,9 @@ export const createRequest = async (req, res) => {
       comments: `New access request submitted for ${formattedBikeNum}`
     });
 
-    if (initialStatus === 'Pending Company Approval') {
+    if (initialStatus === 'Pending Company Approval' || initialStatus === 'Pending') {
       try {
-        await sendStartupOwnerApprovalEmail(newRequest);
+        await sendStartupOwnerApprovalEmail(reqObj);
       } catch (e) {
         console.error('⚠️ Startup Owner Email Dispatch Error:', e.message);
       }
