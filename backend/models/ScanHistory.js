@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const scanHistorySchema = new mongoose.Schema({
   qrToken: { type: String, required: true },
-  request: { type: mongoose.Schema.Types.ObjectId, ref: 'AccessRequest' },
+  request: { type: mongoose.Schema.Types.Mixed },
   scannedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Guard who scanned
   scanDate: { type: Date, default: Date.now },
   device: { type: String },
