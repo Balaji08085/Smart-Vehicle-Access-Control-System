@@ -275,7 +275,7 @@ const ApprovalDashboard = () => {
                         <img
                           src={req.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80'}
                           alt={req.name}
-                          className="w-full h-full rounded-xl object-contain"
+                          className="w-full h-full rounded-xl object-cover object-center"
                         />
                       </div>
                       <div className="overflow-hidden">
@@ -459,7 +459,7 @@ const ApprovalDashboard = () => {
                 <img
                   src={selectedRequest.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80'}
                   alt={selectedRequest.name}
-                  className="w-full h-full rounded-xl object-contain"
+                  className="w-full h-full rounded-xl object-cover object-center"
                 />
               </div>
               <div className="text-center sm:text-left space-y-2 flex-1">
