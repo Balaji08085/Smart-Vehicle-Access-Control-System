@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useEntry } from '../../context/EntryContext';
 
 const EntryHistory = () => {
-  const { history: contextHistory } = useEntry();
+  const { history: contextHistory, deleteHistoryLog, clearHistoryLogs } = useEntry();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,17 +19,18 @@ const EntryHistory = () => {
       const data = await res.json();
       let combined = Array.isArray(data) ? [...data] : [];
       
-      // Merge with context history for complete data sync
+      // Merge with context history if not present in backend list
       if (Array.isArray(contextHistory) && contextHistory.length > 0) {
         contextHistory.forEach(cItem => {
+          const cId = String(cItem.id || cItem._id || '');
           const exists = combined.some(bItem => 
-            (bItem._id && bItem._id === cItem.id) ||
-            (bItem.vehicleNumber === cItem.vehicleNumber && bItem.scanDate === cItem.date)
+            (bItem._id && String(bItem._id) === cId) ||
+            (bItem.id && String(bItem.id) === cId)
           );
           if (!exists) {
             combined.push({
-              _id: cItem.id || `CTX-${Math.random()}`,
-              scanDate: cItem.date ? `${cItem.date} ${cItem.time || ''}` : new Date().toISOString(),
+              _id: cItem.id || cItem._id || `CTX-${Math.random()}`,
+              scanDate: cItem.scanDate || (cItem.date ? `${cItem.date} ${cItem.time || ''}` : new Date().toISOString()),
               ownerName: cItem.ownerName,
               vehicleNumber: cItem.vehicleNumber,
               result: cItem.status || cItem.result || 'Granted',
@@ -40,13 +41,21 @@ const EntryHistory = () => {
           }
         });
       }
+
+      // Sort by scan timestamp descending (most recent scan at the top)
+      combined.sort((a, b) => {
+        const dateA = new Date(a.scanDate || a.createdAt || a.date || 0).getTime();
+        const dateB = new Date(b.scanDate || b.createdAt || b.date || 0).getTime();
+        return dateB - dateA;
+      });
+
       setHistory(combined);
     } catch (err) {
       console.error('Fetch scan history error:', err);
       if (Array.isArray(contextHistory)) {
         setHistory(contextHistory.map(cItem => ({
-          _id: cItem.id,
-          scanDate: cItem.date ? `${cItem.date} ${cItem.time || ''}` : new Date().toISOString(),
+          _id: cItem.id || cItem._id,
+          scanDate: cItem.scanDate || (cItem.date ? `${cItem.date} ${cItem.time || ''}` : new Date().toISOString()),
           ownerName: cItem.ownerName,
           vehicleNumber: cItem.vehicleNumber,
           result: cItem.status || cItem.result || 'Granted',
@@ -67,16 +76,15 @@ const EntryHistory = () => {
 
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/history/scans/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setHistory(prev => prev.filter(item => (item._id !== id && item.id !== id)));
-      } else {
-        setHistory(prev => prev.filter(item => (item._id !== id && item.id !== id)));
+      // Sync local context state & localStorage first
+      if (typeof deleteHistoryLog === 'function') {
+        deleteHistoryLog(id);
       }
+      await fetch(`/api/history/scans/${id}`, { method: 'DELETE' });
     } catch (err) {
       console.error('Delete scan entry error:', err);
-      setHistory(prev => prev.filter(item => (item._id !== id && item.id !== id)));
     } finally {
+      setHistory(prev => prev.filter(item => item._id !== id && item.id !== id));
       setDeletingId(null);
     }
   };
@@ -87,10 +95,14 @@ const EntryHistory = () => {
     }
 
     try {
+      // Sync local context state & localStorage first
+      if (typeof clearHistoryLogs === 'function') {
+        clearHistoryLogs();
+      }
       await fetch('/api/history/scans/clear-all', { method: 'DELETE' });
-      setHistory([]);
     } catch (err) {
       console.error('Clear scan history error:', err);
+    } finally {
       setHistory([]);
     }
   };

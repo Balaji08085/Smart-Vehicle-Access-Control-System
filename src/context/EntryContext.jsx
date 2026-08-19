@@ -691,6 +691,19 @@ export const EntryProvider = ({ children }) => {
     addNotification(`Sticker status set to ${newStatus}`, 'error');
   }, [token, addNotification]);
 
+  const deleteHistoryLog = useCallback((id) => {
+    setHistory((prev) => {
+      const updated = prev.filter(item => item.id !== id && item._id !== id);
+      localStorage.setItem('smart_campus_history', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const clearHistoryLogs = useCallback(() => {
+    setHistory([]);
+    localStorage.removeItem('smart_campus_history');
+  }, []);
+
   const resetAllData = useCallback(async () => {
     localStorage.removeItem('smart_campus_vehicles');
     localStorage.removeItem('smart_campus_history');
@@ -722,6 +735,9 @@ export const EntryProvider = ({ children }) => {
       logout,
       vehicles,
       history,
+      setHistory,
+      deleteHistoryLog,
+      clearHistoryLogs,
       notifications,
       verifyQrCode,
       addVehicle,
@@ -749,6 +765,9 @@ export const useEntry = () => {
       logout: () => { },
       vehicles: {},
       history: [],
+      setHistory: () => { },
+      deleteHistoryLog: () => { },
+      clearHistoryLogs: () => { },
       notifications: [],
       verifyQrCode: () => Promise.resolve({ status: 'DENIED', reason: 'Error' }),
       addVehicle: () => { },

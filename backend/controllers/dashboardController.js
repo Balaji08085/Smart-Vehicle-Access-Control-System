@@ -9,18 +9,39 @@ const isDbConnected = () => mongoose.connection.readyState === 1;
 export const getDashboardStats = async (req, res) => {
   try {
     if (!isDbConnected()) {
+      const { inMemoryScans = [] } = await import('./qrController.js');
+      const { inMemoryRequests = [] } = await import('./requestController.js');
+
+      const totalUsers = inMemoryRequests.length;
+      const pendingApprovals = inMemoryRequests.filter(r => r.status === 'Pending').length;
+      const approvedUsers = inMemoryRequests.filter(r => r.status === 'Approved').length;
+      const rejectedUsers = inMemoryRequests.filter(r => r.status === 'Rejected').length;
+      const disabledUsers = inMemoryRequests.filter(r => r.status === 'Disabled').length;
+      const activeUsers = approvedUsers;
+      const expiredUsers = 0;
+      const totalQRGenerated = inMemoryRequests.filter(r => r.status === 'Approved').length;
+
+      const now = new Date();
+      const todaysScansList = inMemoryScans.filter(s => {
+        const d = new Date(s.scanDate || s.createdAt || s.date || 0);
+        return d.toDateString() === now.toDateString();
+      });
+
+      const todaysAllowed = todaysScansList.filter(s => (s.result === 'Granted' || s.status === 'Granted' || s.status === 'ALLOWED')).length;
+      const todaysDenied = todaysScansList.filter(s => (s.result === 'Denied' || s.status === 'Denied' || s.status === 'REJECTED')).length;
+
       return res.json({
-        totalUsers: 7,
-        pendingApprovals: 1,
-        approvedUsers: 5,
-        rejectedUsers: 1,
-        activeUsers: 4,
-        expiredUsers: 1,
-        disabledUsers: 1,
-        totalQRGenerated: 5,
-        todaysScans: 12,
-        todaysAllowed: 10,
-        todaysDenied: 2
+        totalUsers,
+        pendingApprovals,
+        approvedUsers,
+        rejectedUsers,
+        activeUsers,
+        expiredUsers,
+        disabledUsers,
+        totalQRGenerated,
+        todaysScans: todaysScansList.length,
+        todaysAllowed,
+        todaysDenied
       });
     }
 

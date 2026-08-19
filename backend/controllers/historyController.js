@@ -63,6 +63,13 @@ export const getScanHistory = async (req, res) => {
       };
     });
 
+    // Sort by timestamp descending (newest scans at top)
+    historyList.sort((a, b) => {
+      const dateA = new Date(a.scanDate || a.createdAt || a.date || 0).getTime();
+      const dateB = new Date(b.scanDate || b.createdAt || b.date || 0).getTime();
+      return dateB - dateA;
+    });
+
     res.json(historyList);
   } catch (error) {
     console.error('getScanHistory error:', error.message);
@@ -81,10 +88,11 @@ export const deleteScanHistoryLog = async (req, res) => {
         console.warn('ScanHistory DB delete attempt:', e.message);
       }
     }
-    const { inMemoryScans = [] } = await import('./qrController.js');
-    const idx = inMemoryScans.findIndex(s => String(s._id) === String(id));
+    const { inMemoryScans = [], saveScansToDisk } = await import('./qrController.js');
+    const idx = inMemoryScans.findIndex(s => String(s._id) === String(id) || String(s.id) === String(id));
     if (idx !== -1) {
       inMemoryScans.splice(idx, 1);
+      if (typeof saveScansToDisk === 'function') saveScansToDisk();
     }
     res.json({ message: 'Scan history log deleted successfully' });
   } catch (error) {
@@ -101,8 +109,9 @@ export const clearAllScanHistoryLogs = async (req, res) => {
         console.warn('ScanHistory DB deleteMany attempt:', e.message);
       }
     }
-    const { inMemoryScans = [] } = await import('./qrController.js');
+    const { inMemoryScans = [], saveScansToDisk } = await import('./qrController.js');
     inMemoryScans.length = 0;
+    if (typeof saveScansToDisk === 'function') saveScansToDisk();
     res.json({ message: 'All scan history logs cleared successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
