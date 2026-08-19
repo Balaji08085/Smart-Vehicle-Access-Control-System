@@ -239,6 +239,7 @@ export const verifyToken = async (req, res) => {
         department: fastPass.department,
         vehicleNumber: fastPass.bikeNumber,
         vehicleType: fastPass.vehicleType || 'Bike',
+        photoUrl: fastPass.photoUrl || fastPass.photo,
         stickerStatus: 'Active',
         expiryDate: fastPass.accessExpiryDate ? new Date(fastPass.accessExpiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '19 Aug 2027',
         emailSent: false,
