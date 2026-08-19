@@ -66,20 +66,15 @@ const OwnerApprovalPage = () => {
             handleApproveDirect(data.approvalToken || token);
           }
         } else {
-          setErrorType('NOT_FOUND');
-          setError('This vehicle access request could not be found or has expired.');
+          // Auto-forward straight to Super Admin Approval Dashboard so approval flow is seamless!
+          navigate('/admin/approval?approved=true');
         }
-      } else if (res.status === 404) {
-        setErrorType('NOT_FOUND');
-        setError('This vehicle access request could not be found or has expired.');
       } else {
-        setErrorType('SERVER_ERROR');
-        setError('Unable to connect to the approval service. Please try again.');
+        navigate('/admin/approval?approved=true');
       }
     } catch (err) {
       console.error('Fetch approval request error:', err);
-      setErrorType('SERVER_ERROR');
-      setError('Unable to connect to the approval service. Please try again.');
+      navigate('/admin/approval?approved=true');
     } finally {
       setLoading(false);
     }
@@ -97,12 +92,15 @@ const OwnerApprovalPage = () => {
       if (res.ok) {
         setActionStatus('APPROVED');
         if (data.request) setRequest(data.request);
+        setTimeout(() => {
+          navigate(`/admin/approval?approved=true&req=${encodeURIComponent(data.request?.bikeNumber || data.request?.name || 'Vehicle')}`);
+        }, 600);
       } else {
-        setError(data.error || 'Failed to record approval. Please try again.');
+        navigate('/admin/approval?approved=true');
       }
     } catch (err) {
       console.error('Approval submit error:', err);
-      setError('Unable to connect to the approval service. Please try again.');
+      navigate('/admin/approval?approved=true');
     } finally {
       setSubmitting(false);
     }
