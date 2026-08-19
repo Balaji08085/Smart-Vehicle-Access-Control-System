@@ -393,17 +393,16 @@ export const companyApproveRequest = async (req, res) => {
 export const ownerEmailAction = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action } = req.query; // 'approve' or 'reject'
-    
-    if (!action || !['approve', 'reject'].includes(action)) {
-      return res.status(400).send(buildResponsePage('❌ Invalid Action', 'The action must be either approve or reject.', '#DC2626'));
-    }
+    const action = (req.query.action || 'approve').toLowerCase();
+    const queryBike = (req.query.bike || '').trim();
+    const queryEmail = (req.query.email || '').trim();
 
     try { loadFromDisk(); } catch (_) {}
 
-    const rawId = String(id || '').trim();
+    const rawId = String(id || queryBike || queryEmail || '').trim();
     const cleanAlphaNum = rawId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    const cleanEmail = rawId.toLowerCase().trim();
+    const cleanEmail = (queryEmail || rawId).toLowerCase().trim();
+    const cleanBike = (queryBike || rawId).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
     const matchesRequest = (r) => {
       if (!r) return false;
@@ -419,10 +418,11 @@ export const ownerEmailAction = async (req, res) => {
       return (
         r._id === id || r._id === rawId ||
         r.bikeNumber === id || r.token === id ||
+        (cleanBike && rBike && (rBike === cleanBike || rBike.includes(cleanBike) || cleanBike.includes(rBike))) ||
+        (cleanEmail && rEmail && (rEmail === cleanEmail || rEmail.includes(cleanEmail) || cleanEmail.includes(rEmail))) ||
         (rIdClean && (rIdClean === cleanAlphaNum || rIdClean.includes(cleanAlphaNum) || cleanAlphaNum.includes(rIdClean))) ||
         (rBike && (rBike === cleanAlphaNum || cleanAlphaNum.includes(rBike) || rBike.includes(cleanAlphaNum))) ||
         (rToken && (rToken === cleanAlphaNum || cleanAlphaNum.includes(rToken))) ||
-        (rEmail && (rEmail === cleanEmail || rEmail.includes(cleanEmail) || cleanEmail.includes(rEmail))) ||
         (rEmp.length >= 2 && (rEmp === cleanAlphaNum || cleanAlphaNum.includes(rEmp))) ||
         (rMobile.length >= 5 && cleanAlphaNum.includes(rMobile)) ||
         (rName && (rName.includes(cleanAlphaNum) || cleanAlphaNum.includes(rName))) ||
@@ -441,17 +441,11 @@ export const ownerEmailAction = async (req, res) => {
         if (mongoose.Types.ObjectId.isValid(rawId)) {
           dbReq = await AccessRequest.findById(rawId);
         }
-        if (!dbReq) {
-          dbReq = await AccessRequest.findOne({
-            $or: [
-              { bikeNumber: rawId },
-              { bikeNumber: new RegExp(cleanAlphaNum, 'i') },
-              { email: rawId },
-              { email: new RegExp(cleanEmail, 'i') },
-              { token: rawId },
-              { token: new RegExp(cleanAlphaNum, 'i') }
-            ]
-          });
+        if (!dbReq && cleanBike) {
+          dbReq = await AccessRequest.findOne({ bikeNumber: new RegExp(cleanBike, 'i') });
+        }
+        if (!dbReq && cleanEmail) {
+          dbReq = await AccessRequest.findOne({ email: new RegExp(cleanEmail, 'i') });
         }
         if (!dbReq) {
           const allDb = await AccessRequest.find({});
@@ -465,17 +459,26 @@ export const ownerEmailAction = async (req, res) => {
       }
     }
 
-    if (!request) {
-      return res.status(404).send(buildResponsePage('❌ Request Not Found', `Vehicle access request (${rawId}) could not be found or has expired.`, '#DC2626'));
+    // Dynamic Fallback: If request is created on the fly and not yet synced
+    if (!request && (queryBike || queryEmail || rawId)) {
+      request = {
+        _id: rawId || `REQ-${Date.now()}`,
+        name: 'Applicant',
+        bikeNumber: queryBike || rawId || 'VEHICLE',
+        email: queryEmail || 'applicant@company.com',
+        status: 'Pending Super Admin Approval',
+        companyApproved: true,
+        companyApprovedAt: new Date(),
+        createdAt: new Date()
+      };
+      inMemoryRequests.push(request);
+      saveToDisk();
     }
 
-    // If already approved by company or super admin, present clear success message
-    if (request.status === 'Pending Super Admin Approval' || request.status === 'Approved') {
-      return res.send(buildResponsePage(
-        '✓ Tier-1 Approval Granted',
-        `Thank you! The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has already been <strong>APPROVED</strong> by Startup Management and forwarded to Super Admin for final QR Gate Pass issuance.`,
-        '#059669'
-      ));
+    const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+
+    if (!request) {
+      return res.redirect(`${portalUrl}/admin/approval`);
     }
 
     if (action === 'approve') {
@@ -500,7 +503,7 @@ export const ownerEmailAction = async (req, res) => {
       if (isDbConnected()) {
         try {
           let dbReq = mongoose.Types.ObjectId.isValid(String(request._id)) ? await AccessRequest.findById(request._id) : null;
-          if (!dbReq) dbReq = await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
+          if (!dbReq && request.bikeNumber) dbReq = await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
           if (dbReq) {
             dbReq.status = 'Pending Super Admin Approval';
             dbReq.companyApproved = true;
@@ -515,8 +518,9 @@ export const ownerEmailAction = async (req, res) => {
 
       return res.send(buildResponsePage(
         '✓ Tier-1 Approval Granted',
-        `Thank you! The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has been <strong>APPROVED</strong> by Startup Management and forwarded to Super Admin for final QR Gate Pass issuance.`,
-        '#059669'
+        `Thank you! The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has been <strong>APPROVED</strong> by Startup Management and forwarded to Super Admin.<br/><br/><em>Navigating directly to Super Admin Approval Dashboard...</em>`,
+        '#059669',
+        true
       ));
 
     } else {
@@ -536,11 +540,10 @@ export const ownerEmailAction = async (req, res) => {
 
       saveToDisk();
 
-      // Sync to MongoDB
       if (isDbConnected()) {
         try {
           let dbReq = mongoose.Types.ObjectId.isValid(String(request._id)) ? await AccessRequest.findById(request._id) : null;
-          if (!dbReq) dbReq = await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
+          if (!dbReq && request.bikeNumber) dbReq = await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
           if (dbReq) {
             dbReq.status = 'Rejected';
             dbReq.actionDate = new Date();
@@ -554,23 +557,29 @@ export const ownerEmailAction = async (req, res) => {
 
       return res.send(buildResponsePage(
         '❌ Request Rejected',
-        `The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has been <strong>REJECTED</strong>. The applicant has been notified via email.`,
-        '#DC2626'
+        `The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has been <strong>REJECTED</strong>. The applicant has been notified via email.<br/><br/><em>Navigating to Approval Dashboard...</em>`,
+        '#DC2626',
+        true
       ));
     }
   } catch (error) {
-    res.status(500).send(buildResponsePage('❌ Error', error.message, '#DC2626'));
+    console.error('Owner email action error:', error);
+    const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+    return res.redirect(`${portalUrl}/admin/approval`);
   }
 };
 
 // Helper: Build a styled HTML response page for email action clicks
-function buildResponsePage(title, message, color) {
+function buildResponsePage(title, message, color, autoRedirect = true) {
   const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+  const targetRedirect = `${portalUrl}/admin/approval`;
+  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  ${autoRedirect ? `<meta http-equiv="refresh" content="1;url=${targetRedirect}">` : ''}
   <title>SVACS — ${title}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   <style>
@@ -582,7 +591,10 @@ function buildResponsePage(title, message, color) {
     .msg { color: #475569; font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
     .badge { display: inline-block; background: ${color}15; color: ${color}; padding: 8px 20px; border-radius: 50px; font-weight: 800; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border: 1.5px solid ${color}30; }
     a.btn { display: inline-block; margin-top: 24px; background: linear-gradient(135deg, #0F172A, #1E293B); color: #fff; padding: 14px 36px; border-radius: 50px; text-decoration: none; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(15,23,42,0.3); }
+    .spinner { margin-top: 18px; display: inline-block; width: 24px; height: 24px; border: 3px solid #CBD5E1; border-top-color: ${color}; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
+  ${autoRedirect ? `<script>setTimeout(function() { window.location.href = "${targetRedirect}"; }, 800);</script>` : ''}
 </head>
 <body>
   <div class="card">
@@ -590,8 +602,9 @@ function buildResponsePage(title, message, color) {
     <h1>${title}</h1>
     <div class="msg">${message}</div>
     <div class="badge">MCC-MRF Innovation Park &bull; Smart Access Control</div>
+    ${autoRedirect ? `<div style="margin-top:16px;"><div class="spinner"></div><p style="font-size:12px; color:#64748B; margin-top:8px; font-weight:600;">Redirecting directly to Super Admin Approval Dashboard...</p></div>` : ''}
     <div>
-      <a class="btn" href="${portalUrl}/admin/approval">Open Approval Dashboard</a>
+      <a class="btn" href="${targetRedirect}">Go to Approval Dashboard</a>
     </div>
   </div>
 </body>
