@@ -79,7 +79,13 @@ const createTransporter = async () => {
   const secure = process.env.SMTP_SECURE === 'true' || port === 465;
   const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.SMTP_EMAIL;
   const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
-  const fromEmail = process.env.SMTP_FROM || process.env.EMAIL_FROM || user || 'security@svacs-campus.edu';
+  const rawFrom = process.env.SMTP_FROM || process.env.EMAIL_FROM || user || 'dsri_mccmrfip@mcc.edu.in';
+  
+  let fromEmail = rawFrom;
+  const match = rawFrom.match(/<([^>]+)>/);
+  if (match) {
+    fromEmail = match[1];
+  }
 
   if (user && pass) {
     return {
@@ -120,7 +126,7 @@ const createTransporter = async () => {
 
   return {
     transporter: etherealTransporter,
-    fromEmail: 'security@svacs-campus.edu',
+    fromEmail: 'dsri_mccmrfip@mcc.edu.in',
     isRealSmtp: false,
     smtpHost: 'smtp.ethereal.email',
     smtpPort: 587
@@ -397,12 +403,12 @@ export const sendApprovalEmail = async (request, qrUrl) => {
     </tr>
   `);
 
-  const textBody = `Dear ${request.name},\n\nYour bike access request for vehicle ${request.bikeNumber} has been APPROVED.\n\nApplicant: ${request.name}\nEmail: ${request.email}\nVehicle Plate: ${request.bikeNumber}\nDepartment: ${request.department}\nDesignation: ${request.designation || 'FULL STACK DEVELOPER'}\nValidity: ${startDateStr} — ${expiryDateStr}\nQR Token: ${request.token || 'N/A'}\n\nSVACS — Smart Vehicle Access Control System`;
+  const textBody = `Dear ${request.name},\n\nYour bike access request for vehicle ${request.bikeNumber} has been APPROVED.\n\nApplicant: ${request.name}\nEmail: ${request.email}\nVehicle Plate: ${request.bikeNumber}\nDepartment: ${request.department}\nDesignation: ${request.designation || 'FULL STACK DEVELOPER'}\nValidity: ${startDateStr} — ${expiryDateStr}\nQR Token: ${request.token || 'N/A'}\n\nMRF Vehicle Security — Smart Access Control System`;
 
   if (transporter) {
     try {
       await transporter.sendMail({
-        from: `"SVACS Security" <${transportObj.fromEmail}>`,
+        from: `"MRF Vehicle Security" <${transportObj.fromEmail}>`,
         to: request.email,
         subject,
         text: textBody,
@@ -527,12 +533,12 @@ export const sendRejectionEmail = async (request, reason) => {
     </tr>
   `);
 
-  const textBody = `Dear ${request.name},\n\nWe regret to inform you that your bike access request for vehicle ${request.bikeNumber} has been REJECTED.\n\nApplicant: ${request.name}\nEmail: ${request.email}\nVehicle Number: ${request.bikeNumber}\nReason: ${reason}\nDate: ${dateStr}\n\nSVACS — Smart Vehicle Access Control System`;
+  const textBody = `Dear ${request.name},\n\nWe regret to inform you that your bike access request for vehicle ${request.bikeNumber} has been REJECTED.\n\nApplicant: ${request.name}\nEmail: ${request.email}\nVehicle Number: ${request.bikeNumber}\nReason: ${reason}\nDate: ${dateStr}\n\nMRF Vehicle Security — Smart Access Control System`;
 
   if (transporter) {
     try {
       await transporter.sendMail({
-        from: `"SVACS Security" <${transportObj.fromEmail}>`,
+        from: `"MRF Vehicle Security" <${transportObj.fromEmail}>`,
         to: request.email,
         subject,
         text: textBody,
@@ -698,7 +704,7 @@ export const sendScanVerificationEmail = async (request, qrToken = 'N/A', guardN
       </tr>
     `);
 
-    const emailBody = `Hello ${request.name},\n\nYour vehicle has been successfully verified by Security.\n\nStatus: ✅ VERIFIED — ACCESS ALLOWED\n\nEntry Details:\n• Name: ${request.name}\n• Department: ${request.department}\n• Vehicle Number: ${request.bikeNumber}\n• QR ID: ${qrToken || request.token || 'N/A'}\n• Verified By: Security\n• Entry Date: ${dateStr}\n• Entry Time: ${timeStr}\n\nScan ID: ${scanId}\n\nSVACS — Smart Vehicle Access Control System`;
+    const emailBody = `Hello ${request.name},\n\nYour vehicle has been successfully verified by Security.\n\nStatus: ✅ VERIFIED — ACCESS ALLOWED\n\nEntry Details:\n• Name: ${request.name}\n• Department: ${request.department}\n• Vehicle Number: ${request.bikeNumber}\n• QR ID: ${qrToken || request.token || 'N/A'}\n• Verified By: Security\n• Entry Date: ${dateStr}\n• Entry Time: ${timeStr}\n\nScan ID: ${scanId}\n\nMRF Vehicle Security — Smart Access Control System`;
 
     // ── 3. DISPATCH EMAIL & RECORD LOG ──
     const transportObj = await createTransporter();
@@ -714,7 +720,7 @@ export const sendScanVerificationEmail = async (request, qrToken = 'N/A', guardN
     if (transportObj && transportObj.transporter) {
       try {
         const info = await transportObj.transporter.sendMail({
-          from: `"SVACS Security" <${transportObj.fromEmail}>`,
+          from: `"MRF Vehicle Security" <${transportObj.fromEmail}>`,
           to: targetRecipients,
           subject,
           text: emailBody,
@@ -794,7 +800,7 @@ export const sendScanVerificationEmail = async (request, qrToken = 'N/A', guardN
 // ██  4. DENIED SCAN SECURITY ALERT EMAIL
 // ═══════════════════════════════════════════════════════════════════
 export const sendScanAlertEmail = async (request, reason = 'ACCESS DENIED', qrToken = 'N/A', guardName = 'Gate Security Guard') => {
-  const targetEmail = request?.email || process.env.NOTIFICATION_EMAIL || process.env.SECURITY_EMAIL || 'security@svacs-campus.edu';
+  const targetEmail = request?.email || process.env.NOTIFICATION_EMAIL || process.env.SECURITY_EMAIL || 'dsri_mccmrfip@mcc.edu.in';
   if (!targetEmail) return false;
 
   const now = new Date();
@@ -852,7 +858,7 @@ export const sendScanAlertEmail = async (request, reason = 'ACCESS DENIED', qrTo
   if (transportObj && transportObj.transporter) {
     try {
       const info = await transportObj.transporter.sendMail({
-        from: `"SVACS Security Alert" <${transportObj.fromEmail}>`,
+        from: `"MRF Vehicle Security Alert" <${transportObj.fromEmail}>`,
         to: targetEmail,
         subject,
         text: textBody,
@@ -964,7 +970,7 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
   if (transporter) {
     try {
       await transporter.sendMail({
-        from: `"SVACS Company Approval" <${transportObj.fromEmail}>`,
+        from: `"MRF Vehicle Security" <${transportObj.fromEmail}>`,
         to: recipients,
         subject,
         text: textBody,
