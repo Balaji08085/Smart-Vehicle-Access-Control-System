@@ -982,15 +982,21 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
     try {
       await transporter.sendMail({
         from: `"MRF Vehicle Security" <${transportObj.fromEmail}>`,
-        to: recipients,
+        to: targetEmail,
+        replyTo: transportObj.fromEmail,
+        headers: {
+          'X-Priority': '1 (Highest)',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'High'
+        },
         subject,
         text: textBody,
         html: htmlBody,
         attachments
       });
-      console.log(`✅ Tier-1 Company Owner approval email dispatched to ${recipients} (${ownerName}) via ${baseUrl}`);
+      console.log(`✅ Tier-1 Company Owner approval email dispatched to ${targetEmail} (${ownerName}) via ${baseUrl}`);
     } catch (e) {
-      console.error(`❌ Mail send error to ${recipients}:`, e.message);
+      console.error(`❌ Mail send error to ${targetEmail}:`, e.message);
     }
   }
 

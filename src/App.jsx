@@ -86,8 +86,9 @@ const AppLayout = () => {
           } />
 
           <Route path="/admin/approval" element={<ApprovalDashboard />} />
-
           <Route path="/owner/approve" element={<OwnerApprovalPage />} />
+          <Route path="/api/requests/:id/owner-action" element={<OwnerApprovalPage />} />
+          <Route path="/requests/:id/owner-action" element={<OwnerApprovalPage />} />
 
           <Route path="/verify/:token" element={
             <ProtectedRoute allowedRoles={['guard', 'admin', 'superadmin']}>
