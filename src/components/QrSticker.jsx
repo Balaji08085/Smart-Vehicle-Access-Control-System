@@ -8,7 +8,10 @@ const QrSticker = ({ request, token, onClose }) => {
   if (!request) return null;
 
   const qrToken = token || request.token || `BIKE-2026-${request.bikeNumber.replace(/\s+/g, '')}`;
-  const verifyUrl = `${window.location.origin}/verify/${qrToken}`;
+  const liveDomain = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'https://smart-vehicle-access-control-system.mccmrfip.in' 
+    : window.location.origin;
+  const verifyUrl = `${liveDomain}/verify/${qrToken}`;
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');

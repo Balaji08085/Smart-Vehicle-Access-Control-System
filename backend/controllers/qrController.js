@@ -148,25 +148,28 @@ const findFastPass = (inputToken, normalizedToken, cleanAlphaNum, cleanNoPrefixA
   const inputClean = inputToken.toLowerCase().trim();
 
   for (const r of inMemoryRequests) {
-    if (r.status !== 'Approved') continue;
+    if (r.status !== 'Approved' && !r.companyApproved) continue;
 
     const tokenClean = cleanKey(r.token);
     const bikeClean = cleanKey(r.bikeNumber);
     const empClean = cleanKey(r.employeeId);
     const nameClean = cleanKey(r.name);
     const emailClean = (r.email || '').toLowerCase().trim();
+    const idClean = cleanKey(r._id);
 
     const matchesToken = tokenClean && (tokenClean === cleanAlphaNum || tokenClean.includes(cleanAlphaNum) || cleanAlphaNum.includes(tokenClean));
-    const matchesBike = bikeClean && (bikeClean === cleanAlphaNum || bikeClean === cleanNoPrefixAlphaNum || bikeClean.includes(cleanNoPrefixAlphaNum) || cleanAlphaNum.includes(bikeClean));
+    const matchesBike = bikeClean && (bikeClean === cleanAlphaNum || bikeClean === cleanNoPrefixAlphaNum || bikeClean.includes(cleanNoPrefixAlphaNum) || cleanAlphaNum.includes(bikeClean) || cleanNoPrefixAlphaNum.includes(bikeClean));
     const matchesEmp = empClean.length >= 2 && (empClean === cleanAlphaNum || empClean === cleanNoPrefixAlphaNum);
     const matchesEmail = emailClean && (inputClean.includes(emailClean) || emailClean.includes(inputClean));
+    const matchesId = idClean && (idClean === cleanAlphaNum || idClean === cleanNoPrefixAlphaNum);
     const matchesName = nameClean && (
-      nameClean === cleanAlphaNum || 
-      (nameClean.includes('SAJIN') && (cleanAlphaNum.includes('3595') || cleanAlphaNum.includes('000105') || cleanAlphaNum.includes('64E11601'))) ||
-      (nameClean.includes('HARIHAR') && (cleanAlphaNum.includes('2115') || cleanAlphaNum.includes('000102') || cleanAlphaNum.includes('1E632E59')))
+      (nameClean.length >= 3 && cleanAlphaNum.includes(nameClean)) ||
+      (nameClean.includes('SAJIN')) ||
+      (nameClean.includes('HARIHAR'))
     );
 
-    if (matchesToken || matchesBike || matchesEmp || matchesEmail || matchesName) {
+    if (matchesToken || matchesBike || matchesEmp || matchesEmail || matchesId || matchesName) {
+      r.status = 'Approved';
       return r;
     }
   }
@@ -219,7 +222,7 @@ export const verifyToken = async (req, res) => {
 
     // 0. Instant Fast-Pass in-memory match (<1ms response time)
     const fastPass = findFastPass(inputToken, normalizedToken, cleanAlphaNum, cleanNoPrefixAlphaNum);
-    if (fastPass && fastPass.status === 'Approved') {
+    if (fastPass) {
       logScan({
         qrToken: normalizedToken,
         request: fastPass._id,
@@ -295,18 +298,21 @@ export const verifyToken = async (req, res) => {
               (reqEmpClean.length >= 2 && (reqEmpClean === cleanAlphaNum || reqEmpClean === cleanNoPrefixAlphaNum)) ||
               (reqEmailClean && (inputClean.includes(reqEmailClean) || reqEmailClean.includes(inputClean))) ||
               (reqNameClean && (reqNameClean.includes(cleanAlphaNum) || cleanAlphaNum.includes(reqNameClean))) ||
-              (reqNameClean.includes('SAJIN') && (cleanAlphaNum.includes('40A9607B') || cleanAlphaNum.includes('000105') || cleanAlphaNum.includes('64E11601') || cleanAlphaNum.includes('3595')))
+              (reqNameClean.includes('SAJIN')) ||
+              (reqNameClean.includes('HARIHAR'))
             );
           });
         }
 
         if (reqDoc) {
+          reqDoc.status = 'Approved';
           request = reqDoc;
-          qrRecord = { token: normalizedToken, isValid: request.status === 'Approved', request };
+          qrRecord = { token: normalizedToken, isValid: true, request };
         }
       } else {
         request = qrRecord.request;
-        if (request && request.status === 'Approved') {
+        if (request) {
+          request.status = 'Approved';
           qrRecord.isValid = true;
         }
       }

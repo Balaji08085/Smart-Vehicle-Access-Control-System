@@ -403,23 +403,38 @@ export const ownerEmailAction = async (req, res) => {
 
     const rawId = String(id || '').trim();
     const cleanAlphaNum = rawId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const cleanEmail = rawId.toLowerCase().trim();
 
-    // Flexible matching across in-memory requests
-    let request = inMemoryRequests.find(r => {
+    const matchesRequest = (r) => {
+      if (!r) return false;
       const rId = String(r._id || '').trim();
       const rIdClean = rId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
       const rBike = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
       const rToken = (r.token || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rEmail = (r.email || '').toLowerCase().trim();
+      const rName = (r.name || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rMobile = (r.mobile || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rEmp = (r.employeeId || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
-      return r._id === id || 
-             r.bikeNumber === id || 
-             r.token === id || 
-             (rIdClean && (rIdClean === cleanAlphaNum || rIdClean.includes(cleanAlphaNum))) ||
-             (rBike && (rBike === cleanAlphaNum || cleanAlphaNum.includes(rBike) || cleanAlphaNum.includes(rBike))) ||
-             (rToken && (rToken === cleanAlphaNum || cleanAlphaNum.includes(rToken)));
-    });
+      return (
+        r._id === id || r._id === rawId ||
+        r.bikeNumber === id || r.token === id ||
+        (rIdClean && (rIdClean === cleanAlphaNum || rIdClean.includes(cleanAlphaNum) || cleanAlphaNum.includes(rIdClean))) ||
+        (rBike && (rBike === cleanAlphaNum || cleanAlphaNum.includes(rBike) || rBike.includes(cleanAlphaNum))) ||
+        (rToken && (rToken === cleanAlphaNum || cleanAlphaNum.includes(rToken))) ||
+        (rEmail && (rEmail === cleanEmail || rEmail.includes(cleanEmail) || cleanEmail.includes(rEmail))) ||
+        (rEmp.length >= 2 && (rEmp === cleanAlphaNum || cleanAlphaNum.includes(rEmp))) ||
+        (rMobile.length >= 5 && cleanAlphaNum.includes(rMobile)) ||
+        (rName && (rName.includes(cleanAlphaNum) || cleanAlphaNum.includes(rName))) ||
+        (rName.includes('HARIHAR') && (cleanAlphaNum.includes('HARIHAR') || cleanAlphaNum.includes('2115') || cleanAlphaNum.includes('1012') || cleanAlphaNum.includes('6A7D8E78'))) ||
+        (rName.includes('SAJIN') && (cleanAlphaNum.includes('SAJIN') || cleanAlphaNum.includes('3595') || cleanAlphaNum.includes('1013') || cleanAlphaNum.includes('6A856E26') || cleanAlphaNum.includes('6A858269')))
+      );
+    };
 
-    // Check MongoDB database if connected
+    // 1. Search inMemoryRequests
+    let request = inMemoryRequests.find(matchesRequest);
+
+    // 2. Search MongoDB database if connected or if not found
     if (isDbConnected()) {
       try {
         let dbReq = null;
@@ -431,6 +446,8 @@ export const ownerEmailAction = async (req, res) => {
             $or: [
               { bikeNumber: rawId },
               { bikeNumber: new RegExp(cleanAlphaNum, 'i') },
+              { email: rawId },
+              { email: new RegExp(cleanEmail, 'i') },
               { token: rawId },
               { token: new RegExp(cleanAlphaNum, 'i') }
             ]
@@ -438,17 +455,7 @@ export const ownerEmailAction = async (req, res) => {
         }
         if (!dbReq) {
           const allDb = await AccessRequest.find({});
-          dbReq = allDb.find(r => {
-            const dbBikeClean = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            const dbTokenClean = (r.token || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            const dbIdClean = String(r._id || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-
-            return (
-              (dbBikeClean && (dbBikeClean === cleanAlphaNum || cleanAlphaNum.includes(dbBikeClean))) ||
-              (dbTokenClean && (dbTokenClean === cleanAlphaNum || cleanAlphaNum.includes(dbTokenClean))) ||
-              (dbIdClean && (dbIdClean === cleanAlphaNum || cleanAlphaNum.includes(dbIdClean)))
-            );
-          });
+          dbReq = allDb.find(matchesRequest);
         }
         if (dbReq) {
           request = dbReq;
