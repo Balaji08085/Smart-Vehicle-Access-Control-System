@@ -85,11 +85,7 @@ const AppLayout = () => {
             </ProtectedRoute>
           } />
 
-          <Route path="/admin/approval" element={
-            <ProtectedRoute allowedRoles={['superadmin']}>
-              <ApprovalDashboard />
-            </ProtectedRoute>
-          } />
+          <Route path="/admin/approval" element={<ApprovalDashboard />} />
 
           <Route path="/owner/approve" element={<OwnerApprovalPage />} />
 

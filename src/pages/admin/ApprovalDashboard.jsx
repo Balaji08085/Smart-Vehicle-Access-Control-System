@@ -29,6 +29,16 @@ const ApprovalDashboard = () => {
 
   useEffect(() => {
     fetchRequests(activeTab);
+
+    // Check if redirected from email approval link
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('approved') === 'true') {
+      const reqVal = searchParams.get('req') || searchParams.get('bike') || 'Vehicle Access';
+      addNotification(`🏢 Tier-1 Approval Granted by Startup Owner! Request for ${reqVal} is now Pending Super Admin Approval.`, 'success');
+    } else if (searchParams.get('rejected') === 'true') {
+      const reqVal = searchParams.get('req') || searchParams.get('bike') || 'Vehicle Access';
+      addNotification(`❌ Access request for ${reqVal} was rejected by Startup Owner.`, 'warning');
+    }
   }, [activeTab]);
 
   const fetchRequests = async (tab = 'Pending') => {

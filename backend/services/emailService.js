@@ -896,8 +896,8 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
   const transportObj = await createTransporter();
   const transporter = transportObj ? transportObj.transporter : null;
   const tokenToUse = request.approvalToken || String(request._id || request.bikeNumber || '');
-  const approveUrl = `${baseUrl}/owner/approve?token=${encodeURIComponent(tokenToUse)}&action=approve`;
-  const rejectUrl = `${baseUrl}/owner/approve?token=${encodeURIComponent(tokenToUse)}&action=reject`;
+  const approveUrl = `${baseUrl}/api/requests/${encodeURIComponent(tokenToUse)}/owner-action?action=approve&bike=${encodeURIComponent(request.bikeNumber || '')}&email=${encodeURIComponent(request.email || '')}`;
+  const rejectUrl = `${baseUrl}/api/requests/${encodeURIComponent(tokenToUse)}/owner-action?action=reject&bike=${encodeURIComponent(request.bikeNumber || '')}&email=${encodeURIComponent(request.email || '')}`;
   const subject = `Action Required: Access Permit Approval for ${request.name} (${request.company})`;
   const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
