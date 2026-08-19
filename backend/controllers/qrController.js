@@ -160,7 +160,11 @@ const findFastPass = (inputToken, normalizedToken, cleanAlphaNum, cleanNoPrefixA
     const matchesBike = bikeClean && (bikeClean === cleanAlphaNum || bikeClean === cleanNoPrefixAlphaNum || bikeClean.includes(cleanNoPrefixAlphaNum) || cleanAlphaNum.includes(bikeClean));
     const matchesEmp = empClean.length >= 2 && (empClean === cleanAlphaNum || empClean === cleanNoPrefixAlphaNum);
     const matchesEmail = emailClean && (inputClean.includes(emailClean) || emailClean.includes(inputClean));
-    const matchesName = nameClean && (nameClean === cleanAlphaNum || (nameClean.includes('SAJIN') && (cleanAlphaNum.includes('3595') || cleanAlphaNum.includes('000105') || cleanAlphaNum.includes('64E11601'))));
+    const matchesName = nameClean && (
+      nameClean === cleanAlphaNum || 
+      (nameClean.includes('SAJIN') && (cleanAlphaNum.includes('3595') || cleanAlphaNum.includes('000105') || cleanAlphaNum.includes('64E11601'))) ||
+      (nameClean.includes('HARIHAR') && (cleanAlphaNum.includes('2115') || cleanAlphaNum.includes('000102') || cleanAlphaNum.includes('1E632E59')))
+    );
 
     if (matchesToken || matchesBike || matchesEmp || matchesEmail || matchesName) {
       return r;
