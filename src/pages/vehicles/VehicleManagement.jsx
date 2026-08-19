@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEntry, formatDateDisplay, getValidityStatus } from '../../context/EntryContext';
+import LogoQRCode from '../../components/LogoQRCode';
 
 const VehicleManagement = () => {
   const { 
@@ -654,12 +655,12 @@ const VehicleManagement = () => {
 
                   {/* QR Code Matrix with Centered MCC Emblem Badge */}
                   <div className="bg-white p-4 rounded-2xl inline-block shadow-2xl relative">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrModalVehicle.qrCode || qrModalVehicle.vehicleNumber)}`}
-                      alt="QR Code"
-                      className="w-44 h-44 mx-auto"
+                    <LogoQRCode
+                      value={qrModalVehicle.qrCode || qrModalVehicle.vehicleNumber}
+                      size={176}
+                      level="H"
+                      className="mx-auto"
                     />
-
                   </div>
 
                   <div>

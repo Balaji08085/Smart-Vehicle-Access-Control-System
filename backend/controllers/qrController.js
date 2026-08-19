@@ -1,7 +1,7 @@
 import QRCode from '../models/QRCode.js';
 import AccessRequest from '../models/AccessRequest.js';
 import ScanHistory from '../models/ScanHistory.js';
-import { inMemoryRequests } from './requestController.js';
+import { inMemoryRequests, loadFromDisk } from './requestController.js';
 import { sendScanVerificationEmail, sendScanAlertEmail } from '../services/emailService.js';
 import mongoose from 'mongoose';
 
@@ -230,23 +230,29 @@ export const verifyToken = async (req, res) => {
         }
       } else {
         request = qrRecord.request;
+        if (request && request.status === 'Approved') {
+          qrRecord.isValid = true;
+        }
       }
     }
 
     // 2. Fallback to in-memory store if not found in MongoDB
     if (!qrRecord) {
       try { loadScansFromDisk(); } catch (_) {}
+      try { loadFromDisk(); } catch (_) {}
       const foundInMemory = inMemoryRequests.find(r => {
         const reqTokenClean = (r.token || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         const reqBikeClean = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         const reqIdClean = String(r._id || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         const reqEmpClean = (r.employeeId || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        const reqNameClean = (r.name || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
         return (
           (reqTokenClean && (reqTokenClean === cleanAlphaNum || reqTokenClean.includes(cleanAlphaNum) || cleanAlphaNum.includes(reqTokenClean))) ||
-          (reqBikeClean && (reqBikeClean === cleanAlphaNum || reqBikeClean === cleanNoPrefixAlphaNum || reqBikeClean.includes(cleanNoPrefixAlphaNum))) ||
+          (reqBikeClean && (reqBikeClean === cleanAlphaNum || reqBikeClean === cleanNoPrefixAlphaNum || reqBikeClean.includes(cleanNoPrefixAlphaNum) || cleanAlphaNum.includes(reqBikeClean) || cleanNoPrefixAlphaNum.includes(reqBikeClean))) ||
           (reqIdClean && (reqIdClean === cleanAlphaNum || reqIdClean === cleanNoPrefixAlphaNum)) ||
-          (reqEmpClean.length >= 2 && (reqEmpClean === cleanAlphaNum || reqEmpClean === cleanNoPrefixAlphaNum))
+          (reqEmpClean.length >= 2 && (reqEmpClean === cleanAlphaNum || reqEmpClean === cleanNoPrefixAlphaNum)) ||
+          (reqNameClean && (reqNameClean === cleanAlphaNum || reqNameClean === cleanNoPrefixAlphaNum))
         );
       });
 

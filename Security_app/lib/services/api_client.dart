@@ -26,26 +26,33 @@ class ApiClient {
     String endpoint, {
     T Function(dynamic json)? parser,
   }) async {
-    final uri = Uri.parse('${AppConfig.baseUrl}$endpoint');
-    debugPrint('📡 GET Request: $uri');
+    final primaryBase = AppConfig.baseUrl;
+    final secondaryBase = primaryBase.contains('10.100.10.27')
+        ? 'https://smart-vehicle-access-control-system.mccmrfip.in'
+        : 'http://10.100.10.27:5000';
 
-    try {
-      final headers = await _getHeaders();
-      final response = await http.get(uri, headers: headers).timeout(_timeoutDuration);
-      return _processResponse<T>(response, parser, method: 'GET');
-    } on SocketException catch (e) {
-      debugPrint('❌ SocketException: $e');
-      return ApiResponse.error('Unable to connect to server at ${AppConfig.baseUrl}. Check Wi-Fi & IP settings.');
-    } on TimeoutException catch (e) {
-      debugPrint('⏱️ TimeoutException: $e');
-      return ApiResponse.error('Server request timed out (10s). Ensure backend is running.');
-    } on FormatException catch (e) {
-      debugPrint('❌ FormatException: $e');
-      return ApiResponse.error('Invalid server response format.');
-    } catch (e) {
-      debugPrint('❌ Network Error: $e');
-      return ApiResponse.error('Network Error: $e');
+    final urlsToTry = [primaryBase, secondaryBase];
+
+    for (int i = 0; i < urlsToTry.length; i++) {
+      final baseUrl = urlsToTry[i];
+      final uri = Uri.parse('$baseUrl$endpoint');
+      debugPrint('📡 GET Request (Attempt ${i + 1}): $uri');
+
+      try {
+        final headers = await _getHeaders();
+        final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 8));
+        final result = await _processResponse<T>(response, parser, method: 'GET');
+        if (result.success || i == urlsToTry.length - 1) {
+          return result;
+        }
+      } catch (e) {
+        debugPrint('⚠️ Attempt ${i + 1} GET failed for $uri: $e');
+        if (i == urlsToTry.length - 1) {
+          return ApiResponse.error('Network Error: $e');
+        }
+      }
     }
+    return ApiResponse.error('GET Request Failed');
   }
 
   static Future<ApiResponse<T>> post<T>(
@@ -53,28 +60,45 @@ class ApiClient {
     Map<String, dynamic>? body,
     T Function(dynamic json)? parser,
   }) async {
-    final uri = Uri.parse('${AppConfig.baseUrl}$endpoint');
-    debugPrint('📡 POST Request: $uri');
+    final primaryBase = AppConfig.baseUrl;
+    final secondaryBase = primaryBase.contains('10.100.10.27')
+        ? 'https://smart-vehicle-access-control-system.mccmrfip.in'
+        : 'http://10.100.10.27:5000';
 
-    try {
-      final headers = await _getHeaders();
-      final response = await http
-          .post(uri, headers: headers, body: jsonEncode(body ?? {}))
-          .timeout(_timeoutDuration);
-      return _processResponse<T>(response, parser, method: 'POST', body: body);
-    } on SocketException catch (e) {
-      debugPrint('❌ SocketException: $e');
-      return ApiResponse.error('Unable to connect to server at ${AppConfig.baseUrl}. Check Wi-Fi & IP settings.');
-    } on TimeoutException catch (e) {
-      debugPrint('⏱️ TimeoutException: $e');
-      return ApiResponse.error('Server request timed out (10s). Ensure backend is running.');
-    } on FormatException catch (e) {
-      debugPrint('❌ FormatException: $e');
-      return ApiResponse.error('Invalid server response format.');
-    } catch (e) {
-      debugPrint('❌ Network Error: $e');
-      return ApiResponse.error('Network Error: $e');
+    final urlsToTry = [primaryBase, secondaryBase];
+
+    for (int i = 0; i < urlsToTry.length; i++) {
+      final baseUrl = urlsToTry[i];
+      final uri = Uri.parse('$baseUrl$endpoint');
+      debugPrint('📡 POST Request (Attempt ${i + 1}): $uri');
+
+      try {
+        final headers = await _getHeaders();
+        final response = await http
+            .post(uri, headers: headers, body: jsonEncode(body ?? {}))
+            .timeout(const Duration(seconds: 8));
+        final result = await _processResponse<T>(response, parser, method: 'POST', body: body);
+        if (result.success || i == urlsToTry.length - 1) {
+          return result;
+        }
+      } on SocketException catch (e) {
+        debugPrint('❌ Attempt ${i + 1} SocketException: $e');
+        if (i == urlsToTry.length - 1) {
+          return ApiResponse.error('Unable to connect to server ($baseUrl). Check Wi-Fi & IP settings.');
+        }
+      } on TimeoutException catch (e) {
+        debugPrint('⏱️ Attempt ${i + 1} TimeoutException: $e');
+        if (i == urlsToTry.length - 1) {
+          return ApiResponse.error('Server request timed out. Ensure backend server is running.');
+        }
+      } catch (e) {
+        debugPrint('❌ Attempt ${i + 1} Error: $e');
+        if (i == urlsToTry.length - 1) {
+          return ApiResponse.error('Network Error: $e');
+        }
+      }
     }
+    return ApiResponse.error('Verification failed');
   }
 
   static Future<ApiResponse<T>> put<T>(

@@ -1006,4 +1006,69 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
   return true;
 };
 
+// ═══════════════════════════════════════════════════════════════════
+// ██  6. SUPER ADMIN TIER-1 APPROVAL NOTICE EMAIL
+// ═══════════════════════════════════════════════════════════════════
+export const sendSuperAdminApprovalNotice = async (request) => {
+  const baseUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || process.env.NOTIFICATION_EMAIL || process.env.SMTP_USER || 'dsri_mccmrfip@mcc.edu.in';
+  const transportObj = await createTransporter();
+  const transporter = transportObj ? transportObj.transporter : null;
+  const subject = `🟢 Tier-1 Approval Granted: Access Pass Request for ${request.name} (${request.company})`;
+  const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  const htmlBody = emailWrapper('#059669', `
+    <tr>
+      <td style="padding: 32px 40px 28px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+          <tr>
+            <td align="center">
+              <span style="background-color: #ECFDF5; border: 2px solid #059669; color: #059669; padding: 10px 32px; border-radius: 50px; font-size: 14px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;">TIER-1 APPROVAL COMPLETED BY COMPANY OWNER</span>
+            </td>
+          </tr>
+        </table>
+
+        <p style="font-size: 15px; color: #0F172A; margin: 16px 0 6px; font-weight: 700;">Dear Super Admin,</p>
+        <p style="font-size: 14px; color: #475569; margin: 0 0 24px; line-height: 1.7; font-weight: 500;">
+          The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; <strong>${request.company || 'Startup'}</strong>) has been <strong>APPROVED by Company Owner / Management (${request.companyHead || 'Owner'})</strong>. It is now forwarded to you for final Super Admin Approval & Gate Pass issuance.
+        </p>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FAFBFC; border-radius: 14px; border: 1px solid #E2E8F0; overflow: hidden; margin-bottom: 24px;">
+          ${detailRow('', 'Applicant Name', request.name, '#0F172A', true)}
+          ${detailRow('', 'Vehicle Number', request.bikeNumber, '#0F172A', true, true)}
+          ${detailRow('', 'Company Name', request.company || 'Startup', '#0F172A')}
+          ${detailRow('', 'Owner Approval Date', dateStr, '#0F172A')}
+          ${detailRow('', 'Status', 'Pending Super Admin Approval', '#D97706', true)}
+        </table>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
+          <tr>
+            <td align="center">
+              <a href="${baseUrl}/admin/approval" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #0F172A, #1E293B); color: #ffffff; padding: 16px 52px; border-radius: 50px; font-size: 15px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.4);">
+                OPEN APPROVAL DASHBOARD
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  `);
+
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: `"MRF Vehicle Security" <${transportObj.fromEmail}>`,
+        to: superAdminEmail,
+        subject,
+        html: htmlBody,
+        attachments: getMccLogoAttachment() ? [getMccLogoAttachment()] : []
+      });
+      console.log(`✅ Super Admin approval notice dispatched to ${superAdminEmail}`);
+    } catch (e) {
+      console.error(`❌ Mail send error to ${superAdminEmail}:`, e.message);
+    }
+  }
+  return true;
+};
+
 

@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppConfig {
-  // Live backend server URL
+  // Primary local PC server URL & Live fallback
   static const String _defaultPhysicalDeviceUrl =
-      'https://smart-vehicle-access-control-system.mccmrfip.in';
+      'http://10.100.10.27:5000';
 
   static const String _defaultLocalhostUrl =
-      'https://smart-vehicle-access-control-system.mccmrfip.in';
+      'http://localhost:5000';
 
   static const String _urlKey = 'server_base_url';
 
@@ -15,6 +15,16 @@ class AppConfig {
 
   static String get baseUrl {
     var url = _currentBaseUrl.trim();
+    // On physical mobile devices, 'localhost' refers to the phone itself.
+    // Replace 'localhost' or '127.0.0.1' with the PC's Wi-Fi IP address (10.100.10.27) or live server.
+    if (!kIsWeb && (url.contains('localhost') || url.contains('127.0.0.1'))) {
+      url = url
+          .replaceAll('localhost', '10.100.10.27')
+          .replaceAll('127.0.0.1', '10.100.10.27');
+      if (url.contains(':5173') || url.contains(':5174')) {
+        url = url.replaceAll(':5173', ':5000').replaceAll(':5174', ':5000');
+      }
+    }
     // Enforce https:// for live web domains to prevent HTTP 301 redirects
     if (url.startsWith('http://') &&
         !url.contains('192.168.') &&
@@ -40,14 +50,15 @@ class AppConfig {
       if (savedUrl != null && savedUrl.trim().isNotEmpty) {
         final trimmed = savedUrl.trim();
 
-        // Automatically migrate old cached local dev IPs to live production server
-        if (trimmed.contains('10.100.10.85') ||
+        // Migrate old cached URLs to current active Wi-Fi IP
+        if (trimmed.contains('mccmrfip.in') ||
+            trimmed.contains('10.100.10.85') ||
             trimmed.contains('192.168.') ||
             trimmed.contains('10.0.2.2')) {
           _currentBaseUrl = defaultUrl;
           await prefs.setString(_urlKey, _currentBaseUrl);
           debugPrint(
-            '🔄 Migrated old cached local IP to live server URL: $_currentBaseUrl',
+            '🔄 Migrated old cached URL to active Wi-Fi server: $_currentBaseUrl',
           );
           return _currentBaseUrl;
         }

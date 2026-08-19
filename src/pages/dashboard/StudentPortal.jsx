@@ -3,6 +3,7 @@ import { User, QrCode, Clock, Download, CheckCircle2, AlertCircle, Edit, ShieldA
 import MOCK_USERS from '../../context/mockData';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import LogoQRCode from '../../components/LogoQRCode';
 
 const StudentPortal = () => {
   const [activeTab, setActiveTab] = useState('pass');
@@ -128,7 +129,12 @@ const StudentPortal = () => {
                   <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 opacity-20 ${isExpired || isBlacklisted ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
                   
                   <div className="bg-white p-4 rounded-2xl shadow-2xl relative z-10 shrink-0">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${user.id}`} alt="QR" className={`w-48 h-48 md:w-56 md:h-56 ${isBlacklisted ? 'opacity-20' : ''}`} />
+                    <LogoQRCode
+                      value={user.id}
+                      size={220}
+                      level="H"
+                      className={isBlacklisted ? 'opacity-20' : ''}
+                    />
                     {isBlacklisted && <div className="absolute inset-0 flex items-center justify-center"><Ban className="w-24 h-24 text-red-600" /></div>}
                   </div>
                   

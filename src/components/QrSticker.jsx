@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import LogoQRCode from './LogoQRCode';
 import { Printer, X } from 'lucide-react';
 
 const QrSticker = ({ request, token, onClose }) => {
@@ -211,7 +211,7 @@ const QrSticker = ({ request, token, onClose }) => {
             <div className="md:col-span-5 flex flex-col items-center justify-center">
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center w-full max-w-[200px]">
                 <div id="sticker-qr-svg">
-                  <QRCodeSVG
+                  <LogoQRCode
                     value={verifyUrl}
                     size={160}
                     level="H"

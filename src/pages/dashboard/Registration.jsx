@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import LogoQRCode from '../../components/LogoQRCode';
 import {
   Shield, QrCode, CheckCircle2, Search, Trash2, Ban, Building,
   Calendar, Eye, Clock, Download, Printer, Share2, User, Mail,
@@ -593,10 +594,10 @@ const StaffRegistration = () => {
                     {/* Mock QR display */}
                     <div className="bg-white p-3 rounded-2xl shadow-2xl">
                       {form.employeeId ? (
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(form.employeeId)}&format=png&margin=4`}
-                          alt="QR Preview"
-                          className="w-32 h-32"
+                        <LogoQRCode
+                          value={form.employeeId}
+                          size={130}
+                          level="H"
                         />
                       ) : (
                         <div className="w-32 h-32 bg-zinc-100 rounded-lg flex items-center justify-center">

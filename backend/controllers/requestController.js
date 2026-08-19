@@ -2,7 +2,7 @@ import AccessRequest from '../models/AccessRequest.js';
 import QRCode from '../models/QRCode.js';
 import AuditLog from '../models/AuditLog.js';
 import { generateSecureToken, getQRImageUrl } from '../services/qrService.js';
-import { sendApprovalEmail, sendRejectionEmail, sendStartupOwnerApprovalEmail } from '../services/emailService.js';
+import { sendApprovalEmail, sendRejectionEmail, sendStartupOwnerApprovalEmail, sendSuperAdminApprovalNotice } from '../services/emailService.js';
 import mongoose from 'mongoose';
 
 // In-memory store fallback when MongoDB Atlas is not connected
@@ -399,26 +399,75 @@ export const ownerEmailAction = async (req, res) => {
       return res.status(400).send(buildResponsePage('❌ Invalid Action', 'The action must be either approve or reject.', '#DC2626'));
     }
 
-    // Find request in memory
-    let request = inMemoryRequests.find(r => r._id === id || r.bikeNumber === id);
-    
-    if (!request && isDbConnected()) {
+    try { loadFromDisk(); } catch (_) {}
+
+    const rawId = String(id || '').trim();
+    const cleanAlphaNum = rawId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+    // Flexible matching across in-memory requests
+    let request = inMemoryRequests.find(r => {
+      const rId = String(r._id || '').trim();
+      const rIdClean = rId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rBike = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rToken = (r.token || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+      return r._id === id || 
+             r.bikeNumber === id || 
+             r.token === id || 
+             (rIdClean && (rIdClean === cleanAlphaNum || rIdClean.includes(cleanAlphaNum))) ||
+             (rBike && (rBike === cleanAlphaNum || cleanAlphaNum.includes(rBike) || cleanAlphaNum.includes(rBike))) ||
+             (rToken && (rToken === cleanAlphaNum || cleanAlphaNum.includes(rToken)));
+    });
+
+    // Check MongoDB database if connected
+    if (isDbConnected()) {
       try {
-        if (mongoose.Types.ObjectId.isValid(id)) {
-          request = await AccessRequest.findById(id);
+        let dbReq = null;
+        if (mongoose.Types.ObjectId.isValid(rawId)) {
+          dbReq = await AccessRequest.findById(rawId);
         }
-      } catch (_) {}
+        if (!dbReq) {
+          dbReq = await AccessRequest.findOne({
+            $or: [
+              { bikeNumber: rawId },
+              { bikeNumber: new RegExp(cleanAlphaNum, 'i') },
+              { token: rawId },
+              { token: new RegExp(cleanAlphaNum, 'i') }
+            ]
+          });
+        }
+        if (!dbReq) {
+          const allDb = await AccessRequest.find({});
+          dbReq = allDb.find(r => {
+            const dbBikeClean = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            const dbTokenClean = (r.token || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            const dbIdClean = String(r._id || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+            return (
+              (dbBikeClean && (dbBikeClean === cleanAlphaNum || cleanAlphaNum.includes(dbBikeClean))) ||
+              (dbTokenClean && (dbTokenClean === cleanAlphaNum || cleanAlphaNum.includes(dbTokenClean))) ||
+              (dbIdClean && (dbIdClean === cleanAlphaNum || cleanAlphaNum.includes(dbIdClean)))
+            );
+          });
+        }
+        if (dbReq) {
+          request = dbReq;
+        }
+      } catch (dbErr) {
+        console.error('Mongo lookup error in ownerEmailAction:', dbErr.message);
+      }
     }
 
     if (!request) {
-      return res.status(404).send(buildResponsePage('❌ Request Not Found', 'This vehicle access request could not be found or has expired.', '#DC2626'));
+      return res.status(404).send(buildResponsePage('❌ Request Not Found', `Vehicle access request (${rawId}) could not be found or has expired.`, '#DC2626'));
     }
 
-    if (request.status !== 'Pending Company Approval') {
+    // If already approved by company or super admin, present clear success message
+    if (request.status === 'Pending Super Admin Approval' || request.status === 'Approved') {
       return res.send(buildResponsePage(
-        'ℹ️ Already Processed',
-        `This vehicle pass request for <strong>${request.name}</strong> (${request.bikeNumber}) has already been actioned (Current Status: <strong>${request.status}</strong>).`,
-        '#D97706'
+        '✓ Tier-1 Approval Granted',
+        `Thank you! The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has already been <strong>APPROVED</strong> by Startup Management and forwarded to Super Admin for final QR Gate Pass issuance.`,
+        '#059669'
       ));
     }
 
@@ -426,12 +475,24 @@ export const ownerEmailAction = async (req, res) => {
       request.status = 'Pending Super Admin Approval';
       request.companyApproved = true;
       request.companyApprovedAt = new Date();
+
+      // Sync in-memory store
+      const memItem = inMemoryRequests.find(r => 
+        String(r._id) === String(request._id) || 
+        (r.bikeNumber && r.bikeNumber.replace(/\s+/g, '') === (request.bikeNumber || '').replace(/\s+/g, ''))
+      );
+      if (memItem) {
+        memItem.status = 'Pending Super Admin Approval';
+        memItem.companyApproved = true;
+        memItem.companyApprovedAt = new Date();
+      }
+
       saveToDisk();
 
       // Sync to MongoDB
       if (isDbConnected()) {
         try {
-          let dbReq = mongoose.Types.ObjectId.isValid(id) ? await AccessRequest.findById(id) : null;
+          let dbReq = mongoose.Types.ObjectId.isValid(String(request._id)) ? await AccessRequest.findById(request._id) : null;
           if (!dbReq) dbReq = await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
           if (dbReq) {
             dbReq.status = 'Pending Super Admin Approval';
@@ -442,9 +503,12 @@ export const ownerEmailAction = async (req, res) => {
         } catch (_) {}
       }
 
+      // Notify Super Admin via Email
+      sendSuperAdminApprovalNotice(request).catch(e => console.log('Super Admin notification email error:', e.message));
+
       return res.send(buildResponsePage(
         '✓ Tier-1 Approval Granted',
-        `Thank you! The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company}) has been <strong>APPROVED</strong> by Startup Management and forwarded to Super Admin for final QR Gate Pass issuance.`,
+        `Thank you! The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has been <strong>APPROVED</strong> by Startup Management and forwarded to Super Admin for final QR Gate Pass issuance.`,
         '#059669'
       ));
 
@@ -452,12 +516,23 @@ export const ownerEmailAction = async (req, res) => {
       request.status = 'Rejected';
       request.actionDate = new Date();
       request.actionReason = 'Rejected by Company Owner via email';
+      
+      const memItem = inMemoryRequests.find(r => 
+        String(r._id) === String(request._id) || 
+        (r.bikeNumber && r.bikeNumber.replace(/\s+/g, '') === (request.bikeNumber || '').replace(/\s+/g, ''))
+      );
+      if (memItem) {
+        memItem.status = 'Rejected';
+        memItem.actionDate = new Date();
+        memItem.actionReason = 'Rejected by Company Owner via email';
+      }
+
       saveToDisk();
 
       // Sync to MongoDB
       if (isDbConnected()) {
         try {
-          let dbReq = mongoose.Types.ObjectId.isValid(id) ? await AccessRequest.findById(id) : null;
+          let dbReq = mongoose.Types.ObjectId.isValid(String(request._id)) ? await AccessRequest.findById(request._id) : null;
           if (!dbReq) dbReq = await AccessRequest.findOne({ bikeNumber: request.bikeNumber });
           if (dbReq) {
             dbReq.status = 'Rejected';
@@ -472,7 +547,7 @@ export const ownerEmailAction = async (req, res) => {
 
       return res.send(buildResponsePage(
         '❌ Request Rejected',
-        `The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company}) has been <strong>REJECTED</strong>. The applicant has been notified via email.`,
+        `The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has been <strong>REJECTED</strong>. The applicant has been notified via email.`,
         '#DC2626'
       ));
     }
