@@ -516,12 +516,8 @@ export const ownerEmailAction = async (req, res) => {
       // Notify Super Admin via Email
       sendSuperAdminApprovalNotice(request).catch(e => console.log('Super Admin notification email error:', e.message));
 
-      return res.send(buildResponsePage(
-        '✓ Tier-1 Approval Granted',
-        `Thank you! The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has been <strong>APPROVED</strong> by Startup Management and forwarded to Super Admin.<br/><br/><em>Navigating directly to Super Admin Approval Dashboard...</em>`,
-        '#059669',
-        true
-      ));
+      // Direct HTTP redirect straight to Super Admin Approval Dashboard (/admin/approval)
+      return res.redirect(`${portalUrl}/admin/approval?approved=true&req=${encodeURIComponent(request.bikeNumber || request._id)}`);
 
     } else {
       request.status = 'Rejected';
@@ -555,12 +551,7 @@ export const ownerEmailAction = async (req, res) => {
 
       sendRejectionEmail(request, 'Rejected by Startup Company Owner').catch(e => console.log('Rejection email error:', e.message));
 
-      return res.send(buildResponsePage(
-        '❌ Request Rejected',
-        `The vehicle access pass request for <strong>${request.name}</strong> (${request.bikeNumber} &bull; ${request.company || 'Startup'}) has been <strong>REJECTED</strong>. The applicant has been notified via email.<br/><br/><em>Navigating to Approval Dashboard...</em>`,
-        '#DC2626',
-        true
-      ));
+      return res.redirect(`${portalUrl}/admin/approval?rejected=true&req=${encodeURIComponent(request.bikeNumber || request._id)}`);
     }
   } catch (error) {
     console.error('Owner email action error:', error);
