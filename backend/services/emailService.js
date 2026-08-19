@@ -88,19 +88,27 @@ const createTransporter = async () => {
   }
 
   if (user && pass) {
+    const isGmail = host.includes('gmail') || user.includes('gmail') || user.includes('mcc.edu.in');
+    
+    const transporterConfig = isGmail ? {
+      service: 'gmail',
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false }
+    } : {
+      host,
+      port,
+      secure,
+      lookup: ipv4Lookup,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false }
+    };
+
     return {
-      transporter: nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        lookup: ipv4Lookup,
-        auth: { user, pass },
-        tls: { rejectUnauthorized: false }
-      }),
-      fromEmail,
+      transporter: nodemailer.createTransport(transporterConfig),
+      fromEmail: user,
       isRealSmtp: true,
-      smtpHost: host,
-      smtpPort: port
+      smtpHost: isGmail ? 'smtp.gmail.com' : host,
+      smtpPort: isGmail ? 465 : port
     };
   }
 
