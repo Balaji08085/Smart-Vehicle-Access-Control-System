@@ -889,7 +889,7 @@ export const sendScanAlertEmail = async (request, reason = 'ACCESS DENIED', qrTo
 // ██  5. STARTUP COMPANY OWNER APPROVAL EMAIL (Tier 1)
 // ═══════════════════════════════════════════════════════════════════
 export const sendStartupOwnerApprovalEmail = async (request) => {
-  const baseUrl = process.env.BASE_URL || process.env.PUBLIC_URL || 'http://localhost:5000';
+  const baseUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
 
   const targetEmail = request.companyHeadEmail || 'frankin@techquora.com';
   const ownerName = request.companyHead || 'Mr. Franklin';
@@ -1027,7 +1027,7 @@ export const sendStartupOwnerApprovalEmail = async (request) => {
 // ██  6. SUPER ADMIN TIER-1 APPROVAL NOTICE EMAIL
 // ═══════════════════════════════════════════════════════════════════
 export const sendSuperAdminApprovalNotice = async (request) => {
-  const baseUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+  const baseUrl = process.env.BASE_URL || process.env.PUBLIC_URL || 'http://localhost:5000';
   const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || process.env.NOTIFICATION_EMAIL || process.env.SMTP_USER || 'dsri_mccmrfip@mcc.edu.in';
   const transportObj = await createTransporter();
   const transporter = transportObj ? transportObj.transporter : null;
