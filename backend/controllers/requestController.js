@@ -7,7 +7,40 @@ import mongoose from 'mongoose';
 import crypto from 'crypto';
 
 // In-memory store fallback when MongoDB Atlas is not connected
+export const getReqPortalUrl = (req) => {
+  if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL;
+  if (process.env.BASE_URL) return process.env.BASE_URL;
+  if (req && req.get) {
+    const host = req.get('host');
+    const protocol = req.protocol || (host && (host.includes('localhost') || host.includes('127.0.0.1')) ? 'http' : 'https');
+    return `${protocol}://${host}`;
+  }
+  return process.env.NODE_ENV === 'production' 
+    ? 'https://smart-vehicle-access-control-system.mccmrfip.in' 
+    : 'http://localhost:5000';
+};
+
 export const inMemoryRequests = [
+  {
+    _id: 'REQ-SAJIN-012',
+    name: 'SAJIN DEVESH',
+    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
+    employeeId: '012',
+    department: 'Marketing',
+    company: 'Madras Christian College',
+    designation: 'Marketing Executive',
+    bikeNumber: 'TN 11 BV 3595',
+    vehicleType: 'Bike',
+    token: 'BIKE-2026-000764-9850B964',
+    approvalToken: 'BIKE-2026-000764-9850B964',
+    email: 'sajindevesh@gmail.com',
+    mobile: '+91 98765 00012',
+    accessStartDate: new Date('2026-08-19'),
+    accessExpiryDate: new Date('2027-08-19'),
+    status: 'Approved',
+    companyApproved: true,
+    createdAt: new Date()
+  },
   {
     _id: 'REQ-1001',
     approvalToken: 'sat_1001_balaji_mrf_lab',
@@ -278,11 +311,7 @@ export const createRequest = async (req, res) => {
       saveToDisk();
 
       if (initialStatus === 'Pending Company Approval' || initialStatus === 'Pending') {
-        try {
-          await sendStartupOwnerApprovalEmail(newReq);
-        } catch (e) {
-          console.error('⚠️ Startup Owner Email Dispatch Error:', e.message);
-        }
+        sendStartupOwnerApprovalEmail(newReq, req).catch(e => console.error('⚠️ Startup Owner Email Dispatch Error:', e.message));
       }
 
       return res.status(201).json(newReq);
@@ -341,7 +370,7 @@ export const createRequest = async (req, res) => {
     });
 
     if (initialStatus === 'Pending Company Approval' || initialStatus === 'Pending') {
-      sendStartupOwnerApprovalEmail(reqObj).catch(e => console.error('⚠️ Startup Owner Email Dispatch Error:', e.message));
+      sendStartupOwnerApprovalEmail(reqObj, req).catch(e => console.error('⚠️ Startup Owner Email Dispatch Error:', e.message));
     }
 
     res.status(201).json(newRequest);
@@ -722,7 +751,7 @@ export const ownerEmailAction = async (req, res) => {
       saveToDisk();
     }
 
-    const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+    const portalUrl = getReqPortalUrl(req);
 
     if (!request) {
       return res.redirect(`${portalUrl}/owner/approve?status=success`);
@@ -808,14 +837,14 @@ export const ownerEmailAction = async (req, res) => {
       return res.redirect(`${portalUrl}/owner/approve?token=${encodeURIComponent(request.approvalToken || rawId)}&status=rejected&name=${encodeURIComponent(request.name || '')}&bike=${encodeURIComponent(request.bikeNumber || '')}`);
     }
   } catch (error) {
-    const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+    const portalUrl = getReqPortalUrl(req);
     return res.redirect(`${portalUrl}/admin/approval?approved=true`);
   }
 };
 
 // Helper: Build a styled HTML response page for email action clicks
-function buildResponsePage(title, message, color, autoRedirect = true) {
-  const portalUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+function buildResponsePage(title, message, color, autoRedirect = true, req = null) {
+  const portalUrl = getReqPortalUrl(req);
   const targetRedirect = `${portalUrl}/owner/approve?status=success`;
   
   const displayTitle = (title && !title.includes('Not Found')) ? title : '✓ Tier-1 Startup Owner Approval Granted';

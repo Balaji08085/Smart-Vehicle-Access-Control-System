@@ -164,7 +164,7 @@ const findFastPass = (inputToken, normalizedToken, cleanAlphaNum, cleanNoPrefixA
     const matchesId = idClean && (idClean === cleanAlphaNum || idClean === cleanNoPrefixAlphaNum);
     const matchesName = nameClean && (
       (nameClean.length >= 3 && cleanAlphaNum.includes(nameClean)) ||
-      (nameClean.includes('SAJIN') && (cleanAlphaNum.includes('SAJIN') || cleanAlphaNum.includes('3595') || cleanAlphaNum.includes('000886') || cleanAlphaNum.includes('64E11601') || cleanAlphaNum.includes('000022') || cleanAlphaNum.includes('1570351A'))) ||
+      (nameClean.includes('SAJIN') && (cleanAlphaNum.includes('SAJIN') || cleanAlphaNum.includes('3595') || cleanAlphaNum.includes('000764') || cleanAlphaNum.includes('9850B964') || cleanAlphaNum.includes('000886') || cleanAlphaNum.includes('64E11601') || cleanAlphaNum.includes('000022') || cleanAlphaNum.includes('1570351A'))) ||
       (nameClean.includes('HARIHAR') && (cleanAlphaNum.includes('HARIHAR') || cleanAlphaNum.includes('2115') || cleanAlphaNum.includes('000102') || cleanAlphaNum.includes('1E632E59')))
     );
 

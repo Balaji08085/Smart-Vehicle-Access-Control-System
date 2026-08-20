@@ -888,8 +888,19 @@ export const sendScanAlertEmail = async (request, reason = 'ACCESS DENIED', qrTo
 // ═══════════════════════════════════════════════════════════════════
 // ██  5. STARTUP COMPANY OWNER APPROVAL EMAIL (Tier 1)
 // ═══════════════════════════════════════════════════════════════════
-export const sendStartupOwnerApprovalEmail = async (request) => {
-  const baseUrl = process.env.PUBLIC_URL || process.env.BASE_URL || 'https://smart-vehicle-access-control-system.mccmrfip.in';
+export const sendStartupOwnerApprovalEmail = async (request, req = null) => {
+  let baseUrl = process.env.PUBLIC_URL || process.env.BASE_URL;
+  if (!baseUrl) {
+    if (req && req.get) {
+      const host = req.get('host');
+      const protocol = req.protocol || (host && (host.includes('localhost') || host.includes('127.0.0.1')) ? 'http' : 'https');
+      baseUrl = `${protocol}://${host}`;
+    } else {
+      baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://smart-vehicle-access-control-system.mccmrfip.in' 
+        : 'http://localhost:5000';
+    }
+  }
 
   const targetEmail = request.companyHeadEmail || 'frankin@techquora.com';
   const ownerName = request.companyHead || 'Mr. Franklin';

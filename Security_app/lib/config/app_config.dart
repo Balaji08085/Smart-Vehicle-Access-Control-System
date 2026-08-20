@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppConfig {
   // Primary local PC server URL & Live fallback
   static const String _defaultPhysicalDeviceUrl =
-      'http://10.100.10.27:5000';
+      'http://10.100.10.37:5000';
 
   static const String _defaultLocalhostUrl =
       'http://localhost:5000';
@@ -15,24 +15,10 @@ class AppConfig {
 
   static String get baseUrl {
     var url = _currentBaseUrl.trim();
-    // On physical mobile devices, 'localhost' refers to the phone itself.
-    // Replace 'localhost' or '127.0.0.1' with the PC's Wi-Fi IP address (10.100.10.27) or live server.
+    // On physical mobile devices, 'localhost' or '127.0.0.1' refers to the phone itself.
+    // Replace with local Wi-Fi IP address 10.100.10.37 for instant local verification.
     if (!kIsWeb && (url.contains('localhost') || url.contains('127.0.0.1'))) {
-      url = url
-          .replaceAll('localhost', '10.100.10.27')
-          .replaceAll('127.0.0.1', '10.100.10.27');
-      if (url.contains(':5173') || url.contains(':5174')) {
-        url = url.replaceAll(':5173', ':5000').replaceAll(':5174', ':5000');
-      }
-    }
-    // Enforce https:// for live web domains to prevent HTTP 301 redirects
-    if (url.startsWith('http://') &&
-        !url.contains('192.168.') &&
-        !url.contains('10.100.') &&
-        !url.contains('10.0.') &&
-        !url.contains('localhost') &&
-        !url.contains('127.0.0.1')) {
-      url = url.replaceFirst('http://', 'https://');
+      url = url.replaceAll('localhost', '10.100.10.37').replaceAll('127.0.0.1', '10.100.10.37');
     }
     return url;
   }

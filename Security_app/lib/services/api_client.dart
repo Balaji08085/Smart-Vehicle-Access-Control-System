@@ -27,11 +27,9 @@ class ApiClient {
     T Function(dynamic json)? parser,
   }) async {
     final primaryBase = AppConfig.baseUrl;
-    final secondaryBase = primaryBase.contains('10.100.10.27')
-        ? 'https://smart-vehicle-access-control-system.mccmrfip.in'
-        : 'http://10.100.10.27:5000';
+    final secondaryBase = 'https://smart-vehicle-access-control-system.mccmrfip.in';
 
-    final urlsToTry = [primaryBase, secondaryBase];
+    final urlsToTry = primaryBase == secondaryBase ? [primaryBase] : [primaryBase, secondaryBase];
     final headers = await _getHeaders();
 
     final completer = Completer<ApiResponse<T>>();
@@ -44,7 +42,7 @@ class ApiClient {
 
       http
           .get(uri, headers: headers)
-          .timeout(const Duration(seconds: 3))
+          .timeout(const Duration(milliseconds: 1500))
           .then((response) async {
         final result = await _processResponse<T>(response, parser, method: 'GET');
         if (result.success && !completer.isCompleted) {
@@ -75,11 +73,9 @@ class ApiClient {
     T Function(dynamic json)? parser,
   }) async {
     final primaryBase = AppConfig.baseUrl;
-    final secondaryBase = primaryBase.contains('10.100.10.27')
-        ? 'https://smart-vehicle-access-control-system.mccmrfip.in'
-        : 'http://10.100.10.27:5000';
+    final secondaryBase = 'https://smart-vehicle-access-control-system.mccmrfip.in';
 
-    final urlsToTry = [primaryBase, secondaryBase];
+    final urlsToTry = primaryBase == secondaryBase ? [primaryBase] : [primaryBase, secondaryBase];
     final headers = await _getHeaders();
 
     final completer = Completer<ApiResponse<T>>();
@@ -92,7 +88,7 @@ class ApiClient {
 
       http
           .post(uri, headers: headers, body: jsonEncode(body ?? {}))
-          .timeout(const Duration(seconds: 3))
+          .timeout(const Duration(milliseconds: 1500))
           .then((response) async {
         final result = await _processResponse<T>(response, parser, method: 'POST', body: body);
         if (result.success && !completer.isCompleted) {

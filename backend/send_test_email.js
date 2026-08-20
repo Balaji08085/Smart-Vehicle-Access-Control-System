@@ -19,7 +19,7 @@ async function sendTestEmailToUser() {
       companyHead: 'Balaji Owner',
       companyHeadEmail: 'balap4496@gmail.com',
       designation: 'Full Stack Developer',
-      bikeNumber: 'TN 15 LOCAL VERIFIED 500',
+      bikeNumber: 'TN 15 FRESH RESTART 999',
       vehicleType: 'Bike',
       email: 'balap4496@gmail.com',
       mobile: '9080758943',
