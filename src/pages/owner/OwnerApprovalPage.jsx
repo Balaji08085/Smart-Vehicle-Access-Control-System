@@ -58,6 +58,8 @@ const OwnerApprovalPage = () => {
       setLoading(false);
       if (statusParam === 'success' || statusParam === 'approved') {
         setActionStatus('APPROVED');
+      } else {
+        setError('No approval token provided in URL.');
       }
       return;
     }
@@ -68,7 +70,7 @@ const OwnerApprovalPage = () => {
         const data = await res.json();
         if (data && (data._id || data.bikeNumber)) {
           setRequest(data);
-          if (data.status === 'Pending Super Admin Approval' || data.status === 'OWNER_APPROVED' || data.companyApproved) {
+          if (data.status === 'Pending Super Admin Approval' || data.status === 'OWNER_APPROVED' || data.companyApproved || statusParam === 'success' || statusParam === 'approved') {
             setActionStatus('APPROVED');
           } else if (data.status === 'Rejected' || data.status === 'OWNER_REJECTED') {
             setActionStatus('REJECTED');
@@ -79,15 +81,26 @@ const OwnerApprovalPage = () => {
             handleApproveDirect(data.approvalToken || token);
           }
         } else {
-          // Auto-forward straight to Super Admin Approval Dashboard so approval flow is seamless!
-          navigate('/admin/approval?approved=true');
+          if (statusParam === 'success' || statusParam === 'approved') {
+            setActionStatus('APPROVED');
+          } else {
+            setError('Approval record not found or link has expired.');
+          }
         }
       } else {
-        navigate('/admin/approval?approved=true');
+        if (statusParam === 'success' || statusParam === 'approved') {
+          setActionStatus('APPROVED');
+        } else {
+          setError('Unable to fetch approval request details.');
+        }
       }
     } catch (err) {
       console.error('Fetch approval request error:', err);
-      navigate('/admin/approval?approved=true');
+      if (statusParam === 'success' || statusParam === 'approved') {
+        setActionStatus('APPROVED');
+      } else {
+        setError('Failed to connect to approval server.');
+      }
     } finally {
       setLoading(false);
     }
@@ -105,15 +118,12 @@ const OwnerApprovalPage = () => {
       if (res.ok) {
         setActionStatus('APPROVED');
         if (data.request) setRequest(data.request);
-        setTimeout(() => {
-          navigate(`/admin/approval?approved=true&req=${encodeURIComponent(data.request?.bikeNumber || data.request?.name || 'Vehicle')}`);
-        }, 600);
       } else {
-        navigate('/admin/approval?approved=true');
+        setError(data.error || 'Failed to record approval.');
       }
     } catch (err) {
       console.error('Approval submit error:', err);
-      navigate('/admin/approval?approved=true');
+      setError('Unable to connect to the approval service.');
     } finally {
       setSubmitting(false);
     }

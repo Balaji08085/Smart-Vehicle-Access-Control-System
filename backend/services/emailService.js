@@ -163,6 +163,12 @@ const emailWrapper = (statusColor, content, footerExtra = '') => {
     body { background-color: #f8fafc !important; color: #0F172A !important; }
     .email-card { background-color: #ffffff !important; color: #0F172A !important; }
     .black-text { color: #0F172A !important; }
+    @media only screen and (max-width: 600px) {
+      .email-card { width: 100% !important; border-radius: 14px !important; }
+      .mobile-padding { padding: 20px 16px !important; }
+      .mobile-btn { width: 92% !important; max-width: 320px !important; padding: 16px 12px !important; box-sizing: border-box !important; font-size: 13px !important; display: block !important; margin: 0 auto !important; }
+      .mobile-text { font-size: 13px !important; line-height: 1.6 !important; }
+    }
   </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
@@ -956,14 +962,14 @@ export const sendStartupOwnerApprovalEmail = async (request, req = null) => {
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
           <tr>
             <td align="center" style="padding-bottom: 12px;">
-              <a href="${approveUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #701A1A, #5C121E); color: #ffffff; padding: 16px 52px; border-radius: 50px; font-size: 15px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(112, 26, 26, 0.4);">
+              <a href="${approveUrl}" target="_blank" class="mobile-btn" style="display: inline-block; background: linear-gradient(135deg, #701A1A, #5C121E); color: #ffffff; padding: 16px 52px; border-radius: 50px; font-size: 15px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(112, 26, 26, 0.4); text-align: center;">
                 APPROVE ACCESS REQUEST
               </a>
             </td>
           </tr>
           <tr>
             <td align="center">
-              <a href="${rejectUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #DC2626, #EF4444); color: #ffffff; padding: 14px 52px; border-radius: 50px; font-size: 14px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(220, 38, 38, 0.35);">
+              <a href="${rejectUrl}" target="_blank" class="mobile-btn" style="display: inline-block; background: linear-gradient(135deg, #DC2626, #EF4444); color: #ffffff; padding: 14px 52px; border-radius: 50px; font-size: 14px; font-weight: 900; text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 6px 20px rgba(220, 38, 38, 0.35); text-align: center;">
                 REJECT REQUEST
               </a>
             </td>

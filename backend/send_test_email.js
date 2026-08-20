@@ -27,7 +27,6 @@ async function sendTestEmailToUser() {
       accessExpiryDate: '2027-08-19'
     }
   };
-
   const res = {
     status: (code) => ({
       json: (data) => {
