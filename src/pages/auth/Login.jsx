@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, Lock, ShieldAlert, ArrowRight, Sparkles, ShieldCheck, Mail } from 'lucide-react';
+import { UserCheck, Lock, ShieldAlert, ArrowRight, Sparkles, ShieldCheck, Mail, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEntry } from '../../context/EntryContext';
 import MccLogo from '../../components/MccLogo';
@@ -8,9 +8,11 @@ import MccLogo from '../../components/MccLogo';
 const Login = () => {
   const [activeTab, setActiveTab] = useState('superadmin'); // 'admin', 'superadmin', 'guard'
   const [guardPassword, setGuardPassword] = useState('guard123');
+  const [adminEmail, setAdminEmail] = useState('admin@svacs.edu');
   const [adminPassword, setAdminPassword] = useState('admin123');
   const [superAdminEmail, setSuperAdminEmail] = useState('superadmin@svacs.edu');
-  const [superAdminPassword, setSuperAdminPassword] = useState('••••••••');
+  const [superAdminPassword, setSuperAdminPassword] = useState('superadmin123');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ const Login = () => {
     if (activeTab === 'guard') {
       credentials = { guardPin: guardPassword };
     } else if (activeTab === 'admin') {
-      credentials = { adminPassword };
+      credentials = { adminEmail, adminPassword };
     } else if (activeTab === 'superadmin') {
       credentials = { adminEmail: superAdminEmail, adminPassword: superAdminPassword };
     }
@@ -148,22 +150,48 @@ const Login = () => {
           )}
 
           {activeTab === 'admin' && (
-            <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 block">
-                Admin Access Passcode
-              </label>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  required
-                  className="w-full bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#701A1A] transition-colors"
-                  placeholder="Enter Admin Passcode (admin123)"
-                />
+            <>
+              <div>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 block">
+                  Admin Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#701A1A] transition-colors"
+                    placeholder="admin@svacs.edu"
+                  />
+                </div>
               </div>
-            </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 block">
+                  Admin Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-2xl pl-12 pr-12 py-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#701A1A] transition-colors"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors focus:outline-none"
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+            </>
           )}
 
           {activeTab === 'guard' && (
@@ -174,13 +202,21 @@ const Login = () => {
               <div className="relative">
                 <ShieldCheck className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={guardPassword}
                   onChange={(e) => setGuardPassword(e.target.value)}
                   required
-                  className="w-full bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-2xl pl-12 pr-12 py-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
                   placeholder="Enter Guard Passcode (guard123)"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors focus:outline-none"
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </div>
           )}
@@ -210,13 +246,21 @@ const Login = () => {
                 <div className="relative">
                   <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={superAdminPassword}
                     onChange={(e) => setSuperAdminPassword(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-2xl pl-12 pr-4 py-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#701A1A] transition-colors"
+                    className="w-full bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-[#5C121E] rounded-2xl pl-12 pr-12 py-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#701A1A] transition-colors"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors focus:outline-none"
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
             </>
