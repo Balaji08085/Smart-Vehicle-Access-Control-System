@@ -78,69 +78,16 @@ export const EntryProvider = ({ children }) => {
   const [vehicles, setVehicles] = useState(() => {
     try {
       const saved = localStorage.getItem('smart_campus_vehicles');
-      return saved ? JSON.parse(saved) : { ...INITIAL_MOCK_USERS };
+      return saved ? JSON.parse(saved) : {};
     } catch {
-      return { ...INITIAL_MOCK_USERS };
+      return {};
     }
   });
 
   const [history, setHistory] = useState(() => {
     try {
       const saved = localStorage.getItem('smart_campus_history');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'LOG-101',
-          date: new Date().toLocaleDateString(),
-          time: '09:12 AM',
-          vehicleNumber: 'TN 38 AB 1234',
-          ownerName: 'Balaji S',
-          registerId: '23BCS045',
-          department: 'Computer Science & Engineering',
-          vehicleType: 'Bike (Two-Wheeler)',
-          gate: 'Main Entrance Gate',
-          status: 'Granted',
-          reason: '',
-        },
-        {
-          id: 'LOG-102',
-          date: new Date().toLocaleDateString(),
-          time: '08:30 AM',
-          vehicleNumber: 'TN 38 XY 9999',
-          ownerName: 'Dr. Ramesh Kumar',
-          registerId: 'EMP9023',
-          department: 'Mechanical Engineering',
-          vehicleType: 'Car (Four-Wheeler)',
-          gate: 'Main Entrance Gate',
-          status: 'Granted',
-          reason: '',
-        },
-        {
-          id: 'LOG-103',
-          date: new Date().toLocaleDateString(),
-          time: '08:15 AM',
-          vehicleNumber: 'TN 38 ZZZ 999',
-          ownerName: 'Rohan Malhotra',
-          registerId: 'VIS8902',
-          department: 'Outsourcing Partner',
-          vehicleType: 'Bike (Two-Wheeler)',
-          gate: 'Main Entrance Gate',
-          status: 'Denied',
-          reason: 'Blacklisted Vehicle',
-        },
-        {
-          id: 'LOG-104',
-          date: new Date().toLocaleDateString(),
-          time: '07:45 AM',
-          vehicleNumber: 'TN 38 EXP 2025',
-          ownerName: 'Vikram T',
-          registerId: '21BME102',
-          department: 'Mechanical Engineering',
-          vehicleType: 'Bike (Two-Wheeler)',
-          gate: 'South Gate',
-          status: 'Denied',
-          reason: 'Sticker Expired',
-        }
-      ];
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
@@ -169,24 +116,24 @@ export const EntryProvider = ({ children }) => {
     localStorage.setItem('smart_campus_history', JSON.stringify(history));
   }, [history]);
 
-  // Load database from backend (if token is present)
+  // Load live database state from backend API on mount
   useEffect(() => {
-    if (!token) return;
-
     const fetchDatabase = async () => {
       try {
         const res = await fetch('/api/vehicles', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
-        const data = await res.json();
         if (res.ok) {
-          setVehicles(data.vehicles);
-          setHistory(data.history);
-        } else {
-          console.error('Failed to load database from backend', data.error);
+          const data = await res.json();
+          if (data.vehicles && typeof data.vehicles === 'object') {
+            setVehicles(data.vehicles);
+          }
+          if (Array.isArray(data.history)) {
+            setHistory(data.history);
+          }
         }
       } catch (err) {
-        console.error('Error fetching database', err);
+        console.warn('Backend API connection pending:', err);
       }
     };
 
@@ -708,7 +655,7 @@ export const EntryProvider = ({ children }) => {
     localStorage.removeItem('smart_campus_vehicles');
     localStorage.removeItem('smart_campus_history');
     localStorage.removeItem('smart_campus_token');
-    setVehicles({ ...INITIAL_MOCK_USERS });
+    setVehicles({});
     setHistory([]);
     setToken('');
 

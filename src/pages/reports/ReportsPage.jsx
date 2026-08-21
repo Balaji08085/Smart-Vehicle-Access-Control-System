@@ -5,7 +5,7 @@ const ReportsPage = () => {
   const { vehicles, history } = useEntry();
   const [activeTab, setActiveTab] = useState('daily'); // daily, weekly, monthly, expired, invalid
 
-  const vehicleList = Object.values(vehicles);
+  const vehicleList = Object.values(vehicles || {});
 
   // Helper to filter history based on the active report tab
   const getFilteredHistory = () => {
@@ -13,12 +13,11 @@ const ReportsPage = () => {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
     if (activeTab === 'expired' || activeTab === 'invalid') {
-      return history; // Show overall stats for expired/invalid tabs
+      return history || [];
     }
     
-    return history.filter(h => {
-      // Parse history item date
-      const dateStr = h.scanDate || h.date;
+    return (history || []).filter(h => {
+      const dateStr = h.scanDate || h.createdAt || h.date;
       if (!dateStr) return true;
 
       const itemDate = new Date(dateStr);
@@ -45,8 +44,52 @@ const ReportsPage = () => {
   const totalScans = filteredHistory.length;
   const grantedCount = filteredHistory.filter(h => (h.status === 'Granted' || h.result === 'Granted')).length;
   const deniedCount = filteredHistory.filter(h => (h.status === 'Denied' || h.result === 'Denied')).length;
-  const expiredVehicles = vehicleList.filter(v => getValidityStatus(v) === 'Expired');
-  const invalidAttempts = history.filter(h => (h.status === 'Denied' || h.result === 'Denied'));
+  
+  // Calculate expired vehicles from live vehicle registry
+  const expiredVehicles = vehicleList.filter(v => {
+    const status = getValidityStatus(v);
+    if (status === 'Expired') return true;
+    const expDateStr = v.expiryDate || v.accessExpiryDate;
+    if (expDateStr) {
+      const expDate = new Date(expDateStr);
+      if (!isNaN(expDate.getTime()) && expDate < new Date()) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  const invalidAttempts = (history || []).filter(h => (h.status === 'Denied' || h.result === 'Denied'));
+
+  // Group gate access stats dynamically by gate name
+  const getGateSummaries = () => {
+    const gateMap = {};
+
+    filteredHistory.forEach(h => {
+      const gateName = h.gate || h.ipAddress || 'Main Entrance Gate';
+      if (!gateMap[gateName]) {
+        gateMap[gateName] = { gateName, totalScans: 0, granted: 0, denied: 0 };
+      }
+      gateMap[gateName].totalScans += 1;
+      if (h.status === 'Granted' || h.result === 'Granted') {
+        gateMap[gateName].granted += 1;
+      } else {
+        gateMap[gateName].denied += 1;
+      }
+    });
+
+    const list = Object.values(gateMap);
+    if (list.length === 0) {
+      return [{ gateName: 'Main Entrance Gate', totalScans: 0, granted: 0, denied: 0, passRate: '0%' }];
+    }
+
+    return list.map(g => ({
+      ...g,
+      passRate: g.totalScans ? `${Math.round((g.granted / g.totalScans) * 100)}%` : '0%'
+    }));
+  };
+
+  const gateSummaries = getGateSummaries();
 
   const exportReport = () => {
     window.print();
@@ -139,16 +182,20 @@ const ReportsPage = () => {
               {/* Progress Visual Bar */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-mono font-bold">
-                  <span className="text-emerald-800 dark:text-emerald-400">Granted: {grantedCount} ({totalScans ? Math.round((grantedCount/totalScans)*100) : 0}%)</span>
-                  <span className="text-rose-800 dark:text-rose-400">Denied: {deniedCount} ({totalScans ? Math.round((deniedCount/totalScans)*100) : 0}%)</span>
+                  <span className="text-emerald-800 dark:text-emerald-400">
+                    Granted: {grantedCount} ({totalScans ? Math.round((grantedCount / totalScans) * 100) : 0}%)
+                  </span>
+                  <span className="text-rose-800 dark:text-rose-400">
+                    Denied: {deniedCount} ({totalScans ? Math.round((deniedCount / totalScans) * 100) : 0}%)
+                  </span>
                 </div>
                 <div className="h-4 w-full bg-slate-100 dark:bg-[#120305] rounded-full overflow-hidden flex border border-slate-200 dark:border-[#5C121E]">
                   <div 
-                    style={{ width: `${totalScans ? (grantedCount/totalScans)*100 : 50}%` }} 
+                    style={{ width: `${totalScans ? (grantedCount / totalScans) * 100 : 0}%` }} 
                     className="bg-emerald-600 h-full transition-all"
                   />
                   <div 
-                    style={{ width: `${totalScans ? (deniedCount/totalScans)*100 : 50}%` }} 
+                    style={{ width: `${totalScans ? (deniedCount / totalScans) * 100 : 0}%` }} 
                     className="bg-rose-600 h-full transition-all"
                   />
                 </div>
@@ -167,15 +214,15 @@ const ReportsPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
-                    <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                      <td className="p-3.5 font-bold text-slate-900 dark:text-white">Main Entrance Gate</td>
-                      <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{totalScans}</td>
-                      <td className="p-3.5 font-mono text-emerald-800 dark:text-emerald-400 font-bold">{grantedCount}</td>
-                      <td className="p-3.5 font-mono text-rose-800 dark:text-rose-400 font-bold">{deniedCount}</td>
-                      <td className="p-3.5 font-mono text-emerald-800 dark:text-emerald-400 font-bold">
-                        {totalScans ? `${Math.round((grantedCount/totalScans)*100)}%` : '100%'}
-                      </td>
-                    </tr>
+                    {gateSummaries.map((g, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td className="p-3.5 font-bold text-slate-900 dark:text-white">{g.gateName}</td>
+                        <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{g.totalScans}</td>
+                        <td className="p-3.5 font-mono text-emerald-800 dark:text-emerald-400 font-bold">{g.granted}</td>
+                        <td className="p-3.5 font-mono text-rose-800 dark:text-rose-400 font-bold">{g.denied}</td>
+                        <td className="p-3.5 font-mono text-emerald-800 dark:text-emerald-400 font-bold">{g.passRate}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -191,7 +238,10 @@ const ReportsPage = () => {
             </h3>
 
             {expiredVehicles.length === 0 ? (
-              <p className="text-xs text-slate-500 py-6 text-center font-medium">No expired stickers currently registered.</p>
+              <div className="py-12 text-center">
+                <p className="text-sm font-bold text-slate-500 dark:text-slate-400">No expired vehicle stickers found in live system registry.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">All registered vehicle stickers are currently valid and up-to-date.</p>
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
@@ -239,7 +289,10 @@ const ReportsPage = () => {
             </h3>
 
             {invalidAttempts.length === 0 ? (
-              <p className="text-xs text-slate-500 py-6 text-center font-medium">No invalid scan attempts recorded.</p>
+              <div className="py-12 text-center">
+                <p className="text-sm font-bold text-slate-500 dark:text-slate-400">No invalid scan attempts recorded in live system logs.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">All processed gate scans have been successfully validated.</p>
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
@@ -253,16 +306,20 @@ const ReportsPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
-                    {invalidAttempts.map(item => (
-                      <tr key={item.id || item._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="p-3.5 font-mono text-slate-600 dark:text-slate-300">{item.scanDate ? new Date(item.scanDate).toLocaleString() : `${item.date || ''} ${item.time || ''}`}</td>
+                    {invalidAttempts.map((item, idx) => (
+                      <tr key={item.id || item._id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td className="p-3.5 font-mono text-slate-600 dark:text-slate-300">
+                          {item.scanDate ? (isNaN(new Date(item.scanDate).getTime()) ? item.scanDate : new Date(item.scanDate).toLocaleString()) : `${item.date || ''} ${item.time || ''}`}
+                        </td>
                         <td className="p-3.5">
                           <span className="font-mono font-black text-slate-900 dark:text-slate-900 bg-amber-100 dark:bg-amber-100 rounded-lg px-2.5 py-1 border border-amber-300 inline-block shadow-2xs">
                             {item.vehicleNumber || item.bikeNumber || item.qrToken}
                           </span>
                         </td>
-                        <td className="p-3.5 font-bold text-slate-900 dark:text-white">{item.ownerName || item.request?.name || 'Verified Vehicle'} ({item.registerId || item.employeeId || 'N/A'})</td>
-                        <td className="p-3.5 font-mono">{item.gate || 'Main Gate'}</td>
+                        <td className="p-3.5 font-bold text-slate-900 dark:text-white">
+                          {item.ownerName || item.request?.name || 'Verified Vehicle'} ({item.registerId || item.employeeId || 'N/A'})
+                        </td>
+                        <td className="p-3.5 font-mono">{item.gate || item.ipAddress || 'Main Gate'}</td>
                         <td className="p-3.5 font-bold text-rose-800 dark:text-rose-400">{item.reason || 'Invalid QR Code'}</td>
                       </tr>
                     ))}

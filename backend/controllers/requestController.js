@@ -20,137 +20,7 @@ export const getReqPortalUrl = (req) => {
     : 'http://localhost:5000';
 };
 
-export const inMemoryRequests = [
-  {
-    _id: 'REQ-SAJIN-012',
-    name: 'SAJIN DEVESH',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
-    employeeId: '012',
-    department: 'Marketing',
-    company: 'Madras Christian College',
-    designation: 'Marketing Executive',
-    bikeNumber: 'TN 11 BV 3595',
-    vehicleType: 'Bike',
-    token: 'BIKE-2026-000764-9850B964',
-    approvalToken: 'BIKE-2026-000764-9850B964',
-    email: 'sajindevesh@gmail.com',
-    mobile: '+91 98765 00012',
-    accessStartDate: new Date('2026-08-19'),
-    accessExpiryDate: new Date('2027-08-19'),
-    status: 'Approved',
-    companyApproved: true,
-    createdAt: new Date()
-  },
-  {
-    _id: 'REQ-1001',
-    approvalToken: 'sat_1001_balaji_mrf_lab',
-    name: 'Balaji S',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
-    employeeId: '23BCS045',
-    department: 'Computer Science & Engineering',
-    company: 'MRF Innovation Lab',
-    designation: 'Research Fellow',
-    bikeNumber: 'TN 14 AE 8495',
-    vehicleType: 'Bike',
-    token: 'BIKE-2026-000001',
-    email: 'balaji@mrf-innovationpark.edu',
-    mobile: '+91 98765 43210',
-    accessStartDate: new Date('2026-01-01'),
-    accessExpiryDate: new Date('2027-01-01'),
-    status: 'Pending',
-    createdAt: new Date()
-  },
-  {
-    _id: 'REQ-1002',
-    name: 'Dr. Ramesh Kumar',
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
-    employeeId: 'EMP-9023',
-    department: 'Mechanical Engineering',
-    company: 'Madras Christian College',
-    designation: 'Associate Professor',
-    bikeNumber: 'TN 38 AB 1234',
-    vehicleType: 'Car',
-    token: 'BIKE-2026-000002',
-    email: 'ramesh@mcc.edu',
-    mobile: '+91 94440 12345',
-    accessStartDate: new Date('2026-01-01'),
-    accessExpiryDate: new Date('2027-01-01'),
-    status: 'Approved',
-    createdAt: new Date()
-  },
-  {
-    _id: 'REQ-1003',
-    name: 'Karthik Raj',
-    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
-    employeeId: 'EMP-7755',
-    department: 'Electronics & Communication',
-    company: 'MRF Innovation Park',
-    designation: 'Senior Engineer',
-    bikeNumber: 'TN 38 CC 5555',
-    vehicleType: 'Bike',
-    token: 'TN-38-CC-5555',
-    email: 'karthik@mrf-innovationpark.edu',
-    mobile: '+91 99887 76655',
-    accessStartDate: new Date('2026-01-01'),
-    accessExpiryDate: new Date('2027-01-01'),
-    status: 'Approved',
-    createdAt: new Date()
-  },
-  {
-    _id: 'REQ-1004',
-    name: 'Priya Sharma',
-    photoUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80',
-    employeeId: 'STU-2024-089',
-    department: 'Information Technology',
-    company: 'Madras Christian College',
-    designation: 'Final Year Student',
-    bikeNumber: 'TN 22 BZ 9901',
-    vehicleType: 'Car',
-    token: 'BIKE-2026-000004',
-    email: 'priya@mcc.edu',
-    mobile: '+91 97654 32109',
-    accessStartDate: new Date('2026-01-01'),
-    accessExpiryDate: new Date('2027-06-30'),
-    status: 'Approved',
-    createdAt: new Date()
-  },
-  {
-    _id: 'REQ-EXPIRED',
-    name: 'Suresh Mohan',
-    photoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80',
-    employeeId: 'EMP-0001',
-    department: 'Mechanical',
-    company: 'Contractor',
-    designation: 'Technician',
-    bikeNumber: 'TN 38 EXP 2025',
-    vehicleType: 'Bike',
-    token: 'expired-token',
-    email: 'suresh@contractor.com',
-    mobile: '+91 90000 11111',
-    accessStartDate: new Date('2025-01-01'),
-    accessExpiryDate: new Date('2025-12-31'),
-    status: 'Approved',
-    createdAt: new Date()
-  },
-  {
-    _id: 'REQ-DISABLED',
-    name: 'Vijay Kumar',
-    photoUrl: 'https://images.unsplash.com/photo-1463453091185-61582044d556?w=400&q=80',
-    employeeId: 'EMP-9999',
-    department: 'Civil',
-    company: 'Vendor',
-    designation: 'Driver',
-    bikeNumber: 'TN 38 DIS 9999',
-    vehicleType: 'Car',
-    token: 'disabled-token',
-    email: 'vijay@vendor.com',
-    mobile: '+91 91111 22222',
-    accessStartDate: new Date('2026-01-01'),
-    accessExpiryDate: new Date('2027-01-01'),
-    status: 'Disabled',
-    createdAt: new Date()
-  }
-];
+export const inMemoryRequests = [];
 
 import fs from 'fs';
 import path from 'path';
@@ -934,6 +804,53 @@ export const getRequests = async (req, res) => {
     }
 
     res.json(allRequests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get vehicles state and history for frontend sync
+export const getVehiclesState = async (req, res) => {
+  try {
+    let allRequests = [...inMemoryRequests];
+    if (isDbConnected()) {
+      try {
+        const mongoRequests = await AccessRequest.find().sort({ createdAt: -1 });
+        if (mongoRequests && mongoRequests.length > 0) {
+          const mongoBikeNumbers = new Set(mongoRequests.map(r => r.bikeNumber));
+          allRequests = [
+            ...mongoRequests,
+            ...inMemoryRequests.filter(r => !mongoBikeNumbers.has(r.bikeNumber))
+          ];
+        }
+      } catch (err) {
+        console.error('Mongo query error in getVehiclesState:', err.message);
+      }
+    }
+
+    const vehiclesDict = {};
+    allRequests.forEach(r => {
+      const vId = r.bikeNumber || r.token || r._id || `V-${Date.now()}`;
+      vehiclesDict[vId] = {
+        id: vId,
+        qrCode: r.token || r.bikeNumber || vId,
+        type: r.vehicleType === 'Car' ? 'Faculty' : 'Student',
+        name: r.name,
+        registerId: r.employeeId || 'N/A',
+        department: r.department,
+        vehicleNumber: r.bikeNumber,
+        vehicleType: r.vehicleType || 'Bike',
+        status: r.status === 'Approved' ? 'Active' : (r.status === 'Disabled' ? 'Disabled' : r.status),
+        issueDate: r.accessStartDate ? new Date(r.accessStartDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        expiryDate: r.accessExpiryDate ? new Date(r.accessExpiryDate).toISOString().split('T')[0] : new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+        mobile: r.mobile,
+        email: r.email,
+        photo: r.photoUrl || r.photo
+      };
+    });
+
+    const { inMemoryScans = [] } = await import('./qrController.js');
+    res.json({ vehicles: vehiclesDict, history: inMemoryScans });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -11,7 +11,8 @@ import {
   rejectRequest,
   disableRequest,
   deleteRequest,
-  updateRequestValidity
+  updateRequestValidity,
+  getVehiclesState
 } from '../controllers/requestController.js';
 import { verifyToken } from '../controllers/qrController.js';
 import { getDashboardStats } from '../controllers/dashboardController.js';
@@ -28,6 +29,9 @@ router.post('/auth/login', (req, res) => {
     role
   });
 });
+
+// -- Vehicles State --
+router.get('/vehicles', getVehiclesState);
 
 // -- Bike Access Requests --
 router.post('/requests', createRequest);

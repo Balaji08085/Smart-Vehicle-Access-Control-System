@@ -12,36 +12,7 @@ import path from 'path';
 
 const SCANS_FILE = path.resolve(process.cwd(), 'scans_db.json');
 
-export const inMemoryScans = [
-  {
-    _id: 'SCAN-101',
-    qrToken: 'BIKE-2026-000001',
-    scanDate: new Date(),
-    result: 'Granted',
-    reason: 'ALLOWED',
-    device: 'Main Gate Terminal 1',
-    ownerName: 'Dr. Ramesh Kumar',
-    registerId: 'EMP-9023',
-    department: 'Mechanical Engineering',
-    gate: 'Main Entrance Gate',
-    vehicleNumber: 'TN 38 AB 1234',
-    vehicleType: 'Car'
-  },
-  {
-    _id: 'SCAN-102',
-    qrToken: 'expired-token',
-    scanDate: new Date(Date.now() - 3600000),
-    result: 'Denied',
-    reason: 'ACCESS EXPIRED',
-    device: 'South Gate Terminal',
-    ownerName: 'Suresh Mohan',
-    registerId: 'EMP-0001',
-    department: 'Mechanical',
-    gate: 'South Gate',
-    vehicleNumber: 'TN 38 EXP 2025',
-    vehicleType: 'Bike'
-  }
-];
+export const inMemoryScans = [];
 
 export const saveScansToDisk = () => {
   try {
