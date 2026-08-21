@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import LogoQRCode from './LogoQRCode';
-import { Printer, X } from 'lucide-react';
+import { Printer, X, Download } from 'lucide-react';
+import { downloadQrCode } from '../utils/qrDownload';
 
 const QrSticker = ({ request, token, onClose }) => {
   const printRef = useRef(null);
@@ -265,10 +266,16 @@ const QrSticker = ({ request, token, onClose }) => {
         </div>
 
         {/* Action Button Bar */}
-        <div className="pt-2">
+        <div className="pt-2 flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => downloadQrCode(request)}
+            className="flex-1 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all hover:scale-102 active:scale-98 flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" /> Download QR Code PNG
+          </button>
           <button
             onClick={handlePrint}
-            className="w-full py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all hover:scale-102 active:scale-98 flex items-center justify-center gap-2"
+            className="flex-1 py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all hover:scale-102 active:scale-98 flex items-center justify-center gap-2"
           >
             <Printer className="w-4 h-4" /> Print High-Res Sticker
           </button>

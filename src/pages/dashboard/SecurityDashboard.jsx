@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { 
   Car, ShieldCheck, CheckCircle2, AlertTriangle, Scan, History, 
   Activity, ArrowUpRight, Bike, Users, Clock, Filter, AlertOctagon, Sparkles,
-  Radio, Shield, FileText, Lock, ChevronRight, BarChart2, CheckSquare
+  Radio, Shield, FileText, Lock, ChevronRight, BarChart2, CheckSquare, Edit2, X, Check
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEntry, getValidityStatus } from '../../context/EntryContext';
 
 const SecurityDashboard = () => {
-  const { vehicles, history, userRole, theme } = useEntry();
+  const { vehicles, history, userRole, theme, campusGates = [], updateCampusGate, shiftRoster = {}, addNotification } = useEntry();
+  const [isGateModalOpen, setIsGateModalOpen] = useState(false);
 
   const [dbStats, setDbStats] = useState(null);
   const [dbRequests, setDbRequests] = useState([]);
@@ -71,15 +72,25 @@ const SecurityDashboard = () => {
   const todayEntries = dbStats?.todaysAllowed ?? allScanLogs.filter(h => h.status === 'Granted' || h.result === 'Granted').length;
   const invalidScanAttempts = dbStats?.todaysDenied ?? allScanLogs.filter(h => h.status === 'Denied' || h.result === 'Denied').length;
 
-  const twoWheelers = vehicleList.filter(v => v.vehicleType?.toLowerCase().includes('bike') || v.vehicleType?.toLowerCase().includes('two')).length;
-  const fourWheelers = vehicleList.filter(v => v.vehicleType?.toLowerCase().includes('car') || v.vehicleType?.toLowerCase().includes('four')).length;
+  const twoWheelers = allVehicleRecords.filter(v => {
+    const type = (v.vehicleType || 'Bike').toLowerCase();
+    return type.includes('bike') || type.includes('two') || type.includes('scooter') || type.includes('motorcycle');
+  }).length;
 
-  const gates = [
-    { name: 'Gate 1 — Main Gate', status: 'ONLINE', officer: 'M. Kumar (SEC-102)', activeCount: allScanLogs.filter(s => (s.gate || s.device || '').includes('Main') || (s.gate || s.device || '').includes('Gate 1')).length, color: 'emerald' },
-    { name: 'Gate 2 — Selaiyur Gate', status: 'ONLINE', officer: 'S. Rajan (SEC-105)', activeCount: allScanLogs.filter(s => (s.gate || s.device || '').includes('Selaiyur') || (s.gate || s.device || '').includes('Gate 2')).length, color: 'emerald' },
-    { name: 'Gate 3 — Heber Gate', status: 'ONLINE', officer: 'P. Vignesh (SEC-109)', activeCount: allScanLogs.filter(s => (s.gate || s.device || '').includes('Heber') || (s.gate || s.device || '').includes('Gate 3')).length, color: 'emerald' },
-    { name: 'Gate 4 — Thomas Gate', status: 'ONLINE', officer: 'R. Anthony (SEC-112)', activeCount: allScanLogs.filter(s => (s.gate || s.device || '').includes('Thomas') || (s.gate || s.device || '').includes('Gate 4')).length, color: 'emerald' },
-  ];
+  const fourWheelers = allVehicleRecords.filter(v => {
+    const type = (v.vehicleType || '').toLowerCase();
+    return type.includes('car') || type.includes('four') || type.includes('auto') || type.includes('van');
+  }).length;
+
+  const gates = (campusGates && campusGates.length > 0 ? campusGates : [
+    { id: 1, name: 'Gate 1 — Main Gate', status: 'ONLINE', officer: 'M. Kumar (SEC-102)' },
+    { id: 2, name: 'Gate 2 — Selaiyur Gate', status: 'ONLINE', officer: 'S. Rajan (SEC-105)' },
+    { id: 3, name: 'Gate 3 — Heber Gate', status: 'ONLINE', officer: 'P. Vignesh (SEC-109)' },
+    { id: 4, name: 'Gate 4 — Thomas Gate', status: 'ONLINE', officer: 'R. Anthony (SEC-112)' },
+  ]).map(g => ({
+    ...g,
+    activeCount: allScanLogs.filter(s => (s.gate || s.device || '').toLowerCase().includes(g.name.toLowerCase()) || (s.gate || s.device || '').includes(`Gate ${g.id}`)).length
+  }));
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 md:px-8 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-[#180305]">
@@ -310,17 +321,17 @@ const SecurityDashboard = () => {
                 <div className="p-3 rounded-2xl border flex justify-between items-center bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-white/5">
                   <div>
                     <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-mono block">Chief Security Controller</span>
-                    <span className="text-slate-900 dark:text-white font-bold block">S. Ramanathan (ID: SEC-8801)</span>
+                    <span className="text-slate-900 dark:text-white font-bold block">{shiftRoster.controller || 'S. Ramanathan (ID: SEC-8801)'}</span>
                   </div>
-                  <span className="px-2.5 py-1 rounded-lg font-mono font-bold text-[10px] bg-[#701A1A]/10 dark:bg-[#701A1A]/30 text-[#701A1A] dark:text-red-300 border border-[#701A1A]/20 dark:border-red-500/30">On Duty</span>
+                  <span className="px-2.5 py-1 rounded-lg font-mono font-bold text-[10px] bg-[#701A1A]/10 dark:bg-[#701A1A]/30 text-[#701A1A] dark:text-red-300 border border-[#701A1A]/20 dark:border-red-500/30">{shiftRoster.controllerStatus || 'On Duty'}</span>
                 </div>
 
                 <div className="p-3 rounded-2xl border flex justify-between items-center bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-white/5">
                   <div>
                     <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-mono block">Active Shift</span>
-                    <span className="text-slate-900 dark:text-white font-bold block">Morning Shift Alpha (06:00 AM - 02:00 PM)</span>
+                    <span className="text-slate-900 dark:text-white font-bold block">{shiftRoster.activeShift || 'Morning Shift Alpha (06:00 AM - 02:00 PM)'}</span>
                   </div>
-                  <span className="px-2.5 py-1 rounded-lg font-mono font-bold text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">Active</span>
+                  <span className="px-2.5 py-1 rounded-lg font-mono font-bold text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">{shiftRoster.shiftStatus || 'Active'}</span>
                 </div>
               </div>
             </div>

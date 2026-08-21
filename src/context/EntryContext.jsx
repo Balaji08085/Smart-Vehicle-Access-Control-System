@@ -114,6 +114,54 @@ export const EntryProvider = ({ children }) => {
     }
   });
 
+  const DEFAULT_GATES = [
+    { id: 1, name: 'Gate 1 — Main Gate', officer: 'M. Kumar (SEC-102)', status: 'ONLINE' },
+    { id: 2, name: 'Gate 2 — Selaiyur Gate', officer: 'S. Rajan (SEC-105)', status: 'ONLINE' },
+    { id: 3, name: 'Gate 3 — Heber Gate', officer: 'P. Vignesh (SEC-109)', status: 'ONLINE' },
+    { id: 4, name: 'Gate 4 — Thomas Gate', officer: 'R. Anthony (SEC-112)', status: 'ONLINE' }
+  ];
+
+  const [campusGates, setCampusGates] = useState(() => {
+    try {
+      const saved = localStorage.getItem('smart_campus_gates');
+      return saved ? JSON.parse(saved) : DEFAULT_GATES;
+    } catch {
+      return DEFAULT_GATES;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('smart_campus_gates', JSON.stringify(campusGates));
+  }, [campusGates]);
+
+  const updateCampusGate = useCallback((id, updatedFields) => {
+    setCampusGates(prev => prev.map(g => g.id === id ? { ...g, ...updatedFields } : g));
+  }, []);
+
+  const DEFAULT_ROSTER = {
+    controller: 'S. Ramanathan (ID: SEC-8801)',
+    controllerStatus: 'On Duty',
+    activeShift: 'Morning Shift Alpha (06:00 AM - 02:00 PM)',
+    shiftStatus: 'Active'
+  };
+
+  const [shiftRoster, setShiftRoster] = useState(() => {
+    try {
+      const saved = localStorage.getItem('smart_campus_roster');
+      return saved ? JSON.parse(saved) : DEFAULT_ROSTER;
+    } catch {
+      return DEFAULT_ROSTER;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('smart_campus_roster', JSON.stringify(shiftRoster));
+  }, [shiftRoster]);
+
+  const updateShiftRoster = useCallback((fields) => {
+    setShiftRoster(prev => ({ ...prev, ...fields }));
+  }, []);
+
   const [notifications, setNotifications] = useState([]);
 
   // Sync to localStorage
@@ -704,6 +752,12 @@ export const EntryProvider = ({ children }) => {
       vehicles,
       history,
       setHistory,
+      campusGates,
+      setCampusGates,
+      updateCampusGate,
+      shiftRoster,
+      setShiftRoster,
+      updateShiftRoster,
       deleteHistoryLog,
       clearHistoryLogs,
       notifications,

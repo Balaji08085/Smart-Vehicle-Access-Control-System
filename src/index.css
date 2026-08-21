@@ -119,38 +119,92 @@
   display: none !important;
 }
 
-/* Print optimization - Print ONLY the sticker badge header & card cleanly */
+/* Print optimization - Executive PDF & Print Report Styles */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 12mm 15mm;
   }
 
   html, body {
-    background: #080C16 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important;
+    height: auto !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide everything on the page */
-  body * {
+  /* Hide navigation, footers, interactive buttons, glows, and elements with .no-print */
+  nav, header, footer, button, .no-print, [class*="blur-"], [class*="pointer-events-none"] {
+    display: none !important;
+  }
+
+  /* Remove dark mode background overlays for clean printing */
+  .dark, 
+  [class*="bg-[#180305]"], 
+  [class*="bg-[#240609]"], 
+  [class*="bg-[#2E080C]"], 
+  [class*="bg-[#1E0609]"], 
+  [class*="bg-slate-900"],
+  [class*="bg-black"] {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+
+  h1, h2, h3, h4, h5, h6, p, span, div, td, th {
+    color: #0f172a !important;
+    text-shadow: none !important;
+  }
+
+  /* High contrast metric cards for print */
+  [class*="bg-emerald-"], [class*="bg-rose-"], [class*="bg-amber-"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Print Table Formatting */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 10px !important;
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 8px 12px !important;
+    font-size: 11px !important;
+    color: #0f172a !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+  }
+
+  /* Specific Single QR Pass Printing (only when printable-sticker-area exists) */
+  body:has(.printable-sticker-area) {
+    background: #080C16 !important;
+  }
+
+  body:has(.printable-sticker-area) * {
     visibility: hidden !important;
   }
 
-  /* Make ONLY the printable sticker badge visible and centered */
-  .printable-sticker-area,
-  .printable-sticker-area * {
+  body:has(.printable-sticker-area) .printable-sticker-area,
+  body:has(.printable-sticker-area) .printable-sticker-area * {
     visibility: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  .printable-sticker-area {
+  body:has(.printable-sticker-area) .printable-sticker-area {
     position: absolute !important;
     left: 50% !important;
     top: 50% !important;
@@ -161,21 +215,10 @@
     padding: 20px !important;
     box-shadow: none !important;
     text-align: center !important;
-    box-sizing: border-box !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    color: #ffffff !important;
   }
 
-  .printable-sticker-area img {
-    display: block !important;
-    margin: 0 auto !important;
-  }
-
-  .printable-sticker-area svg {
-    display: inline-block !important;
-  }
-
-  .printable-sticker-area div {
-    display: block !important;
+  body:has(.printable-sticker-area) .printable-sticker-area * {
+    color: inherit !important;
   }
 }

@@ -1,17 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Eye, Clock, Building, Briefcase, Mail, Phone, Calendar, Hash, ShieldAlert, Printer, Ban, Trash2, Filter, Edit2, CalendarRange, Save } from 'lucide-react';
+import { Check, X, Eye, Clock, Building, Briefcase, Mail, Phone, Calendar, Hash, ShieldAlert, Printer, Ban, Trash2, Filter, Edit2, CalendarRange, Save, Download, Radio, Settings, Bike, Car, Shield } from 'lucide-react';
 import QrSticker from '../../components/QrSticker';
 import { useEntry } from '../../context/EntryContext';
+import { downloadQrCode } from '../../utils/qrDownload';
+
+const ALL_CAMPUS_GATES = [
+  'Gate 1 — Main Gate',
+  'Gate 2 — Selaiyur Gate',
+  'Gate 3 — Heber Gate',
+  'Gate 4 — Thomas Gate'
+];
 
 const ApprovalDashboard = () => {
-  const { addNotification } = useEntry();
+  const { addNotification, campusGates = [], updateCampusGate, shiftRoster = {}, updateShiftRoster } = useEntry();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [stickerRequest, setStickerRequest] = useState(null);
   const [rejectModalRequest, setRejectModalRequest] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  
+  // Gate Manager Modal State
+  const [isGateModalOpen, setIsGateModalOpen] = useState(false);
+  const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
   
   // Edit Validity Modal State
   const [editModalRequest, setEditModalRequest] = useState(null);
@@ -26,6 +38,16 @@ const ApprovalDashboard = () => {
 
   const [activeTab, setActiveTab] = useState('Pending'); // 'Pending', 'Approved', 'Rejected', 'Disabled', 'All'
   const [portalRole, setPortalRole] = useState('SuperAdmin'); // 'SuperAdmin' or 'CompanyOwner'
+
+  const twoWheelers = requests.filter(v => {
+    const type = (v.vehicleType || 'Bike').toLowerCase();
+    return type.includes('bike') || type.includes('two') || type.includes('scooter') || type.includes('motorcycle');
+  }).length;
+
+  const fourWheelers = requests.filter(v => {
+    const type = (v.vehicleType || '').toLowerCase();
+    return type.includes('car') || type.includes('four') || type.includes('auto') || type.includes('van');
+  }).length;
 
   useEffect(() => {
     fetchRequests(activeTab);
@@ -235,6 +257,15 @@ const ApprovalDashboard = () => {
             </div>
             <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Vehicle Access Approvals</h1>
             <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 font-medium">Review requests, edit validity dates, approve permits, generate QR stickers, or issue rejection notices.</p>
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              <button
+                onClick={() => setIsGateModalOpen(true)}
+                className="px-4 py-2.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all hover:scale-102 flex items-center gap-2"
+              >
+                <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+                Manage 4 Gate Terminals
+              </button>
+            </div>
           </div>
 
           {/* Tab Filters */}
@@ -243,7 +274,7 @@ const ApprovalDashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab
                     ? 'bg-[#701A1A] text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#2A0A0F]'
@@ -253,6 +284,85 @@ const ApprovalDashboard = () => {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Dynamic Campus Vehicle Categories & Security Duty Shift Roster Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Card 1: Campus Vehicle Categories */}
+          <div className="p-6 rounded-3xl border shadow-sm space-y-4 bg-white dark:bg-[#1E0609] border-slate-200 dark:border-[#5C121E]">
+            <h3 className="text-sm font-extrabold uppercase tracking-wider flex items-center justify-between text-slate-900 dark:text-white">
+              <span className="flex items-center gap-2">
+                <Car className="w-4 h-4 text-[#701A1A] dark:text-red-400" /> Campus Vehicle Categories
+              </span>
+              <span className="text-[10px] font-mono text-slate-500 font-bold">LIVE REGISTRY</span>
+            </h3>
+
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-2xl border flex items-center justify-between bg-slate-50 dark:bg-[#120305] border-slate-200 dark:border-[#5C121E]">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                    <Bike className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold block text-slate-900 dark:text-white">Two-Wheelers (Bikes)</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Students & Staff Two-Wheelers</span>
+                  </div>
+                </div>
+                <span className="text-xl font-black text-slate-900 dark:text-white">{twoWheelers}</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl border flex items-center justify-between bg-slate-50 dark:bg-[#120305] border-slate-200 dark:border-[#5C121E]">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
+                    <Car className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold block text-slate-900 dark:text-white">Four-Wheelers (Cars)</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Faculty & VIP Four-Wheelers</span>
+                  </div>
+                </div>
+                <span className="text-xl font-black text-slate-900 dark:text-white">{fourWheelers}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Security Duty Shift Roster */}
+          <div className="p-6 rounded-3xl border shadow-sm space-y-4 bg-white dark:bg-[#1E0609] border-slate-200 dark:border-[#5C121E] flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-extrabold uppercase tracking-wider flex items-center gap-2 text-slate-900 dark:text-white">
+                  <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Security Duty Shift Roster
+                </h3>
+                <button
+                  onClick={() => setIsRosterModalOpen(true)}
+                  className="px-2.5 py-1 bg-[#701A1A]/10 hover:bg-[#701A1A]/20 dark:bg-red-950/60 dark:hover:bg-red-900 text-[#701A1A] dark:text-red-300 rounded-lg text-[10px] font-bold border border-[#701A1A]/20 dark:border-red-500/40 flex items-center gap-1 transition-all cursor-pointer"
+                  title="Super Admin: Edit Duty Shift Roster"
+                >
+                  <Edit2 className="w-3 h-3" /> Edit Roster
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3 rounded-2xl border flex justify-between items-center bg-slate-50 dark:bg-[#120305] border-slate-200 dark:border-[#5C121E]">
+                  <div>
+                    <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-mono block">Chief Security Controller</span>
+                    <span className="text-slate-900 dark:text-white font-bold block">{shiftRoster.controller || 'S. Ramanathan (ID: SEC-8801)'}</span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg font-mono font-bold text-[10px] bg-[#701A1A]/10 dark:bg-[#701A1A]/30 text-[#701A1A] dark:text-red-300 border border-[#701A1A]/20 dark:border-red-500/30">{shiftRoster.controllerStatus || 'On Duty'}</span>
+                </div>
+
+                <div className="p-3 rounded-2xl border flex justify-between items-center bg-slate-50 dark:bg-[#120305] border-slate-200 dark:border-[#5C121E]">
+                  <div>
+                    <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-mono block">Active Shift</span>
+                    <span className="text-slate-900 dark:text-white font-bold block">{shiftRoster.activeShift || 'Morning Shift Alpha (06:00 AM - 02:00 PM)'}</span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg font-mono font-bold text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">{shiftRoster.shiftStatus || 'Active'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* Requests Grid */}
@@ -384,6 +494,13 @@ const ApprovalDashboard = () => {
                         <X className="w-3.5 h-3.5" /> Reject
                       </button>
                       <button
+                        onClick={() => handleDelete(req._id, req.bikeNumber)}
+                        className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-rose-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-rose-300 border border-slate-200 dark:border-white/10 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition-colors"
+                        title="Delete Pending Request"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                      <button
                         onClick={() => handleCompanyApprove(req._id)}
                         className="py-2.5 px-3 bg-[#701A1A] hover:bg-[#5C121E] text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1 shadow-sm transition-transform hover:scale-102"
                       >
@@ -401,6 +518,13 @@ const ApprovalDashboard = () => {
                         <X className="w-3.5 h-3.5" /> Reject
                       </button>
                       <button
+                        onClick={() => handleDelete(req._id, req.bikeNumber)}
+                        className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-rose-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-rose-300 border border-slate-200 dark:border-white/10 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition-colors"
+                        title="Delete Pending Request"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                      <button
                         onClick={() => handleApprove(req._id)}
                         className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1 shadow-sm transition-transform hover:scale-102"
                       >
@@ -412,8 +536,15 @@ const ApprovalDashboard = () => {
                   {req.status === 'Approved' && (
                     <>
                       <button
+                        onClick={() => downloadQrCode(req)}
+                        className="py-2.5 px-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-all hover:scale-102"
+                        title="Download High-Res QR Code PNG Image"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Download QR
+                      </button>
+                      <button
                         onClick={() => setStickerRequest(req)}
-                        className="py-2.5 px-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                        className="py-2.5 px-3 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors"
                         title="Print QR Sticker"
                       >
                         <Printer className="w-3.5 h-3.5" /> Sticker
@@ -549,6 +680,12 @@ const ApprovalDashboard = () => {
 
               {selectedRequest.status === 'Approved' && (
                 <>
+                  <button
+                    onClick={() => downloadQrCode(selectedRequest)}
+                    className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-4 h-4" /> Download QR Code PNG
+                  </button>
                   <button
                     onClick={() => setStickerRequest(selectedRequest)}
                     className="w-full py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
@@ -740,6 +877,170 @@ const ApprovalDashboard = () => {
         />
       )}
 
+      {/* SUPER ADMIN DYNAMIC GATE TERMINALS MANAGER MODAL */}
+      {isGateModalOpen && (
+        <div className="fixed inset-0 z-[9999] w-screen h-screen bg-white dark:bg-[#1E0609] overflow-y-auto overflow-x-hidden flex flex-col">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="w-full max-w-6xl mx-auto px-6 py-12 md:px-12 md:py-16 space-y-8 text-slate-900 dark:text-slate-100"
+          >
+            <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-6">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#701A1A] dark:text-red-400 block font-mono">
+                  Super Admin Terminal Configuration
+                </span>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Radio className="w-6 h-6 text-emerald-500 animate-pulse" /> Dynamic Gate Terminals Setup
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsGateModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl bg-slate-100 dark:bg-[#2A0A0F]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+              Dynamically update the Gate Names, Assigned Security Officer Badges, and Operational Status for all 4 Live Campus Terminals. Changes apply instantly system-wide!
+            </p>
+
+            <div className="space-y-4">
+              {campusGates.map((gate) => (
+                <div key={gate.id} className="p-4 rounded-2xl border border-slate-200 dark:border-[#5C121E] bg-slate-50 dark:bg-[#120305] space-y-3 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-wider text-[#701A1A] dark:text-red-400 font-mono">
+                      Terminal #{gate.id}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newStatus = gate.status === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
+                        updateCampusGate(gate.id, { status: newStatus });
+                        addNotification(`${gate.name} status changed to ${newStatus}`, 'info');
+                      }}
+                      className={`px-3 py-1 rounded-full text-[10px] font-black font-mono tracking-wider border transition-all cursor-pointer ${
+                        gate.status === 'ONLINE'
+                          ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-300'
+                          : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border-rose-300'
+                      }`}
+                    >
+                      {gate.status === 'ONLINE' ? '🟢 ONLINE' : '🔴 OFFLINE'}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gate Name</label>
+                      <input
+                        type="text"
+                        value={gate.name}
+                        onChange={(e) => updateCampusGate(gate.id, { name: e.target.value })}
+                        className="w-full bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Assigned Security Officer & Badge</label>
+                      <input
+                        type="text"
+                        value={gate.officer}
+                        onChange={(e) => updateCampusGate(gate.id, { officer: e.target.value })}
+                        className="w-full bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  setIsGateModalOpen(false);
+                  addNotification('✅ Campus Terminals updated dynamically!', 'success');
+                }}
+                className="w-full py-4 bg-[#701A1A] hover:bg-[#5C121E] text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-transform hover:scale-102 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Check className="w-4 h-4" /> Save Gate Terminals Configuration
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* SECURITY DUTY SHIFT ROSTER DYNAMIC CONFIGURATION MODAL */}
+      {isRosterModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 pt-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl space-y-6 text-slate-900 dark:text-slate-100 max-h-[85vh] overflow-y-auto"
+          >
+            <div className="flex justify-between items-center border-b border-slate-200 dark:border-[#5C121E] pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#701A1A] dark:text-red-400 block font-mono">
+                  Super Admin Configuration
+                </span>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Shield className="w-6 h-6 text-emerald-500" /> Duty Shift Roster Setup
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsRosterModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl bg-slate-100 dark:bg-[#2A0A0F]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+              Dynamically update the Security Duty Shift Roster. Changes apply instantly system-wide!
+            </p>
+
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-[#5C121E] bg-slate-50 dark:bg-[#120305] space-y-3">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Chief Security Controller & ID</label>
+                    <input
+                      type="text"
+                      value={shiftRoster.controller || ''}
+                      onChange={(e) => updateShiftRoster({ controller: e.target.value })}
+                      placeholder="S. Ramanathan (ID: SEC-8801)"
+                      className="w-full bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Active Shift & Time Slot</label>
+                    <input
+                      type="text"
+                      value={shiftRoster.activeShift || ''}
+                      onChange={(e) => updateShiftRoster({ activeShift: e.target.value })}
+                      placeholder="Morning Shift Alpha (06:00 AM - 02:00 PM)"
+                      className="w-full bg-white dark:bg-[#1E0609] border border-slate-200 dark:border-[#5C121E] rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  setIsRosterModalOpen(false);
+                  addNotification('✅ Security Duty Roster updated dynamically!', 'success');
+                }}
+                className="w-full py-4 bg-[#701A1A] hover:bg-[#5C121E] text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-transform hover:scale-102 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Check className="w-4 h-4" /> Save Roster Configuration
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

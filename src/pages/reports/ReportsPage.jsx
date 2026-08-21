@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Download } from 'lucide-react';
 import { useEntry, formatDateDisplay, getValidityStatus } from '../../context/EntryContext';
 
 const ReportsPage = () => {
@@ -79,10 +80,6 @@ const ReportsPage = () => {
     });
 
     const list = Object.values(gateMap);
-    if (list.length === 0) {
-      return [{ gateName: 'Gate 1 — Main Gate', totalScans: 0, granted: 0, denied: 0, passRate: '0%' }];
-    }
-
     return list.map(g => ({
       ...g,
       passRate: g.totalScans ? `${Math.round((g.granted / g.totalScans) * 100)}%` : '0%'
@@ -117,16 +114,28 @@ const ReportsPage = () => {
             </p>
           </div>
 
-          <button
-            onClick={exportReport}
-            className="w-full md:w-auto px-6 py-3.5 bg-[#701A1A] hover:bg-[#5C121E] text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 hover:scale-102 active:scale-98"
-          >
-            Print / Export Report
-          </button>
+
+        </div>
+
+        {/* Print-Only Official Header */}
+        <div className="hidden print:block mb-4 p-4 border-b-2 border-slate-900">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">
+                MCC MRF INNOVATION PARK — SECURITY REPORT
+              </h2>
+              <p className="text-xs font-mono text-slate-600 font-bold mt-0.5">
+                Report Category: {activeTab.toUpperCase()} | Generated: {new Date().toLocaleString()}
+              </p>
+            </div>
+            <div className="text-right text-xs font-mono font-bold text-slate-700">
+              Madras Christian College<br />Gate Security Control
+            </div>
+          </div>
         </div>
 
         {/* Report Timeframe / Category Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-1.5 rounded-2xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#240609] shadow-sm">
+        <div className="no-print grid grid-cols-2 sm:grid-cols-5 gap-2 p-1.5 rounded-2xl border border-slate-200 dark:border-[#5C121E] bg-white dark:bg-[#240609] shadow-sm">
           {[
             { id: 'daily', label: 'Daily Report' },
             { id: 'weekly', label: 'Weekly Report' },
@@ -179,53 +188,62 @@ const ReportsPage = () => {
                 {activeTab.toUpperCase()} GATE ACCESS VERIFICATION SUMMARY
               </h3>
 
-              {/* Progress Visual Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-mono font-bold">
-                  <span className="text-emerald-800 dark:text-emerald-400">
-                    Granted: {grantedCount} ({totalScans ? Math.round((grantedCount / totalScans) * 100) : 0}%)
-                  </span>
-                  <span className="text-rose-800 dark:text-rose-400">
-                    Denied: {deniedCount} ({totalScans ? Math.round((deniedCount / totalScans) * 100) : 0}%)
-                  </span>
+              {totalScans === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400">No gate scan history logs recorded for this timeframe ({activeTab}) yet.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Perform a QR code validation scan at any gate checkpoint to populate live gate access analytics.</p>
                 </div>
-                <div className="h-4 w-full bg-slate-100 dark:bg-[#120305] rounded-full overflow-hidden flex border border-slate-200 dark:border-[#5C121E]">
-                  <div 
-                    style={{ width: `${totalScans ? (grantedCount / totalScans) * 100 : 0}%` }} 
-                    className="bg-emerald-600 h-full transition-all"
-                  />
-                  <div 
-                    style={{ width: `${totalScans ? (deniedCount / totalScans) * 100 : 0}%` }} 
-                    className="bg-rose-600 h-full transition-all"
-                  />
-                </div>
-              </div>
+              ) : (
+                <>
+                  {/* Progress Visual Bar */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-mono font-bold">
+                      <span className="text-emerald-800 dark:text-emerald-400">
+                        Granted: {grantedCount} ({totalScans ? Math.round((grantedCount / totalScans) * 100) : 0}%)
+                      </span>
+                      <span className="text-rose-800 dark:text-rose-400">
+                        Denied: {deniedCount} ({totalScans ? Math.round((deniedCount / totalScans) * 100) : 0}%)
+                      </span>
+                    </div>
+                    <div className="h-4 w-full bg-slate-100 dark:bg-[#120305] rounded-full overflow-hidden flex border border-slate-200 dark:border-[#5C121E]">
+                      <div 
+                        style={{ width: `${totalScans ? (grantedCount / totalScans) * 100 : 0}%` }} 
+                        className="bg-emerald-600 h-full transition-all"
+                      />
+                      <div 
+                        style={{ width: `${totalScans ? (deniedCount / totalScans) * 100 : 0}%` }} 
+                        className="bg-rose-600 h-full transition-all"
+                      />
+                    </div>
+                  </div>
 
-              {/* Summary Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="bg-slate-100 dark:bg-[#180305] text-slate-700 dark:text-slate-300 font-mono uppercase border-b border-slate-200 dark:border-[#5C121E]">
-                      <th className="p-3.5">Gate Name</th>
-                      <th className="p-3.5">Total Scans</th>
-                      <th className="p-3.5">Granted</th>
-                      <th className="p-3.5">Denied</th>
-                      <th className="p-3.5">Pass Rate</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
-                    {gateSummaries.map((g, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="p-3.5 font-bold text-slate-900 dark:text-white">{g.gateName}</td>
-                        <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{g.totalScans}</td>
-                        <td className="p-3.5 font-mono text-emerald-800 dark:text-emerald-400 font-bold">{g.granted}</td>
-                        <td className="p-3.5 font-mono text-rose-800 dark:text-rose-400 font-bold">{g.denied}</td>
-                        <td className="p-3.5 font-mono text-emerald-800 dark:text-emerald-400 font-bold">{g.passRate}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  {/* Summary Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="bg-slate-100 dark:bg-[#180305] text-slate-700 dark:text-slate-300 font-mono uppercase border-b border-slate-200 dark:border-[#5C121E]">
+                          <th className="p-3.5">Gate Name</th>
+                          <th className="p-3.5">Total Scans</th>
+                          <th className="p-3.5">Granted</th>
+                          <th className="p-3.5">Denied</th>
+                          <th className="p-3.5">Pass Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
+                        {gateSummaries.map((g, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <td className="p-3.5 font-bold text-slate-900 dark:text-white">{g.gateName}</td>
+                            <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{g.totalScans}</td>
+                            <td className="p-3.5 font-mono text-emerald-800 dark:text-emerald-400 font-bold">{g.granted}</td>
+                            <td className="p-3.5 font-mono text-rose-800 dark:text-rose-400 font-bold">{g.denied}</td>
+                            <td className="p-3.5 font-mono text-emerald-800 dark:text-emerald-400 font-bold">{g.passRate}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

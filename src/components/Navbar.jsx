@@ -13,7 +13,7 @@ const Navbar = () => {
   const { userRole, theme, toggleTheme } = useEntry();
 
   const allLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: ShieldCheck, roles: ['guard', 'admin', 'superadmin'] },
+    { name: 'Home', path: '/dashboard', icon: ShieldCheck, roles: ['guard', 'admin', 'superadmin'] },
     { name: 'Register Bike Access', path: '/superadmin/create', icon: Sparkles, roles: ['admin'] },
     { name: 'Approvals Queue', path: '/admin/approval', icon: CheckSquare, roles: ['superadmin'] },
     { name: 'QR Scanner', path: '/scanner', icon: Scan, roles: ['guard', 'admin', 'superadmin'] },

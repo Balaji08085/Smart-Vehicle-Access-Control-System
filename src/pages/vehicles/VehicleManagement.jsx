@@ -6,6 +6,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEntry, formatDateDisplay, getValidityStatus } from '../../context/EntryContext';
 import LogoQRCode from '../../components/LogoQRCode';
+import { downloadQrCode } from '../../utils/qrDownload';
 
 const VehicleManagement = () => {
   const { 
@@ -231,6 +232,16 @@ const VehicleManagement = () => {
                       {/* Actions Column (Refresh button removed, Sticker button featured) */}
                       <td className="p-4 pr-6 text-right space-x-1.5">
                         
+                        {/* Download QR Code */}
+                        <button
+                          onClick={() => downloadQrCode({ name: v.ownerName, bikeNumber: v.vehicleNumber, department: v.department, token: v.qrToken })}
+                          title="Download High-Res QR Code PNG Image"
+                          className="px-3 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-xl border border-emerald-500/40 transition-all font-bold text-xs inline-flex items-center gap-1.5 shadow-lg"
+                        >
+                          <Download className="w-4 h-4 text-emerald-300" />
+                          <span>Download QR</span>
+                        </button>
+
                         {/* Featured Sticker Badge Button */}
                         <button
                           onClick={() => setQrModalVehicle(v)}
