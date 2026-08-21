@@ -66,7 +66,7 @@ const ReportsPage = () => {
     const gateMap = {};
 
     filteredHistory.forEach(h => {
-      const gateName = h.gate || h.ipAddress || 'Main Entrance Gate';
+      const gateName = h.gate || h.ipAddress || 'Gate 1 — Main Gate';
       if (!gateMap[gateName]) {
         gateMap[gateName] = { gateName, totalScans: 0, granted: 0, denied: 0 };
       }
@@ -80,7 +80,7 @@ const ReportsPage = () => {
 
     const list = Object.values(gateMap);
     if (list.length === 0) {
-      return [{ gateName: 'Main Entrance Gate', totalScans: 0, granted: 0, denied: 0, passRate: '0%' }];
+      return [{ gateName: 'Gate 1 — Main Gate', totalScans: 0, granted: 0, denied: 0, passRate: '0%' }];
     }
 
     return list.map(g => ({

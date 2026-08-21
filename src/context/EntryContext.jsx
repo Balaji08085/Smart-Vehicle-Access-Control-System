@@ -221,7 +221,7 @@ export const EntryProvider = ({ children }) => {
   }, [addNotification]);
 
   // Core Access Verification Method (Dual Mode: Live API with Offline Fallback)
-  const verifyQrCode = useCallback((scannedQuery, gateName = 'Main Entrance Gate') => {
+  const verifyQrCode = useCallback((scannedQuery, gateName = 'Gate 1 — Main Gate') => {
     return new Promise(async (resolve) => {
       const rawInput = (scannedQuery || '').trim();
       const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });

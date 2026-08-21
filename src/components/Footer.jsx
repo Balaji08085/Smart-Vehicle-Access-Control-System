@@ -77,19 +77,19 @@ const Footer = () => {
             </h4>
             <ul className="space-y-2.5 text-white/90 text-xs font-semibold">
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white/80" /> Gate 1 — Main Entrance</span>
+                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white/80" /> Gate 1 — Main Gate</span>
                 <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.5 rounded font-extrabold">ONLINE</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white/80" /> Gate 2 — North Complex</span>
+                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white/80" /> Gate 2 — Selaiyur Gate</span>
                 <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.5 rounded font-extrabold">ONLINE</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white/80" /> Gate 3 — South Research</span>
+                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white/80" /> Gate 3 — Heber Gate</span>
                 <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.5 rounded font-extrabold">ONLINE</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white/80" /> Gate 4 — Innovation Hub</span>
+                <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-white/80" /> Gate 4 — Thomas Gate</span>
                 <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.5 rounded font-extrabold">ONLINE</span>
               </li>
             </ul>

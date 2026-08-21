@@ -75,10 +75,10 @@ const SecurityDashboard = () => {
   const fourWheelers = vehicleList.filter(v => v.vehicleType?.toLowerCase().includes('car') || v.vehicleType?.toLowerCase().includes('four')).length;
 
   const gates = [
-    { name: 'Gate 1 (Main Entrance)', status: 'ONLINE', officer: 'M. Kumar (SEC-102)', activeCount: 42, color: 'emerald' },
-    { name: 'Gate 2 (North Complex)', status: 'ONLINE', officer: 'S. Rajan (SEC-105)', activeCount: 38, color: 'emerald' },
-    { name: 'Gate 3 (South Research)', status: 'ONLINE', officer: 'P. Vignesh (SEC-109)', activeCount: 26, color: 'emerald' },
-    { name: 'Gate 4 (Innovation Hub)', status: 'ONLINE', officer: 'R. Anthony (SEC-112)', activeCount: 15, color: 'emerald' },
+    { name: 'Gate 1 — Main Gate', status: 'ONLINE', officer: 'M. Kumar (SEC-102)', activeCount: allScanLogs.filter(s => (s.gate || s.device || '').includes('Main') || (s.gate || s.device || '').includes('Gate 1')).length, color: 'emerald' },
+    { name: 'Gate 2 — Selaiyur Gate', status: 'ONLINE', officer: 'S. Rajan (SEC-105)', activeCount: allScanLogs.filter(s => (s.gate || s.device || '').includes('Selaiyur') || (s.gate || s.device || '').includes('Gate 2')).length, color: 'emerald' },
+    { name: 'Gate 3 — Heber Gate', status: 'ONLINE', officer: 'P. Vignesh (SEC-109)', activeCount: allScanLogs.filter(s => (s.gate || s.device || '').includes('Heber') || (s.gate || s.device || '').includes('Gate 3')).length, color: 'emerald' },
+    { name: 'Gate 4 — Thomas Gate', status: 'ONLINE', officer: 'R. Anthony (SEC-112)', activeCount: allScanLogs.filter(s => (s.gate || s.device || '').includes('Thomas') || (s.gate || s.device || '').includes('Gate 4')).length, color: 'emerald' },
   ];
 
   return (
