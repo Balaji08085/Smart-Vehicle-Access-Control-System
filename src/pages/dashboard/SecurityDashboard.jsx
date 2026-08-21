@@ -354,7 +354,11 @@ const SecurityDashboard = () => {
                     const statusVal = log.status || log.result || 'Granted';
                     const isGranted = statusVal === 'Granted' || statusVal === 'ALLOWED';
                     const plateNo = log.vehicleNumber || log.qrToken || 'UNKNOWN';
-                    const owner = log.ownerName || log.request?.name || 'Verified User';
+                    const rawOwner = log.ownerName || log.request?.name;
+                    let owner = (rawOwner && !['Verified User', 'Verified Vehicle'].includes(rawOwner)) ? rawOwner : null;
+                    if (!owner) {
+                      owner = isGranted ? 'Authorized User' : 'Unregistered QR / Visitor';
+                    }
                     const gateName = log.gate || log.device || 'Main Entrance Gate';
                     const timeVal = log.time || (log.scanDate ? new Date(log.scanDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
 

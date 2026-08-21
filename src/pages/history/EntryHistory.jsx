@@ -178,10 +178,17 @@ const EntryHistory = () => {
                 ) : filteredHistory.length === 0 ? (
                   <tr><td colSpan="7" className="text-center py-12 text-slate-500 dark:text-slate-400 font-bold">No gate scan history records found.</td></tr>
                 ) : filteredHistory.map((scan) => {
-                  const ownerName = scan.ownerName || scan.request?.name || 'Verified Vehicle';
+                  const validationResult = scan.result || scan.status || 'Granted';
+                  const isDenied = validationResult === 'Denied' || (scan.reason && scan.reason.toUpperCase().includes('INVALID'));
+                  const rawOwner = scan.ownerName || scan.request?.name;
+
+                  let ownerName = (rawOwner && !['Verified Vehicle', 'Verified User'].includes(rawOwner)) ? rawOwner : null;
+                  if (!ownerName) {
+                    ownerName = isDenied ? 'Unregistered QR / Visitor' : 'Authorized User';
+                  }
+
                   const vehiclePlate = scan.vehicleNumber || scan.request?.bikeNumber || scan.qrToken || 'N/A';
                   const formattedDate = scan.scanDate ? (isNaN(new Date(scan.scanDate).getTime()) ? scan.scanDate : new Date(scan.scanDate).toLocaleString()) : (scan.date ? `${scan.date} ${scan.time || ''}` : new Date().toLocaleString());
-                  const validationResult = scan.result || scan.status || 'Granted';
 
                   return (
                     <tr key={scan._id || scan.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">

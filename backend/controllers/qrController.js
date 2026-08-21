@@ -58,13 +58,25 @@ const logScan = async (data) => {
   }
 
   if (!reqObj && data.qrToken) {
-    reqObj = inMemoryRequests.find(r => 
-      r.token === data.qrToken || 
-      (r.bikeNumber && data.qrToken.includes(r.bikeNumber.replace(/\s+/g, '')))
-    );
+    const tokenClean = data.qrToken.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    reqObj = inMemoryRequests.find(r => {
+      const rTokenClean = (r.token || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rBikeClean = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      const rEmpClean = (r.employeeId || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      return (
+        (rTokenClean && (rTokenClean === tokenClean || rTokenClean.includes(tokenClean) || tokenClean.includes(rTokenClean))) ||
+        (rBikeClean && (rBikeClean === tokenClean || rBikeClean.includes(tokenClean) || tokenClean.includes(rBikeClean))) ||
+        (rEmpClean.length >= 2 && rEmpClean === tokenClean)
+      );
+    });
   }
 
-  const ownerName = reqObj?.name || data.ownerName || 'Verified User';
+  let ownerName = reqObj?.name || (data.ownerName && !['Verified User', 'Verified Vehicle'].includes(data.ownerName) ? data.ownerName : null);
+  if (!ownerName) {
+    const isDenied = data.result === 'Denied' || data.status === 'Denied' || (data.reason && data.reason.toUpperCase().includes('INVALID'));
+    ownerName = isDenied ? 'Unregistered QR / Visitor' : 'Authorized User';
+  }
+
   const vehicleNumber = reqObj?.bikeNumber || data.vehicleNumber || data.qrToken || 'N/A';
   const registerId = reqObj?.employeeId || data.registerId || 'N/A';
   const department = reqObj?.department || data.department || 'N/A';

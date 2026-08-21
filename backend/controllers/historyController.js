@@ -29,12 +29,23 @@ export const getScanHistory = async (req, res) => {
     const historyList = rawList.map(item => {
       let reqObj = item.request;
       if (!reqObj || typeof reqObj !== 'object' || !reqObj.name) {
-        const token = item.qrToken || '';
-        const match = inMemoryRequests.find(r => 
-          (r.token && r.token === token) ||
-          (r.bikeNumber && token.includes(r.bikeNumber.replace(/\s+/g, ''))) ||
-          String(r._id) === String(item.request)
-        );
+        const token = item.qrToken || item.vehicleNumber || '';
+        const cleanToken = token.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        
+        const match = inMemoryRequests.find(r => {
+          const rTokenClean = (r.token || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          const rBikeClean = (r.bikeNumber || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          const rEmpClean = (r.employeeId || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          const rIdClean = String(r._id || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          
+          return (
+            (rTokenClean && (rTokenClean === cleanToken || rTokenClean.includes(cleanToken) || cleanToken.includes(rTokenClean))) ||
+            (rBikeClean && (rBikeClean === cleanToken || rBikeClean.includes(cleanToken) || cleanToken.includes(rBikeClean))) ||
+            (rEmpClean.length >= 2 && (rEmpClean === cleanToken)) ||
+            (rIdClean && rIdClean === cleanToken)
+          );
+        });
+
         if (match) {
           reqObj = {
             _id: match._id,
@@ -47,15 +58,21 @@ export const getScanHistory = async (req, res) => {
         }
       }
 
-      const ownerName = reqObj?.name || item.ownerName || (item.qrToken ? 'Verified Vehicle' : 'Unknown User');
+      let resolvedOwnerName = reqObj?.name || (item.ownerName && !['Verified Vehicle', 'Verified User'].includes(item.ownerName) ? item.ownerName : null);
+      
+      const isDenied = item.result === 'Denied' || item.status === 'Denied' || (item.reason && item.reason.toUpperCase().includes('INVALID'));
+      if (!resolvedOwnerName) {
+        resolvedOwnerName = isDenied ? 'Unregistered QR / Visitor' : 'Authorized User';
+      }
+
       const vehicleNumber = reqObj?.bikeNumber || item.vehicleNumber || item.qrToken || 'N/A';
 
       return {
         ...item,
-        ownerName,
+        ownerName: resolvedOwnerName,
         vehicleNumber,
         request: reqObj && typeof reqObj === 'object' && reqObj.name ? reqObj : {
-          name: ownerName,
+          name: resolvedOwnerName,
           bikeNumber: vehicleNumber,
           employeeId: item.registerId || 'N/A',
           department: item.department || 'N/A'
