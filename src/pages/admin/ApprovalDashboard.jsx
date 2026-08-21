@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Eye, Clock, Building, Briefcase, Mail, Phone, Calendar, Hash, ShieldAlert, Printer, Ban, Trash2, Filter, Edit2, CalendarRange, Save, Download, Radio, Settings, Bike, Car, Shield } from 'lucide-react';
+import { Check, X, Eye, Clock, Building, Briefcase, Mail, Phone, Calendar, Hash, ShieldAlert, Printer, Ban, Trash2, Filter, Edit2, CalendarRange, Save, Download, Radio, Settings, Bike, Car, Shield, Plus } from 'lucide-react';
 import QrSticker from '../../components/QrSticker';
 import { useEntry } from '../../context/EntryContext';
 import { downloadQrCode } from '../../utils/qrDownload';
@@ -334,13 +334,25 @@ const ApprovalDashboard = () => {
                 <h3 className="text-sm font-extrabold uppercase tracking-wider flex items-center gap-2 text-slate-900 dark:text-white">
                   <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Security Duty Shift Roster
                 </h3>
-                <button
-                  onClick={() => setIsRosterModalOpen(true)}
-                  className="px-2.5 py-1 bg-[#701A1A]/10 hover:bg-[#701A1A]/20 dark:bg-red-950/60 dark:hover:bg-red-900 text-[#701A1A] dark:text-red-300 rounded-lg text-[10px] font-bold border border-[#701A1A]/20 dark:border-red-500/40 flex items-center gap-1 transition-all cursor-pointer"
-                  title="Super Admin: Edit Duty Shift Roster"
-                >
-                  <Edit2 className="w-3 h-3" /> Edit Roster
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setIsRosterModalOpen(true);
+                      addNotification('Add functionality modal opened', 'info');
+                    }}
+                    className="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-lg text-[10px] font-bold border border-emerald-200 dark:border-emerald-500/40 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                    title="Super Admin: Add Duty Shift Roster"
+                  >
+                    <Plus className="w-3 h-3" /> Add Roster
+                  </button>
+                  <button
+                    onClick={() => setIsRosterModalOpen(true)}
+                    className="px-2.5 py-1 bg-[#701A1A]/10 hover:bg-[#701A1A]/20 dark:bg-red-950/60 dark:hover:bg-red-900 text-[#701A1A] dark:text-red-300 rounded-lg text-[10px] font-bold border border-[#701A1A]/20 dark:border-red-500/40 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                    title="Super Admin: Edit Duty Shift Roster"
+                  >
+                    <Edit2 className="w-3 h-3" /> Edit Roster
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3 text-xs">
