@@ -50,24 +50,10 @@ const SearchPage = () => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. TN 38 AB 1234, 23BCS045, EMP9023, or Balaji S..."
+              placeholder="Search by Vehicle Number, Student Register ID, Staff ID, or Owner Name..."
               className="w-full bg-black/60 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-white text-sm md:text-base font-mono focus:outline-none focus:border-emerald-500 transition-colors shadow-inner"
             />
           </div>
-        </div>
-
-        {/* Quick Search Chips */}
-        <div className="flex flex-wrap justify-center gap-2 text-xs">
-          <span className="text-slate-500 font-bold uppercase tracking-wider py-1">Try Searching:</span>
-          {['TN 38 AB 1234', '23BCS045', 'EMP9023', 'Balaji S', 'TN 38 ZZZ 999'].map((sample) => (
-            <button
-              key={sample}
-              onClick={() => setQuery(sample)}
-              className="px-3 py-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition-all font-mono"
-            >
-              {sample}
-            </button>
-          ))}
         </div>
 
         {/* Search Results */}

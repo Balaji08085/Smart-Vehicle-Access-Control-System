@@ -343,43 +343,60 @@ const SecurityDashboard = () => {
               </div>
 
               <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-                {history.slice(0, 6).map((log) => (
-                  <div 
-                    key={log.id}
-                    className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${
-                      log.status === 'Granted'
-                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-500/30'
-                        : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-500/30'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className={`p-2.5 rounded-xl text-white font-bold ${
-                        log.status === 'Granted' ? 'bg-emerald-600' : 'bg-rose-600'
-                      }`}>
-                        {log.status === 'Granted' ? <CheckCircle2 className="w-5 h-5" /> : <AlertOctagon className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-mono font-black text-slate-900 dark:text-white">{log.vehicleNumber}</span>
-                          <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold">({log.ownerName})</span>
-                        </div>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-mono mt-0.5">
-                          {log.gate} • {log.time}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                        log.status === 'Granted'
-                          ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
-                          : 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
-                      }`}>
-                        {log.status === 'Granted' ? 'ACCESS GRANTED' : `DENIED: ${log.reason}`}
-                      </span>
-                    </div>
+                {allScanLogs.length === 0 ? (
+                  <div className="py-12 text-center bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-200 dark:border-white/10">
+                    <Activity className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-500 mb-2 opacity-50" />
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400">No gate validation scans recorded yet.</p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Perform a live QR code scan to see real-time gate entry events here.</p>
                   </div>
-                ))}
+                ) : (
+                  allScanLogs.slice(0, 6).map((log, idx) => {
+                    const statusVal = log.status || log.result || 'Granted';
+                    const isGranted = statusVal === 'Granted' || statusVal === 'ALLOWED';
+                    const plateNo = log.vehicleNumber || log.qrToken || 'UNKNOWN';
+                    const owner = log.ownerName || log.request?.name || 'Verified User';
+                    const gateName = log.gate || log.device || 'Main Entrance Gate';
+                    const timeVal = log.time || (log.scanDate ? new Date(log.scanDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+
+                    return (
+                      <div 
+                        key={log._id || log.id || idx}
+                        className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${
+                          isGranted
+                            ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-500/30'
+                            : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-500/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className={`p-2.5 rounded-xl text-white font-bold ${
+                            isGranted ? 'bg-emerald-600' : 'bg-rose-600'
+                          }`}>
+                            {isGranted ? <CheckCircle2 className="w-5 h-5" /> : <AlertOctagon className="w-5 h-5" />}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-mono font-black text-slate-900 dark:text-white">{plateNo}</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold">({owner})</span>
+                            </div>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-mono mt-0.5">
+                              {gateName} {timeVal ? `• ${timeVal}` : ''}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                            isGranted
+                              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
+                              : 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
+                          }`}>
+                            {isGranted ? 'ACCESS GRANTED' : `DENIED: ${log.reason || 'INVALID'}`}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 

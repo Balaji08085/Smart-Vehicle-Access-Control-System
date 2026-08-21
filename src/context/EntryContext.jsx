@@ -78,7 +78,17 @@ export const EntryProvider = ({ children }) => {
   const [vehicles, setVehicles] = useState(() => {
     try {
       const saved = localStorage.getItem('smart_campus_vehicles');
-      return saved ? JSON.parse(saved) : {};
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const clean = {};
+        Object.keys(parsed).forEach(k => {
+          if (!['TN-38-AB-1234', 'TN-38-XY-9999', 'TN-38-CC-5555', 'TN-38-EXP-2025', 'TN-38-ZZZ-999', 'TN-10-BC-2115', 'TN-11-BV-3595'].includes(k)) {
+            clean[k] = parsed[k];
+          }
+        });
+        return clean;
+      }
+      return {};
     } catch {
       return {};
     }
@@ -87,7 +97,18 @@ export const EntryProvider = ({ children }) => {
   const [history, setHistory] = useState(() => {
     try {
       const saved = localStorage.getItem('smart_campus_history');
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(item => {
+            const id = item.id || item._id || '';
+            const plate = item.vehicleNumber || item.bikeNumber || '';
+            return !['LOG-101', 'LOG-102', 'LOG-103', 'LOG-104'].includes(id) && 
+                   !['TN 38 AB 1234', 'TN 38 XY 9999', 'TN 38 ZZZ 999', 'TN 38 EXP 2025'].includes(plate);
+          });
+        }
+      }
+      return [];
     } catch {
       return [];
     }
